@@ -68,4 +68,4 @@ All rights reserved
  [1]: http://www.pledgie.com/campaigns/17973
  [2]: http://chris.iluo.net/projects/diesel
  [3]: http://live.gnome.org/gtkmm
- [4]: http://live.gnome.org/gtkglext
+ [4]: https://projects.gnome.org/gtkglext/
