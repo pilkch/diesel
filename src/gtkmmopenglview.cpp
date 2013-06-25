@@ -288,7 +288,7 @@ namespace diesel
       matObjectRotation.SetRotation(rotation);
     }
 
-    pContext->SetClearColour(spitfire::math::cColour(0.0f, 1.0f, 0.0f, 1.0f));
+    pContext->SetClearColour(spitfire::math::cColour(0.0f, 0.0f, 0.0f, 1.0f));
 
     pContext->BeginRenderToScreen();
 
@@ -334,36 +334,6 @@ namespace diesel
 
       pContext->EndRenderMode2D();
     }
-
-    static float fRotationRadians = 0.f;
-
-    // Set up our settings
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_LIGHTING);
-    glEnable(GL_COLOR);
-    glDisable(GL_TEXTURE_2D);
-    glDisable(GL_BLEND);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    glRotatef(fRotationRadians, 0.f, 0.f, 1.0);
-    glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-    glBegin(GL_TRIANGLES);
-      glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-      glVertex2f(-0.5f, -0.3f);
-      glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
-      glVertex2f(0.5f, -0.3f);
-      glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
-      glVertex2f(0.f, 0.66f);
-    glEnd();
-
-    // some triangle rotation stuff
-    fRotationRadians += 1.0f;
 
     if (bIsWireframe) pContext->DisableWireframe();
 
