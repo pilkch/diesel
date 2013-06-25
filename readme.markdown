@@ -1,7 +1,3 @@
-<html>
-  <head><title>Diesel</title></head>
-  <body>
-
 ###
       Chris Pilkington
 
@@ -99,6 +95,3 @@
       All rights reserved
 
       [gtkglext](http://live.gnome.org/gtkglext)
-
-  </body>
-</html>
