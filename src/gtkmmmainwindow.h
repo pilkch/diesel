@@ -4,12 +4,16 @@
 // Gtkmm headers
 #include <gtkmm/window.h>
 
+// Spitfire headers
+#include <spitfire/util/updatechecker.h>
+
 // Diesel headers
+#include "diesel.h"
 #include "gtkmmopenglview.h"
 
 namespace diesel
 {
-  class cGtkmmMainWindow : public Gtk::Window
+  class cGtkmmMainWindow : public Gtk::Window, public spitfire::util::cUpdateCheckerHandler
   {
   public:
     cGtkmmMainWindow(int argc, char** argv);
@@ -20,6 +24,10 @@ namespace diesel
 
   private:
     virtual bool on_key_press_event(GdkEventKey* event) override;
+
+    virtual void OnNewVersionFound(int iMajorVersion, int iMinorVersion, const string_t& sDownloadPage) override;
+
+    spitfire::util::cUpdateChecker updateChecker;
 
     cGtkmmOpenGLView openglView;
   };

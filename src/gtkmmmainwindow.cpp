@@ -16,6 +16,7 @@
 namespace diesel
 {
   cGtkmmMainWindow::cGtkmmMainWindow(int argc, char** argv) :
+    updateChecker(*this),
     openglView(*this)
   {
     set_title(BUILD_APPLICATION_NAME);
@@ -26,6 +27,9 @@ namespace diesel
     openglView.Init(argc,  argv);
 
     openglView.show();
+
+    // Start the update checker now that we have finished doing the serious work
+    updateChecker.Run();
   }
 
   void cGtkmmMainWindow::Run()
@@ -35,6 +39,12 @@ namespace diesel
 
   void cGtkmmMainWindow::OnMenuFileQuit()
   {
+    // Tell the update checker thread to stop soon
+    if (updateChecker.IsRunning()) updateChecker.StopThreadSoon();
+
+    // Tell the update checker thread to stop now
+    if (updateChecker.IsRunning()) updateChecker.StopThreadNow();
+
     //hide(); //Closes the main window to stop the Gtk::Main::run().
     Gtk::Main::quit();
   }
@@ -47,5 +57,10 @@ namespace diesel
     if (openglView.is_focus()) return openglView.on_key_press_event(event);
 
     return false;
+  }
+
+  void cGtkmmMainWindow::OnNewVersionFound(int iMajorVersion, int iMinorVersion, const string_t& sDownloadPage)
+  {
+    LOG<<"cGtkmmMainWindow::OnNewVersionFound "<<iMajorVersion<<"."<<iMinorVersion<<", "<<sDownloadPage<<std::endl;
   }
 }

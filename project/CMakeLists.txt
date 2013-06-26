@@ -42,7 +42,7 @@ ENDIF()
 
 ADD_DEFINITIONS("-DBUILD_APPLICATION_NAME=\"\\\"Diesel\\\"\"")
 ADD_DEFINITIONS("-DBUILD_APPLICATION_NAME_LWR=\"\\\"diesel\\\"\"")
-ADD_DEFINITIONS("-DBUILD_APPLICATION_VERSION_STRING=\"\\\"0.8\\\"\"")
+ADD_DEFINITIONS("-DBUILD_APPLICATION_VERSION_STRING=\"\\\"0.1\\\"\"")
 ADD_DEFINITIONS("-DBUILD_APPLICATION_COPYRIGHT_OWNER=\"\\\"Chris Pilkington\\\"\"")
 ADD_DEFINITIONS("-DBUILD_APPLICATION_WEBSITE=\"\\\"http://chris.iluo.net/projects/diesel/\\\"\"")
 
@@ -86,7 +86,7 @@ spitfire.cpp
 communication/http.cpp communication/network.cpp
 math/cColour.cpp math/cVec2.cpp math/cVec3.cpp math/cVec4.cpp math/cMat3.cpp math/cMat4.cpp math/cQuaternion.cpp
 storage/csv.cpp storage/document.cpp storage/file.cpp storage/filesystem.cpp storage/xml.cpp
-util/datetime.cpp util/lang.cpp util/string.cpp util/thread.cpp)
+util/datetime.cpp util/lang.cpp util/string.cpp util/thread.cpp util/updatechecker.cpp)
 
 PREFIX_PATHS(${LIBRARY_SPITFIRE_SOURCE_DIRECTORY} ${LIBRARY_SPITFIRE_SOURCE_FILES})
 SET(OUTPUT_LIBRARY_SPITFIRE_SOURCE_FILES ${OUTPUT_FILES})
