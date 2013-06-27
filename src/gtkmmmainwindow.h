@@ -10,6 +10,7 @@
 // Diesel headers
 #include "diesel.h"
 #include "gtkmmopenglview.h"
+#include "settings.h"
 
 namespace diesel
 {
@@ -26,6 +27,8 @@ namespace diesel
     virtual bool on_key_press_event(GdkEventKey* event) override;
 
     virtual void OnNewVersionFound(int iMajorVersion, int iMinorVersion, const string_t& sDownloadPage) override;
+
+    cSettings settings;
 
     spitfire::util::cUpdateChecker updateChecker;
 

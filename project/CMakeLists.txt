@@ -85,7 +85,7 @@ SET(LIBRARY_SPITFIRE_SOURCE_FILES
 spitfire.cpp
 communication/http.cpp communication/network.cpp
 math/cColour.cpp math/cVec2.cpp math/cVec3.cpp math/cVec4.cpp math/cMat3.cpp math/cMat4.cpp math/cQuaternion.cpp
-storage/csv.cpp storage/document.cpp storage/file.cpp storage/filesystem.cpp storage/xml.cpp
+storage/csv.cpp storage/document.cpp storage/file.cpp storage/filesystem.cpp storage/settings.cpp storage/xml.cpp
 util/datetime.cpp util/lang.cpp util/string.cpp util/thread.cpp util/updatechecker.cpp)
 
 PREFIX_PATHS(${LIBRARY_SPITFIRE_SOURCE_DIRECTORY} ${LIBRARY_SPITFIRE_SOURCE_FILES})

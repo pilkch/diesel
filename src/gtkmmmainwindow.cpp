@@ -19,8 +19,12 @@ namespace diesel
     updateChecker(*this),
     openglView(*this)
   {
+    settings.Load();
+
     set_title(BUILD_APPLICATION_NAME);
+    set_size_request(400, 400);
     set_default_size(800, 800);
+    resize(400, 400);
 
     add(openglView);
 
@@ -47,6 +51,8 @@ namespace diesel
 
     //hide(); //Closes the main window to stop the Gtk::Main::run().
     Gtk::Main::quit();
+
+    settings.Save();
   }
 
   bool cGtkmmMainWindow::on_key_press_event(GdkEventKey* event)
