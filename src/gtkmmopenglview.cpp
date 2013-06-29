@@ -296,40 +296,6 @@ namespace diesel
     ASSERT(pShaderPhoto != nullptr);
     ASSERT(pShaderPhoto->IsCompiledProgram());
 
-    const spitfire::math::cMat4 matProjection = pContext->CalculateProjectionMatrix();
-
-    const spitfire::math::cMat4 matView;
-
-    const float fSpacingX = 0.1f;
-    const float fSpacingY = 0.1f;
-
-    spitfire::math::cMat4 matTranslationPhoto[9];
-    size_t i = 0;
-    for (size_t y = 0; y < 3; y++) {
-      for (size_t x = 0; x < 3; x++) {
-        const spitfire::math::cVec3 position((-1.0f + float(x)) * fSpacingX, ((-2.0f - float(y)) * fSpacingY), 0.0f);
-        matTranslationPhoto[i].SetTranslation(position);
-        i++;
-      }
-    }
-
-    bool bIsRotating = true;
-    float fAngleRadians = 0.0f;
-    const spitfire::sampletime_t uiUpdateDelta = 10;
-    const float fRotationSpeed = 0.1f;
-
-    spitfire::math::cMat4 matObjectRotation;
-
-    {
-      // Update object rotation
-      if (bIsRotating) fAngleRadians += float(uiUpdateDelta) * fRotationSpeed;
-
-      spitfire::math::cQuaternion rotation;
-      rotation.SetFromAxisAngle(spitfire::math::v3Up, fAngleRadians);
-
-      matObjectRotation.SetRotation(rotation);
-    }
-
     pContext->SetClearColour(spitfire::math::cColour(0.0f, 0.0f, 0.0f, 1.0f));
 
     pContext->BeginRenderToScreen();
