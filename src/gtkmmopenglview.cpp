@@ -39,7 +39,8 @@ namespace diesel
     fScrollPosition(0.0f),
     pContext(nullptr),
     pShaderPhoto(nullptr),
-    pStaticVertexBufferObjectPhoto(nullptr)
+    pStaticVertexBufferObjectPhoto(nullptr),
+    pFont(nullptr)
   {
     // Set our resolution
     resolution.width = 500;
@@ -152,6 +153,7 @@ namespace diesel
         opengl::cTexture* pTexture = pContext->CreateTexture(iter.GetFullPath());
         ASSERT(pTexture != nullptr);
         photoTextures.push_back(pTexture);
+        photoNames.push_back(iter.GetFileOrFolder());
       }
     }
 
@@ -163,10 +165,20 @@ namespace diesel
     // Create our shader
     pShaderPhoto = pContext->CreateShader(TEXT("data/shaders/passthrough.vert"), TEXT("data/shaders/passthrough.frag"));
     ASSERT(pShaderPhoto != nullptr);
+
+    // Create our font
+    pFont = pContext->CreateFont(TEXT("data/fonts/pricedown.ttf"), 32, TEXT("data/shaders/font.vert"), TEXT("data/shaders/font.frag"));
+    assert(pFont != nullptr);
+    assert(pFont->IsValid());
   }
 
   void cGtkmmOpenGLView::DestroyResources()
   {
+    if (pFont != nullptr) {
+      pContext->DestroyFont(pFont);
+      pFont = nullptr;
+    }
+
     if (pStaticVertexBufferObjectPhoto != nullptr) {
       pContext->DestroyStaticVertexBufferObject(pStaticVertexBufferObjectPhoto);
       pStaticVertexBufferObjectPhoto = nullptr;
@@ -184,6 +196,7 @@ namespace diesel
     }
 
     photoTextures.clear();
+    photoNames.clear();
   }
 
   void cGtkmmOpenGLView::Init(int argc, char* argv[])
@@ -330,36 +343,104 @@ namespace diesel
       spitfire::math::cMat4 matModelView2D;
 
       spitfire::math::cMat4 matScale;
-      matScale.SetScale(scale.x, scale.y, 1.0f);
-
-      pContext->BindStaticVertexBufferObject2D(*pStaticVertexBufferObjectPhoto);
+      matScale.SetScale(fScale, fScale, 1.0f);
 
       const float fWidth = resolution.width - (fThumbNailSpacing + fThumbNailSpacing);
 
       const size_t columns = fWidth / (fThumbNailWidth + fThumbNailSpacing);
 
-      const size_t nPhotos = photoTextures.size();
-      for (size_t i = 0; i < nPhotos; i++) {
-        opengl::cTexture* pTexture = photoTextures[i];
+      // Draw the photos
+      {
+        pContext->BindStaticVertexBufferObject2D(*pStaticVertexBufferObjectPhoto);
 
-        pContext->BindTexture(0, *pTexture);
 
-        pContext->BindShader(*pShaderPhoto);
+        const size_t nPhotos = photoTextures.size();
+        for (size_t i = 0; i < nPhotos; i++) {
+          opengl::cTexture* pTexture = photoTextures[i];
 
-        const size_t x = i % columns;
-        const size_t y = i / columns;
-        matModelView2D.SetTranslation(fThumbNailSpacing + (float(x) * (fThumbNailWidth + fThumbNailSpacing)), fThumbNailSpacing + (float(y) * (fThumbNailHeight + fThumbNailSpacing)), 0.0f);
+          pContext->BindTexture(0, *pTexture);
 
-        pContext->SetShaderProjectionAndModelViewMatricesRenderMode2D(opengl::MODE2D_TYPE::Y_INCREASES_DOWN_SCREEN_KEEP_DIMENSIONS_AND_ASPECT_RATIO, matScale * matModelView2D);
+          pContext->BindShader(*pShaderPhoto);
 
-        pContext->DrawStaticVertexBufferObjectTriangles2D(*pStaticVertexBufferObjectPhoto);
+          const size_t x = i % columns;
+          const size_t y = i / columns;
+          const float fX = fThumbNailSpacing + (float(x) * (fThumbNailWidth + fThumbNailSpacing));
+          const float fY = fThumbNailSpacing + (float(y) * (fThumbNailHeight + fThumbNailSpacing));
+          matModelView2D.SetTranslation(fX, fY, 0.0f);
 
-        pContext->UnBindShader(*pShaderPhoto);
+          pContext->SetShaderProjectionAndModelViewMatricesRenderMode2D(opengl::MODE2D_TYPE::Y_INCREASES_DOWN_SCREEN_KEEP_DIMENSIONS_AND_ASPECT_RATIO, matScale * matModelView2D);
 
-        pContext->UnBindTexture(0, *pTexture);
+          pContext->DrawStaticVertexBufferObjectTriangles2D(*pStaticVertexBufferObjectPhoto);
+
+          pContext->UnBindShader(*pShaderPhoto);
+
+          pContext->UnBindTexture(0, *pTexture);
+        }
+
+        pContext->UnBindStaticVertexBufferObject2D(*pStaticVertexBufferObjectPhoto);
       }
 
-      pContext->UnBindStaticVertexBufferObject2D(*pStaticVertexBufferObjectPhoto);
+      // Draw the filenames for the photos
+      {
+        assert(pFont != nullptr);
+        assert(pFont->IsValid());
+
+        // The font is designed for use with contexts with a width of 1.0 so we need to scale it here
+        const float fTextScale = 500.0f; // Fixed scale
+        const spitfire::math::cVec2 scale(fTextScale, fTextScale);
+
+        const spitfire::math::cColour colour(1.0f, 1.0f, 1.0f, 1.0f);
+
+        opengl::cGeometryDataPtr pTextGeometryDataPtr = opengl::CreateGeometryData();
+
+        opengl::cGeometryBuilder_v2_c4_t2 builderText(*pTextGeometryDataPtr);
+
+        const size_t n = photoNames.size();
+        for (size_t i = 0; i < n; i++) {
+          const size_t x = i % columns;
+          const size_t y = i / columns;
+          const float fPhotoX = fThumbNailSpacing + (float(x) * (fThumbNailWidth + fThumbNailSpacing));
+          const float fPhotoY = fThumbNailSpacing + (float(y) * (fThumbNailHeight + fThumbNailSpacing));
+
+          // Place the text below the photo
+          const float fNameX = fPhotoX;
+          const float fNameY = fPhotoY + fThumbNailHeight;
+
+          // Create the text for this photo
+          const float fRotationDegrees = 0.0f;
+          pFont->PushBack(builderText, photoNames[i], colour, spitfire::math::cVec2(fNameX, fNameY), fRotationDegrees, scale);
+        }
+
+
+        if (pTextGeometryDataPtr->nVertexCount != 0) {
+          // Compile the vertex buffer object
+          opengl::cStaticVertexBufferObject* pVBOText = pContext->CreateStaticVertexBufferObject();
+
+          pVBOText->SetData(pTextGeometryDataPtr);
+
+          pVBOText->Compile2D(system);
+
+          // Bind the vertex buffer object
+          pContext->BindStaticVertexBufferObject2D(*pVBOText);
+
+          // Set the position of the text
+          spitfire::math::cMat4 matModelView2D;
+          matModelView2D.SetTranslation(0.0f, 0.0f, 0.0f);
+
+          pContext->BindFont(*pFont);
+
+          pContext->SetShaderProjectionAndModelViewMatricesRenderMode2D(opengl::MODE2D_TYPE::Y_INCREASES_DOWN_SCREEN_KEEP_DIMENSIONS_AND_ASPECT_RATIO, matScale * matModelView2D);
+
+          pContext->DrawStaticVertexBufferObjectTriangles2D(*pVBOText);
+
+          pContext->UnBindFont(*pFont);
+
+          // Unbind the vertex buffer object
+          pContext->UnBindStaticVertexBufferObject2D(*pVBOText);
+
+          pContext->DestroyStaticVertexBufferObject(pVBOText);
+        }
+      }
 
       pContext->EndRenderMode2D();
     }

@@ -14,6 +14,7 @@
 #include <gtkmm/drawingarea.h>
 
 // libopenglmm headers
+#include <libopenglmm/cFont.h>
 #include <libopenglmm/cSystem.h>
 
 namespace diesel
@@ -87,6 +88,10 @@ namespace diesel
     std::vector<opengl::cTexture*> photoTextures;
     opengl::cShader* pShaderPhoto;
     opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectPhoto;
+
+    // Text
+    opengl::cFont* pFont;
+    std::vector<string_t> photoNames;
   };
 }
 
