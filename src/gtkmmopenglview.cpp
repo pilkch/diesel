@@ -33,7 +33,10 @@ namespace diesel
   cGtkmmOpenGLView::cGtkmmOpenGLView(cGtkmmMainWindow& _parent) :
     parent(_parent),
     bIsWireframe(false),
-    scale(1.0f, 1.0f),
+    pageHeight(500),
+    requiredHeight(12000),
+    fScale(1.0f),
+    fScrollPosition(0.0f),
     pContext(nullptr),
     pShaderPhoto(nullptr),
     pStaticVertexBufferObjectPhoto(nullptr)
@@ -47,6 +50,10 @@ namespace diesel
 
     // Allow this control to grab the keyboard focus
     set_can_focus(true);
+
+
+    // Allow this widget to handle button press and pointer events
+    add_events(Gdk::BUTTON_PRESS_MASK | Gdk::POINTER_MOTION_MASK);
   }
 
   cGtkmmOpenGLView::~cGtkmmOpenGLView()
@@ -64,6 +71,26 @@ namespace diesel
   GtkWidget* cGtkmmOpenGLView::GetWidget()
   {
     return Gtk::Widget::gobj();
+  }
+
+  size_t cGtkmmOpenGLView::GetPageHeight() const
+  {
+    return pageHeight;
+  }
+
+  size_t cGtkmmOpenGLView::GetRequiredHeight() const
+  {
+    return requiredHeight;
+  }
+
+  float cGtkmmOpenGLView::GetScale() const
+  {
+    return fScale;
+  }
+
+  void cGtkmmOpenGLView::SetScale(float _fScale)
+  {
+    fScale = _fScale;
   }
 
   void cGtkmmOpenGLView::CreateVertexBufferObjectPhoto(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, size_t textureWidth, size_t textureHeight)
@@ -238,6 +265,8 @@ namespace diesel
 
   void cGtkmmOpenGLView::ResizeWidget(size_t width, size_t height)
   {
+    pageHeight = height;
+
     resolution.width = width;
     resolution.height = height;
     pContext->ResizeWindow(resolution);
@@ -400,5 +429,41 @@ namespace diesel
     }
 
     return false;
+  }
+
+  bool cGtkmmOpenGLView::OnMouseDown(int button, int x, int y)
+  {
+    LOG<<"cGtkmmOpenGLView::OnMouseDown"<<std::endl;
+    return false;
+  }
+
+  bool cGtkmmOpenGLView::OnMouseRelease(int button, int x, int y)
+  {
+    LOG<<"cGtkmmOpenGLView::OnMouseRelease"<<std::endl;
+    return false;
+  }
+
+  bool cGtkmmOpenGLView::OnMouseScrollUp(int x, int y)
+  {
+    LOG<<"cGtkmmOpenGLView::OnMouseScrollUp"<<std::endl;
+    return false;
+  }
+
+  bool cGtkmmOpenGLView::OnMouseScrollDown(int x, int y)
+  {
+    LOG<<"cGtkmmOpenGLView::OnMouseScrollDown"<<std::endl;
+    return false;
+  }
+
+  bool cGtkmmOpenGLView::OnMouseMove(int x, int y)
+  {
+    LOG<<"cGtkmmOpenGLView::OnMouseMove"<<std::endl;
+    return false;
+  }
+
+  void cGtkmmOpenGLView::OnScrollBarScrolled(float fValue)
+  {
+    LOG<<"cGtkmmOpenGLView::OnScrollBarScrolled"<<std::endl;
+    fScrollPosition = fValue;
   }
 }

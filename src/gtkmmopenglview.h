@@ -30,8 +30,22 @@ namespace diesel
 
     void Init(int argc, char* argv[]);
 
+    size_t GetPageHeight() const;
+    size_t GetRequiredHeight() const;
+
+    float GetScale() const;
+    void SetScale(float fScale);
+
+    void OnScrollBarScrolled(float fValue);
+
   protected:
     virtual bool on_key_press_event(GdkEventKey* event) override;
+
+    bool OnMouseDown(int button, int x, int y);
+    bool OnMouseRelease(int button, int x, int y);
+    bool OnMouseScrollUp(int x, int y);
+    bool OnMouseScrollDown(int x, int y);
+    bool OnMouseMove(int x, int y);
 
   private:
     const GtkWidget* GetWidget() const;
@@ -58,7 +72,11 @@ namespace diesel
 
     bool bIsWireframe;
 
-    spitfire::math::cVec2 scale;
+    size_t pageHeight;
+    size_t requiredHeight;
+
+    float fScale;
+    float fScrollPosition;
 
     opengl::cSystem system;
 
