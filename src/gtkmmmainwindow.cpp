@@ -184,10 +184,10 @@ namespace diesel
     eventBoxOpenglView.add(openglView);
 
     // Add the OpenGL view and scroll bar
-    boxCategoriesAndPlaylist.pack_start(eventBoxOpenglView, Gtk::PACK_EXPAND_WIDGET);
-    boxCategoriesAndPlaylist.pack_start(scrollBar, Gtk::PACK_EXPAND_WIDGET);
+    boxPhotoView.pack_start(eventBoxOpenglView, Gtk::PACK_EXPAND_WIDGET);
+    boxPhotoView.pack_start(scrollBar, Gtk::PACK_SHRINK);
 
-    boxControls.pack_start(boxCategoriesAndPlaylist, Gtk::PACK_EXPAND_WIDGET);
+    boxControls.pack_start(boxPhotoView, Gtk::PACK_EXPAND_WIDGET);
 
     boxControlsAndToolbar.pack_start(boxControls, Gtk::PACK_EXPAND_WIDGET);
     boxControlsAndToolbar.pack_start(boxToolbar, Gtk::PACK_SHRINK);
@@ -210,7 +210,7 @@ namespace diesel
     scrollBar.set_orientation(Gtk::Orientation::ORIENTATION_VERTICAL);
 
     const size_t page = openglView.GetPageHeight();
-    const size_t step = page / 10;
+    const size_t step = page / 5;
     scrollBar.SetStepAndPageSize(step, page);
 
     scrollBar.set_range(0.0, openglView.GetRequiredHeight());

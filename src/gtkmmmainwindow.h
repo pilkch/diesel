@@ -58,7 +58,7 @@ namespace diesel
     Gtk::VBox boxMainWindow;
     Gtk::Box boxToolbar;
     Gtk::HBox boxPositionSlider;
-    Gtk::HBox boxCategoriesAndPlaylist;
+    Gtk::HBox boxPhotoView;
     Gtk::HBox boxControlsAndToolbar;
     Gtk::VBox boxControls;
     Gtk::HBox boxStatusBar;
