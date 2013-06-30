@@ -299,14 +299,24 @@ namespace diesel
   {
     ASSERT(pEvent != nullptr);
 
-    //guint state; // a bit-mask representing the state of the modifier keys (e.g. Control, Shift and Alt) and the pointer buttons. See GdkModifierType
-
-    if (pEvent->direction == GDK_SCROLL_UP) {
-      scrollBar.ScrollUp();
-      return true;
-    } else if (pEvent->direction == GDK_SCROLL_DOWN) {
-      scrollBar.ScrollDown();
-      return true;
+    if ((pEvent->state & GDK_CONTROL_MASK) != 0) {
+      // Zooming
+      if (pEvent->direction == GDK_SCROLL_UP) {
+        openglView.SetScale(min(20.0f, openglView.GetScale() + 0.1f));
+        return true;
+      } else if (pEvent->direction == GDK_SCROLL_DOWN) {
+        openglView.SetScale(max(1.0f, openglView.GetScale() - 0.1f));
+        return true;
+      }
+    } else {
+      // Scrolling
+      if (pEvent->direction == GDK_SCROLL_UP) {
+        scrollBar.ScrollUp();
+        return true;
+      } else if (pEvent->direction == GDK_SCROLL_DOWN) {
+        scrollBar.ScrollDown();
+        return true;
+      }
     }
 
     return false;
