@@ -455,10 +455,10 @@ namespace diesel
     return TRUE;
   }
 
-  bool cGtkmmOpenGLView::on_key_press_event(GdkEventKey* event)
+  bool cGtkmmOpenGLView::on_key_press_event(GdkEventKey* pEvent)
   {
     LOG<<"cGtkmmOpenGLView::on_key_press_event"<<std::endl;
-    switch (event->keyval) {
+    switch (pEvent->keyval) {
       #ifdef BUILD_DEBUG
       case GDK_Escape: {
         parent.OnMenuFileQuit();
@@ -500,6 +500,15 @@ namespace diesel
       case GDK_Page_Down: {
         parent.OnOpenGLViewScrollPageDown();
         return true;
+      }
+      case GDK_0: {
+        if (pEvent->state & GDK_CONTROL_MASK) {
+          // Reset the zoom
+          SetScale(1.0f);
+          return true;
+        }
+
+        break;
       }
     }
 
