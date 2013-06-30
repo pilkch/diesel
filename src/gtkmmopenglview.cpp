@@ -35,6 +35,7 @@ namespace diesel
     bIsWireframe(false),
     pageHeight(500),
     requiredHeight(12000),
+    columns(10),
     fScale(1.0f),
     fScrollPosition(0.0f),
     pContext(nullptr),
@@ -55,6 +56,8 @@ namespace diesel
 
     // Allow this widget to handle button press and pointer events
     add_events(Gdk::BUTTON_PRESS_MASK | Gdk::POINTER_MOTION_MASK);
+
+    CalculateNumberOfColumns();
   }
 
   cGtkmmOpenGLView::~cGtkmmOpenGLView()
@@ -92,6 +95,15 @@ namespace diesel
   void cGtkmmOpenGLView::SetScale(float _fScale)
   {
     fScale = _fScale;
+
+    CalculateNumberOfColumns();
+  }
+
+  void cGtkmmOpenGLView::CalculateNumberOfColumns()
+  {
+    const float fWidth = (resolution.width - (fThumbNailSpacing + fThumbNailSpacing)) / fScale;
+
+    columns = fWidth / (fThumbNailWidth + fThumbNailSpacing);
   }
 
   void cGtkmmOpenGLView::CreateVertexBufferObjectPhoto(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, size_t textureWidth, size_t textureHeight)
@@ -283,6 +295,8 @@ namespace diesel
     resolution.width = width;
     resolution.height = height;
     pContext->ResizeWindow(resolution);
+
+    CalculateNumberOfColumns();
   }
 
   void cGtkmmOpenGLView::DrawScene()
@@ -310,10 +324,6 @@ namespace diesel
 
       spitfire::math::cMat4 matScale;
       matScale.SetScale(fScale, fScale, 1.0f);
-
-      const float fWidth = resolution.width - (fThumbNailSpacing + fThumbNailSpacing);
-
-      const size_t columns = fWidth / (fThumbNailWidth + fThumbNailSpacing);
 
       // Draw the photos
       {

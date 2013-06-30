@@ -52,6 +52,8 @@ namespace diesel
     const GtkWidget* GetWidget() const;
     GtkWidget* GetWidget();
 
+    void CalculateNumberOfColumns();
+
     void CreateVertexBufferObjectPhoto(opengl::cStaticVertexBufferObject* pObject, size_t textureWidth, size_t textureHeight);
 
     virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr) override;
@@ -75,6 +77,8 @@ namespace diesel
 
     size_t pageHeight;
     size_t requiredHeight;
+
+    size_t columns;
 
     float fScale;
     float fScrollPosition;
