@@ -459,6 +459,7 @@ namespace diesel
   {
     LOG<<"cGtkmmOpenGLView::on_key_press_event"<<std::endl;
     switch (event->keyval) {
+      #ifdef BUILD_DEBUG
       case GDK_Escape: {
         parent.OnMenuFileQuit();
         return true;
@@ -467,6 +468,7 @@ namespace diesel
         bIsWireframe = !bIsWireframe;
         return true;
       }
+      #endif
       /*case GDK_Up:
       case GDK_Left:
         choice--;
@@ -483,6 +485,22 @@ namespace diesel
         entersig.emit("yo");
         cout << "YES!" << endl;
         return true;*/
+      case GDK_Home: {
+        parent.OnOpenGLViewScrollTop();
+        return true;
+      }
+      case GDK_End: {
+        parent.OnOpenGLViewScrollBottom();
+        return true;
+      }
+      case GDK_Page_Up: {
+        parent.OnOpenGLViewScrollPageUp();
+        return true;
+      }
+      case GDK_Page_Down: {
+        parent.OnOpenGLViewScrollPageDown();
+        return true;
+      }
     }
 
     return false;

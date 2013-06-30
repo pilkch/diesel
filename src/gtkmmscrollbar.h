@@ -22,8 +22,11 @@ namespace diesel
   public:
     explicit cGtkmmScrollBar(cGtkmmMainWindow& parent);
 
+    void SetRange(int64_t min, int64_t max);
     void SetStepAndPageSize(size_t step, size_t page);
 
+    void ScrollTop();
+    void ScrollBottom();
     void ScrollUp();
     void ScrollDown();
     void PageUp();
@@ -34,6 +37,8 @@ namespace diesel
 
     cGtkmmMainWindow& parent;
 
+    int64_t min;
+    int64_t max;
     size_t step;
     size_t page;
   };

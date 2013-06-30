@@ -209,11 +209,11 @@ namespace diesel
     // Set up the scroll bar
     scrollBar.set_orientation(Gtk::Orientation::ORIENTATION_VERTICAL);
 
+    scrollBar.SetRange(0, openglView.GetRequiredHeight());
+
     const size_t page = openglView.GetPageHeight();
     const size_t step = page / 5;
     scrollBar.SetStepAndPageSize(step, page);
-
-    scrollBar.set_range(0.0, openglView.GetRequiredHeight());
 
 
     show_all_children();
@@ -332,6 +332,26 @@ namespace diesel
   {
     float fValue = static_cast<float>(scrollBar.get_value());
     openglView.OnScrollBarScrolled(fValue);
+  }
+
+  void cGtkmmMainWindow::OnOpenGLViewScrollTop()
+  {
+    scrollBar.ScrollTop();
+  }
+
+  void cGtkmmMainWindow::OnOpenGLViewScrollBottom()
+  {
+    scrollBar.ScrollBottom();
+  }
+
+  void cGtkmmMainWindow::OnOpenGLViewScrollPageUp()
+  {
+    scrollBar.PageUp();
+  }
+
+  void cGtkmmMainWindow::OnOpenGLViewScrollPageDown()
+  {
+    scrollBar.PageDown();
   }
 
   void cGtkmmMainWindow::OnNewVersionFound(int iMajorVersion, int iMinorVersion, const string_t& sDownloadPage)
