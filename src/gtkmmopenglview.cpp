@@ -1,6 +1,7 @@
 // Standard headers
 #include <cassert>
 #include <iostream>
+#include <limits>
 
 // Gtk headers
 #include <gdk/gdkkeysyms-compat.h>
@@ -57,7 +58,7 @@ namespace diesel
     // Allow this widget to handle button press and pointer events
     add_events(Gdk::BUTTON_PRESS_MASK | Gdk::POINTER_MOTION_MASK);
 
-    CalculateNumberOfColumns();
+    UpdateColumnsPageHeightAndRequiredHeight();
   }
 
   cGtkmmOpenGLView::~cGtkmmOpenGLView()
@@ -96,14 +97,46 @@ namespace diesel
   {
     fScale = _fScale;
 
-    CalculateNumberOfColumns();
+    UpdateColumnsPageHeightAndRequiredHeight();
   }
 
-  void cGtkmmOpenGLView::CalculateNumberOfColumns()
+  void cGtkmmOpenGLView::UpdateColumnsPageHeightAndRequiredHeight()
   {
-    const float fWidth = (resolution.width - (fThumbNailSpacing + fThumbNailSpacing)) / fScale;
+    const float fWidth = (resolution.width - fThumbNailSpacing) / fScale;
 
-    columns = fWidth / (fThumbNailWidth + fThumbNailSpacing);
+    columns = max<size_t>(1, fWidth / (fThumbNailWidth + fThumbNailSpacing));
+
+    const size_t y = max<size_t>(1, photoNames.size() / columns);
+    const float fY = fThumbNailSpacing + (float(y) * (fThumbNailHeight + fThumbNailSpacing));
+
+    requiredHeight = fY;
+
+    pageHeight = resolution.height / fScale;
+  }
+
+  bool cGtkmmOpenGLView::GetPhotoAtPoint(size_t& index, const spitfire::math::cVec2& _point) const
+  {
+    const spitfire::math::cVec2 point = spitfire::math::cVec2(0.0f, fScrollPosition) + _point / fScale;
+
+    const size_t nPhotos = photoNames.size();
+    for (size_t i = 0; i < nPhotos; i++) {
+      const size_t x = i % columns;
+      const size_t y = i / columns;
+      const float fX = fThumbNailSpacing + (float(x) * (fThumbNailWidth + fThumbNailSpacing));
+      const float fY = fThumbNailSpacing + (float(y) * (fThumbNailHeight + fThumbNailSpacing));
+
+      if (
+        (point.x >= fX) && (point.x <= fX + fThumbNailWidth) &&
+        (point.y >= fY) && (point.y <= fY + fThumbNailHeight)
+      ) {
+        LOG<<"cGtkmmOpenGLView::GetPhotoAtPoint Clicked in "<<i<<std::endl;
+        index = i;
+        return true;
+      }
+    }
+
+    LOG<<"cGtkmmOpenGLView::GetPhotoAtPoint Clicked in blank space"<<std::endl;
+    return false;
   }
 
   void cGtkmmOpenGLView::CreateVertexBufferObjectPhoto(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, size_t textureWidth, size_t textureHeight)
@@ -290,13 +323,14 @@ namespace diesel
 
   void cGtkmmOpenGLView::ResizeWidget(size_t width, size_t height)
   {
-    pageHeight = height;
-
     resolution.width = width;
     resolution.height = height;
     pContext->ResizeWindow(resolution);
 
-    CalculateNumberOfColumns();
+    UpdateColumnsPageHeightAndRequiredHeight();
+
+    // Notify the parent that our view has changed
+    parent.OnOpenGLViewContentChanged();
   }
 
   void cGtkmmOpenGLView::DrawScene()
@@ -342,7 +376,7 @@ namespace diesel
           const size_t y = i / columns;
           const float fX = fThumbNailSpacing + (float(x) * (fThumbNailWidth + fThumbNailSpacing));
           const float fY = fThumbNailSpacing + (float(y) * (fThumbNailHeight + fThumbNailSpacing));
-          matModelView2D.SetTranslation(fX, fY, 0.0f);
+          matModelView2D.SetTranslation(fX, fY - fScrollPosition, 0.0f);
 
           pContext->SetShaderProjectionAndModelViewMatricesRenderMode2D(opengl::MODE2D_TYPE::Y_INCREASES_DOWN_SCREEN_KEEP_DIMENSIONS_AND_ASPECT_RATIO, matScale * matModelView2D);
 
@@ -401,7 +435,7 @@ namespace diesel
 
           // Set the position of the text
           spitfire::math::cMat4 matModelView2D;
-          matModelView2D.SetTranslation(0.0f, 0.0f, 0.0f);
+          matModelView2D.SetTranslation(0.0f, -fScrollPosition, 0.0f);
 
           pContext->BindFont(*pFont);
 
@@ -505,6 +539,7 @@ namespace diesel
         if (pEvent->state & GDK_CONTROL_MASK) {
           // Reset the zoom
           SetScale(1.0f);
+          parent.OnOpenGLViewContentChanged();
           return true;
         }
 
@@ -518,6 +553,16 @@ namespace diesel
   bool cGtkmmOpenGLView::OnMouseDown(int button, int x, int y)
   {
     LOG<<"cGtkmmOpenGLView::OnMouseDown"<<std::endl;
+
+    if (button == 1) {
+      size_t index = 0;
+      if (GetPhotoAtPoint(index, spitfire::math::cVec2(x, y))) {
+        LOG<<"cGtkmmOpenGLView::OnMouseDown item="<<index<<std::endl;
+
+      }
+      return true;
+    }
+
     return false;
   }
 

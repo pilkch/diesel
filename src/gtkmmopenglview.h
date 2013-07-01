@@ -52,7 +52,9 @@ namespace diesel
     const GtkWidget* GetWidget() const;
     GtkWidget* GetWidget();
 
-    void CalculateNumberOfColumns();
+    void UpdateColumnsPageHeightAndRequiredHeight();
+
+    bool GetPhotoAtPoint(size_t& index, const spitfire::math::cVec2& point) const;
 
     void CreateVertexBufferObjectPhoto(opengl::cStaticVertexBufferObject* pObject, size_t textureWidth, size_t textureHeight);
 
