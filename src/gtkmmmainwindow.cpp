@@ -16,9 +16,7 @@
 namespace diesel
 {
   cGtkmmMainWindow::cGtkmmMainWindow(int argc, char** argv) :
-    updateChecker(*this),
-    openglView(*this),
-    scrollBar(*this)
+    updateChecker(*this)
   {
     settings.Load();
 
@@ -171,23 +169,9 @@ namespace diesel
     // Controls
     buttonStopLoading.signal_clicked().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionStopLoading));
 
-    // OpenGL view event box
-    eventBoxOpenglView.add_events(Gdk::BUTTON_MOTION_MASK);
-    eventBoxOpenglView.add_events(Gdk::SCROLL_MASK);
-    eventBoxOpenglView.add_events(Gdk::POINTER_MOTION_MASK);
+    photoBrowser.Init(argc, argv);
 
-    eventBoxOpenglView.signal_button_press_event().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::event_box_button_press));
-    eventBoxOpenglView.signal_button_release_event().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::event_box_button_release));
-    eventBoxOpenglView.signal_scroll_event().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::event_box_scroll));
-    eventBoxOpenglView.signal_motion_notify_event().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::event_box_motion_notify));
-
-    eventBoxOpenglView.add(openglView);
-
-    // Add the OpenGL view and scroll bar
-    boxPhotoView.pack_start(eventBoxOpenglView, Gtk::PACK_EXPAND_WIDGET);
-    boxPhotoView.pack_start(scrollBar, Gtk::PACK_SHRINK);
-
-    boxControls.pack_start(boxPhotoView, Gtk::PACK_EXPAND_WIDGET);
+    boxControls.pack_start(photoBrowser.GetWidget(), Gtk::PACK_EXPAND_WIDGET);
 
     boxControlsAndToolbar.pack_start(boxControls, Gtk::PACK_EXPAND_WIDGET);
     boxControlsAndToolbar.pack_start(boxToolbar, Gtk::PACK_SHRINK);
@@ -201,15 +185,6 @@ namespace diesel
 
     // Add the box layout to the main window
     add(boxMainWindow);
-
-
-    openglView.Init(argc,  argv);
-
-
-    // Set up the scroll bar
-    scrollBar.set_orientation(Gtk::Orientation::ORIENTATION_VERTICAL);
-
-    OnOpenGLViewContentChanged();
 
 
     show_all_children();
@@ -274,91 +249,9 @@ namespace diesel
     LOG<<"cGtkmmMainWindow::on_key_press_event"<<std::endl;
 
     // Send the event to the active widget
-    if (openglView.is_focus()) return openglView.on_key_press_event(event);
+    if (photoBrowser.IsOpenGLViewFocus()) return photoBrowser.OnMainWindowKeyPressEvent(event);
 
     return false;
-  }
-
-  bool cGtkmmMainWindow::event_box_button_press(GdkEventButton* pEvent)
-  {
-    ASSERT(pEvent != nullptr);
-    return openglView.OnMouseDown(pEvent->button, pEvent->x, pEvent->y);
-  }
-
-  bool cGtkmmMainWindow::event_box_button_release(GdkEventButton* pEvent)
-  {
-    ASSERT(pEvent != nullptr);
-    return openglView.OnMouseRelease(pEvent->button, pEvent->x, pEvent->y);
-  }
-
-  bool cGtkmmMainWindow::event_box_scroll(GdkEventScroll* pEvent)
-  {
-    ASSERT(pEvent != nullptr);
-
-    if ((pEvent->state & GDK_CONTROL_MASK) != 0) {
-      // Zooming
-      if (pEvent->direction == GDK_SCROLL_UP) {
-        openglView.SetScale(min(20.0f, openglView.GetScale() + 0.1f));
-        OnOpenGLViewContentChanged();
-        return true;
-      } else if (pEvent->direction == GDK_SCROLL_DOWN) {
-        openglView.SetScale(max(1.0f, openglView.GetScale() - 0.1f));
-        OnOpenGLViewContentChanged();
-        return true;
-      }
-    } else {
-      // Scrolling
-      if (pEvent->direction == GDK_SCROLL_UP) {
-        scrollBar.ScrollUp();
-        return true;
-      } else if (pEvent->direction == GDK_SCROLL_DOWN) {
-        scrollBar.ScrollDown();
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  bool cGtkmmMainWindow::event_box_motion_notify(GdkEventMotion* pEvent)
-  {
-    ASSERT(pEvent != nullptr);
-    return openglView.OnMouseMove(pEvent->x, pEvent->y);
-  }
-
-  void cGtkmmMainWindow::OnScrollBarScrolled(const cGtkmmScrollBar& widget)
-  {
-    float fValue = static_cast<float>(scrollBar.get_value());
-    openglView.OnScrollBarScrolled(fValue);
-  }
-
-  void cGtkmmMainWindow::OnOpenGLViewContentChanged()
-  {
-    scrollBar.SetRange(0, openglView.GetRequiredHeight());
-
-    const size_t page = openglView.GetPageHeight();
-    const size_t step = page / 5;
-    scrollBar.SetStepAndPageSize(step, page);
-  }
-
-  void cGtkmmMainWindow::OnOpenGLViewScrollTop()
-  {
-    scrollBar.ScrollTop();
-  }
-
-  void cGtkmmMainWindow::OnOpenGLViewScrollBottom()
-  {
-    scrollBar.ScrollBottom();
-  }
-
-  void cGtkmmMainWindow::OnOpenGLViewScrollPageUp()
-  {
-    scrollBar.PageUp();
-  }
-
-  void cGtkmmMainWindow::OnOpenGLViewScrollPageDown()
-  {
-    scrollBar.PageDown();
   }
 
   void cGtkmmMainWindow::OnNewVersionFound(int iMajorVersion, int iMinorVersion, const string_t& sDownloadPage)

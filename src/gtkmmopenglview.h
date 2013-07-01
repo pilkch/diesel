@@ -17,16 +17,19 @@
 #include <libopenglmm/cFont.h>
 #include <libopenglmm/cSystem.h>
 
+// Diesel headers
+#include "diesel.h"
+
 namespace diesel
 {
-  class cGtkmmMainWindow;
+  class cGtkmmPhotoBrowser;
 
   class cGtkmmOpenGLView : public Gtk::DrawingArea
   {
   public:
-    friend class cGtkmmMainWindow;
+    friend class cGtkmmPhotoBrowser;
 
-    explicit cGtkmmOpenGLView(cGtkmmMainWindow& parent);
+    explicit cGtkmmOpenGLView(cGtkmmPhotoBrowser& parent);
     ~cGtkmmOpenGLView();
 
     void Init(int argc, char* argv[]);
@@ -40,7 +43,7 @@ namespace diesel
     void OnScrollBarScrolled(float fValue);
 
   protected:
-    virtual bool on_key_press_event(GdkEventKey* event) override;
+    bool OnKeyPressEvent(GdkEventKey* event);
 
     bool OnMouseDown(int button, int x, int y);
     bool OnMouseRelease(int button, int x, int y);
@@ -73,7 +76,7 @@ namespace diesel
     static gboolean configure_cb(GtkWidget* pWidget, GdkEventConfigure* event, gpointer pUserData);
     static gboolean idle_cb(gpointer pUserData);
 
-    cGtkmmMainWindow& parent;
+    cGtkmmPhotoBrowser& parent;
 
     bool bIsWireframe;
 

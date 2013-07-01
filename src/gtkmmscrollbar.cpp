@@ -8,12 +8,12 @@
 #include <spitfire/spitfire.h>
 
 // Diesel headers
-#include "gtkmmmainwindow.h"
+#include "gtkmmphotobrowser.h"
 #include "gtkmmscrollbar.h"
 
 namespace diesel
 {
-  cGtkmmScrollBar::cGtkmmScrollBar(cGtkmmMainWindow& _parent) :
+  cGtkmmScrollBar::cGtkmmScrollBar(cGtkmmPhotoBrowser& _parent) :
     parent(_parent),
     min(0),
     max(10),

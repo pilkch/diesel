@@ -9,18 +9,16 @@
 
 // Diesel headers
 #include "diesel.h"
-#include "gtkmmopenglview.h"
-#include "gtkmmscrollbar.h"
 #include "settings.h"
 
 namespace diesel
 {
-  class cGtkmmMainWindow;
+  class cGtkmmPhotoBrowser;
 
   class cGtkmmScrollBar : public Gtk::Scrollbar
   {
   public:
-    explicit cGtkmmScrollBar(cGtkmmMainWindow& parent);
+    explicit cGtkmmScrollBar(cGtkmmPhotoBrowser& parent);
 
     void SetRange(int64_t min, int64_t max);
     void SetStepAndPageSize(size_t step, size_t page);
@@ -35,7 +33,7 @@ namespace diesel
   private:
     virtual void on_value_changed() override;
 
-    cGtkmmMainWindow& parent;
+    cGtkmmPhotoBrowser& parent;
 
     int64_t min;
     int64_t max;

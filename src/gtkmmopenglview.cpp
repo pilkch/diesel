@@ -20,8 +20,8 @@
 #include <spitfire/storage/filesystem.h>
 
 // Diesel headers
-#include "gtkmmmainwindow.h"
 #include "gtkmmopenglview.h"
+#include "gtkmmphotobrowser.h"
 
 namespace diesel
 {
@@ -31,7 +31,7 @@ namespace diesel
 
   // ** cGtkmmOpenGLView
 
-  cGtkmmOpenGLView::cGtkmmOpenGLView(cGtkmmMainWindow& _parent) :
+  cGtkmmOpenGLView::cGtkmmOpenGLView(cGtkmmPhotoBrowser& _parent) :
     parent(_parent),
     bIsWireframe(false),
     pageHeight(500),
@@ -489,15 +489,11 @@ namespace diesel
     return TRUE;
   }
 
-  bool cGtkmmOpenGLView::on_key_press_event(GdkEventKey* pEvent)
+  bool cGtkmmOpenGLView::OnKeyPressEvent(GdkEventKey* pEvent)
   {
-    LOG<<"cGtkmmOpenGLView::on_key_press_event"<<std::endl;
+    LOG<<"cGtkmmOpenGLView::OnKeyPressEvent"<<std::endl;
     switch (pEvent->keyval) {
       #ifdef BUILD_DEBUG
-      case GDK_Escape: {
-        parent.OnMenuFileQuit();
-        return true;
-      }
       case GDK_w: {
         bIsWireframe = !bIsWireframe;
         return true;
