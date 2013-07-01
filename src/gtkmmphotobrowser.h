@@ -11,12 +11,9 @@
 
 namespace diesel
 {
-  class cGtkmmMainWindow;
-
   class cGtkmmPhotoBrowser
   {
   public:
-    friend class cGtkmmMainWindow;
     friend class cGtkmmOpenGLView;
     friend class cGtkmmScrollBar;
 
@@ -40,10 +37,8 @@ namespace diesel
     void OnOpenGLViewScrollPageUp();
     void OnOpenGLViewScrollPageDown();
 
-    // Events caught by the main window
-    bool OnMainWindowKeyPressEvent(GdkEventKey* event);
-
   private:
+    bool event_box_key_press(GdkEventKey* pEvent);
     bool event_box_button_press(GdkEventButton* pEvent);
     bool event_box_button_release(GdkEventButton* pEvent);
     bool event_box_scroll(GdkEventScroll* pEvent);

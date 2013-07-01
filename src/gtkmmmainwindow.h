@@ -29,9 +29,6 @@ namespace diesel
     void OnMenuFileQuit();
 
   private:
-    // TODO: Can the event box catch this too?
-    virtual bool on_key_press_event(GdkEventKey* event) override;
-
     virtual void OnNewVersionFound(int iMajorVersion, int iMinorVersion, const string_t& sDownloadPage) override;
 
     void OnMenuFileBrowseFiles();

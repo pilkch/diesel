@@ -244,16 +244,6 @@ namespace diesel
   {
   }
 
-  bool cGtkmmMainWindow::on_key_press_event(GdkEventKey* event)
-  {
-    LOG<<"cGtkmmMainWindow::on_key_press_event"<<std::endl;
-
-    // Send the event to the active widget
-    if (photoBrowser.IsOpenGLViewFocus()) return photoBrowser.OnMainWindowKeyPressEvent(event);
-
-    return false;
-  }
-
   void cGtkmmMainWindow::OnNewVersionFound(int iMajorVersion, int iMinorVersion, const string_t& sDownloadPage)
   {
     LOG<<"cGtkmmMainWindow::OnNewVersionFound "<<iMajorVersion<<"."<<iMinorVersion<<", "<<sDownloadPage<<std::endl;

@@ -28,6 +28,7 @@ namespace diesel
     eventBoxOpenglView.add_events(Gdk::SCROLL_MASK);
     eventBoxOpenglView.add_events(Gdk::POINTER_MOTION_MASK);
 
+    eventBoxOpenglView.signal_key_press_event().connect(sigc::mem_fun(*this, &cGtkmmPhotoBrowser::event_box_key_press));
     eventBoxOpenglView.signal_button_press_event().connect(sigc::mem_fun(*this, &cGtkmmPhotoBrowser::event_box_button_press));
     eventBoxOpenglView.signal_button_release_event().connect(sigc::mem_fun(*this, &cGtkmmPhotoBrowser::event_box_button_release));
     eventBoxOpenglView.signal_scroll_event().connect(sigc::mem_fun(*this, &cGtkmmPhotoBrowser::event_box_scroll));
@@ -58,17 +59,10 @@ namespace diesel
     return boxPhotoView;
   }
 
-  bool cGtkmmPhotoBrowser::IsOpenGLViewFocus() const
+  bool cGtkmmPhotoBrowser::event_box_key_press(GdkEventKey* pEvent)
   {
-    return openglView.is_focus();
-  }
-
-  bool cGtkmmPhotoBrowser::OnMainWindowKeyPressEvent(GdkEventKey* event)
-  {
-    LOG<<"cGtkmmPhotoBrowser::OnMainWindowKeyPressEvent"<<std::endl;
-
-    ASSERT(openglView.is_focus());
-    return openglView.OnKeyPressEvent(event);
+    ASSERT(pEvent != nullptr);
+    return openglView.OnKeyPressEvent(pEvent);
   }
 
   bool cGtkmmPhotoBrowser::event_box_button_press(GdkEventButton* pEvent)
