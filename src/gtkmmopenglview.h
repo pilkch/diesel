@@ -22,6 +22,23 @@
 
 namespace diesel
 {
+  class cPhotoEntry
+  {
+  public:
+    cPhotoEntry();
+
+    enum class STATE {
+      NOT_FOUND,
+      FOLDER,
+      LOADING,
+      LOADED
+    };
+
+    string_t sFilePath;
+    STATE state;
+    opengl::cTexture* pTexture;
+  };
+
   class cGtkmmPhotoBrowser;
 
   class cGtkmmOpenGLView : public Gtk::DrawingArea
@@ -59,7 +76,10 @@ namespace diesel
 
     bool GetPhotoAtPoint(size_t& index, const spitfire::math::cVec2& point) const;
 
-    void CreateVertexBufferObjectPhoto(opengl::cStaticVertexBufferObject* pObject, size_t textureWidth, size_t textureHeight);
+    void CreateVertexBufferObjectSquare(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight);
+    void CreateVertexBufferObjectRect(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight, size_t textureWidth, size_t textureHeight);
+    void CreateVertexBufferObjectIcon();
+    void CreateVertexBufferObjectPhoto();
 
     virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr) override;
 
@@ -94,13 +114,21 @@ namespace diesel
 
     opengl::cContext* pContext;
 
-    std::vector<opengl::cTexture*> photoTextures;
+    opengl::cTexture* pTextureMissing;
+    opengl::cTexture* pTextureFolder;
+    opengl::cTexture* pTextureLoading;
+
     opengl::cShader* pShaderPhoto;
+    opengl::cShader* pShaderIcon;
+
     opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectPhoto;
+    opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectIcon;
 
     // Text
     opengl::cFont* pFont;
-    std::vector<string_t> photoNames;
+
+    // Photos
+    std::vector<cPhotoEntry*> photos;
   };
 }
 

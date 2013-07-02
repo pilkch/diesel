@@ -29,6 +29,15 @@ namespace diesel
   const float fThumbNailHeight = 100.0f;
   const float fThumbNailSpacing = 20.0f;
 
+  // ** cPhotoEntry
+
+  cPhotoEntry::cPhotoEntry() :
+    state(STATE::LOADING),
+    pTexture(nullptr)
+  {
+  }
+
+
   // ** cGtkmmOpenGLView
 
   cGtkmmOpenGLView::cGtkmmOpenGLView(cGtkmmPhotoBrowser& _parent) :
@@ -40,8 +49,13 @@ namespace diesel
     fScale(1.0f),
     fScrollPosition(0.0f),
     pContext(nullptr),
+    pTextureMissing(nullptr),
+    pTextureFolder(nullptr),
+    pTextureLoading(nullptr),
     pShaderPhoto(nullptr),
+    pShaderIcon(nullptr),
     pStaticVertexBufferObjectPhoto(nullptr),
+    pStaticVertexBufferObjectIcon(nullptr),
     pFont(nullptr)
   {
     // Set our resolution
@@ -106,7 +120,7 @@ namespace diesel
 
     columns = max<size_t>(1, fWidth / (fThumbNailWidth + fThumbNailSpacing));
 
-    const size_t y = max<size_t>(1, photoNames.size() / columns);
+    const size_t y = max<size_t>(1, photos.size() / columns);
     const float fY = fThumbNailSpacing + (float(y) * (fThumbNailHeight + fThumbNailSpacing));
 
     requiredHeight = fY;
@@ -118,7 +132,7 @@ namespace diesel
   {
     const spitfire::math::cVec2 point = spitfire::math::cVec2(0.0f, fScrollPosition) + _point / fScale;
 
-    const size_t nPhotos = photoNames.size();
+    const size_t nPhotos = photos.size();
     for (size_t i = 0; i < nPhotos; i++) {
       const size_t x = i % columns;
       const size_t y = i / columns;
@@ -139,7 +153,31 @@ namespace diesel
     return false;
   }
 
-  void cGtkmmOpenGLView::CreateVertexBufferObjectPhoto(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, size_t textureWidth, size_t textureHeight)
+  void cGtkmmOpenGLView::CreateVertexBufferObjectSquare(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight)
+  {
+    ASSERT(pStaticVertexBufferObject != nullptr);
+
+    opengl::cGeometryDataPtr pGeometryDataPtr = opengl::CreateGeometryData();
+
+    const spitfire::math::cVec2 vMin(0.0f, 0.0f);
+    const spitfire::math::cVec2 vMax(fWidth, fHeight);
+
+    opengl::cGeometryBuilder_v2_t2 builder(*pGeometryDataPtr);
+
+    // Front facing rectangle
+    builder.PushBack(spitfire::math::cVec2(vMax.x, vMin.y), spitfire::math::cVec2(1.0f, 0.0f));
+    builder.PushBack(spitfire::math::cVec2(vMin.x, vMax.y), spitfire::math::cVec2(0.0f, 1.0f));
+    builder.PushBack(spitfire::math::cVec2(vMax.x, vMax.y), spitfire::math::cVec2(1.0f, 1.0f));
+    builder.PushBack(spitfire::math::cVec2(vMin.x, vMin.y), spitfire::math::cVec2(0.0f, 0.0f));
+    builder.PushBack(spitfire::math::cVec2(vMin.x, vMax.y), spitfire::math::cVec2(0.0f, 1.0f));
+    builder.PushBack(spitfire::math::cVec2(vMax.x, vMin.y), spitfire::math::cVec2(1.0f, 0.0f));
+
+    pStaticVertexBufferObject->SetData(pGeometryDataPtr);
+
+    pStaticVertexBufferObject->Compile2D(system);
+  }
+
+  void cGtkmmOpenGLView::CreateVertexBufferObjectRect(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight, size_t textureWidth, size_t textureHeight)
   {
     ASSERT(pStaticVertexBufferObject != nullptr);
 
@@ -148,10 +186,6 @@ namespace diesel
     const float fTextureWidth = textureWidth;
     const float fTextureHeight = textureHeight;
 
-    const float fRatio = fTextureWidth / fTextureHeight;
-
-    const float_t fWidth = fThumbNailWidth;
-    const float_t fHeight = fWidth * (1.0f / fRatio);
     const spitfire::math::cVec2 vMin(0.0f, 0.0f);
     const spitfire::math::cVec2 vMax(fWidth, fHeight);
 
@@ -170,10 +204,40 @@ namespace diesel
     pStaticVertexBufferObject->Compile2D(system);
   }
 
+  void cGtkmmOpenGLView::CreateVertexBufferObjectIcon()
+  {
+    pStaticVertexBufferObjectIcon = pContext->CreateStaticVertexBufferObject();
+    ASSERT(pStaticVertexBufferObjectIcon != nullptr);
+    const float fWidthAndHeight = min(fThumbNailWidth, fThumbNailHeight);
+    CreateVertexBufferObjectSquare(pStaticVertexBufferObjectIcon, fWidthAndHeight, fWidthAndHeight);
+  }
+
+  void cGtkmmOpenGLView::CreateVertexBufferObjectPhoto()
+  {
+    // TODO: We need to cache a few sizes, every time we encounter a newly sized photo we need to create a new vertex buffer object
+    pStaticVertexBufferObjectPhoto = pContext->CreateStaticVertexBufferObject();
+    ASSERT(pStaticVertexBufferObjectPhoto != nullptr);
+    const size_t textureWidth = 3040;
+    const size_t textureHeight = 2024;
+    const float fRatio = float(textureWidth) / float(textureHeight);
+    const float fWidth = fThumbNailWidth;
+    const float fHeight = fWidth * (1.0f / fRatio);
+    CreateVertexBufferObjectRect(pStaticVertexBufferObjectPhoto, fWidth, fHeight, textureWidth, textureHeight);
+  }
+
   void cGtkmmOpenGLView::CreateResources()
   {
     // Return if we have already created our resources
     if (pShaderPhoto != nullptr) {
+      // Recreate the vertex buffer object
+      if (pStaticVertexBufferObjectIcon != nullptr) {
+        pContext->DestroyStaticVertexBufferObject(pStaticVertexBufferObjectIcon);
+        pStaticVertexBufferObjectIcon = nullptr;
+      }
+
+      // Create our vertex buffer object
+      CreateVertexBufferObjectIcon();
+
       // Recreate the vertex buffer object
       if (pStaticVertexBufferObjectPhoto != nullptr) {
         pContext->DestroyStaticVertexBufferObject(pStaticVertexBufferObjectPhoto);
@@ -181,9 +245,7 @@ namespace diesel
       }
 
       // Create our vertex buffer object
-      pStaticVertexBufferObjectPhoto = pContext->CreateStaticVertexBufferObject();
-      ASSERT(pStaticVertexBufferObjectPhoto != nullptr);
-      CreateVertexBufferObjectPhoto(pStaticVertexBufferObjectPhoto, 3040, 2024);
+      CreateVertexBufferObjectPhoto();
 
       return;
     }
@@ -192,36 +254,75 @@ namespace diesel
 
     // Create our textures
     for (spitfire::filesystem::cFolderIterator iter("/home/chris/Pictures/20091102 Mount Kosciuszko"); iter.IsValid(); iter.Next()) {
-      if (photoTextures.size() > 16) break;
+      if (photos.size() > 16) break;
 
       if (iter.IsFile()) {
-        opengl::cTexture* pTexture = pContext->CreateTexture(iter.GetFullPath());
-        ASSERT(pTexture != nullptr);
-        photoTextures.push_back(pTexture);
-        photoNames.push_back(iter.GetFileOrFolder());
+        cPhotoEntry* pEntry = new cPhotoEntry;
+        pEntry->state = cPhotoEntry::STATE::LOADING;
+        if (photos.size() < 4) pEntry->state = cPhotoEntry::STATE::NOT_FOUND;
+        else if (photos.size() < 8) pEntry->state = cPhotoEntry::STATE::FOLDER;
+        else if (photos.size() < 12) {
+          opengl::cTexture* pTexture = pContext->CreateTexture(iter.GetFullPath());
+          ASSERT(pTexture != nullptr);
+          pEntry->state = cPhotoEntry::STATE::LOADED;
+          pEntry->pTexture = pTexture;
+        }
+
+        pEntry->sFilePath = iter.GetFullPath();
+        photos.push_back(pEntry);
       }
     }
 
     // Create our vertex buffer object
-    pStaticVertexBufferObjectPhoto = pContext->CreateStaticVertexBufferObject();
-    ASSERT(pStaticVertexBufferObjectPhoto != nullptr);
-    CreateVertexBufferObjectPhoto(pStaticVertexBufferObjectPhoto, 3040, 2024);
+    CreateVertexBufferObjectIcon();
+
+    // Create our vertex buffer object
+    CreateVertexBufferObjectPhoto();
 
     // Create our shader
-    pShaderPhoto = pContext->CreateShader(TEXT("data/shaders/passthrough.vert"), TEXT("data/shaders/passthrough.frag"));
+    pShaderPhoto = pContext->CreateShader(TEXT("data/shaders/passthrough.vert"), TEXT("data/shaders/passthrough_recttexture.frag"));
     ASSERT(pShaderPhoto != nullptr);
+
+    // Create our shader
+    pShaderIcon = pContext->CreateShader(TEXT("data/shaders/passthrough.vert"), TEXT("data/shaders/passthrough_squaretexture_alphamask.frag"));
+    ASSERT(pShaderIcon != nullptr);
 
     // Create our font
     pFont = pContext->CreateFont(TEXT("data/fonts/pricedown.ttf"), 32, TEXT("data/shaders/font.vert"), TEXT("data/shaders/font.frag"));
     assert(pFont != nullptr);
     assert(pFont->IsValid());
+
+    pTextureMissing = pContext->CreateTexture("data/textures/icon_question_mark.png");
+    ASSERT(pTextureMissing != nullptr);
+    pTextureFolder = pContext->CreateTexture("data/textures/icon_folder.png");
+    ASSERT(pTextureFolder != nullptr);
+    pTextureLoading = pContext->CreateTexture("data/textures/icon_stopwatch.png");
+    ASSERT(pTextureLoading != nullptr);
   }
 
   void cGtkmmOpenGLView::DestroyResources()
   {
+    if (pTextureLoading != nullptr) {
+      pContext->DestroyTexture(pTextureLoading);
+      pTextureLoading = nullptr;
+    }
+    if (pTextureFolder != nullptr) {
+      pContext->DestroyTexture(pTextureFolder);
+      pTextureFolder = nullptr;
+    }
+    if (pTextureMissing != nullptr) {
+      pContext->DestroyTexture(pTextureMissing);
+      pTextureMissing = nullptr;
+    }
+
     if (pFont != nullptr) {
       pContext->DestroyFont(pFont);
       pFont = nullptr;
+    }
+
+    if (pStaticVertexBufferObjectIcon != nullptr) {
+      pContext->DestroyStaticVertexBufferObject(pStaticVertexBufferObjectIcon);
+      pStaticVertexBufferObjectIcon = nullptr;
     }
 
     if (pStaticVertexBufferObjectPhoto != nullptr) {
@@ -229,19 +330,25 @@ namespace diesel
       pStaticVertexBufferObjectPhoto = nullptr;
     }
 
+    if (pShaderIcon != nullptr) {
+      pContext->DestroyShader(pShaderIcon);
+      pShaderIcon = nullptr;
+    }
+
     if (pShaderPhoto != nullptr) {
       pContext->DestroyShader(pShaderPhoto);
       pShaderPhoto = nullptr;
     }
 
-    const size_t n = photoTextures.size();
+    const size_t n = photos.size();
     for (size_t i = 0; i < n; i++) {
-      opengl::cTexture* pTexture = photoTextures[i];
+      opengl::cTexture* pTexture = photos[i]->pTexture;
       if (pTexture != nullptr) pContext->DestroyTexture(pTexture);
+
+      spitfire::SAFE_DELETE(photos[i]);
     }
 
-    photoTextures.clear();
-    photoNames.clear();
+    photos.clear();
   }
 
   void cGtkmmOpenGLView::Init(int argc, char* argv[])
@@ -340,9 +447,13 @@ namespace diesel
 
     ASSERT(pStaticVertexBufferObjectPhoto != nullptr);
     ASSERT(pStaticVertexBufferObjectPhoto->IsCompiled());
+    ASSERT(pStaticVertexBufferObjectIcon != nullptr);
+    ASSERT(pStaticVertexBufferObjectIcon->IsCompiled());
 
     ASSERT(pShaderPhoto != nullptr);
     ASSERT(pShaderPhoto->IsCompiledProgram());
+    ASSERT(pShaderIcon != nullptr);
+    ASSERT(pShaderIcon->IsCompiledProgram());
 
     pContext->SetClearColour(spitfire::math::cColour(0.0f, 0.0f, 0.0f, 1.0f));
 
@@ -361,33 +472,69 @@ namespace diesel
 
       // Draw the photos
       {
-        pContext->BindStaticVertexBufferObject2D(*pStaticVertexBufferObjectPhoto);
-
-
-        const size_t nPhotos = photoTextures.size();
+        const size_t nPhotos = photos.size();
         for (size_t i = 0; i < nPhotos; i++) {
-          opengl::cTexture* pTexture = photoTextures[i];
+          if (photos[i]->pTexture != nullptr) {
+            pContext->BindStaticVertexBufferObject2D(*pStaticVertexBufferObjectPhoto);
 
-          pContext->BindTexture(0, *pTexture);
+            opengl::cTexture* pTexture = photos[i]->pTexture;
 
-          pContext->BindShader(*pShaderPhoto);
+            pContext->BindTexture(0, *pTexture);
 
-          const size_t x = i % columns;
-          const size_t y = i / columns;
-          const float fX = fThumbNailSpacing + (float(x) * (fThumbNailWidth + fThumbNailSpacing));
-          const float fY = fThumbNailSpacing + (float(y) * (fThumbNailHeight + fThumbNailSpacing));
-          matModelView2D.SetTranslation(fX, fY - fScrollPosition, 0.0f);
+            pContext->BindShader(*pShaderPhoto);
 
-          pContext->SetShaderProjectionAndModelViewMatricesRenderMode2D(opengl::MODE2D_TYPE::Y_INCREASES_DOWN_SCREEN_KEEP_DIMENSIONS_AND_ASPECT_RATIO, matScale * matModelView2D);
+            const size_t x = i % columns;
+            const size_t y = i / columns;
+            const float fX = fThumbNailSpacing + (float(x) * (fThumbNailWidth + fThumbNailSpacing));
+            const float fY = fThumbNailSpacing + (float(y) * (fThumbNailHeight + fThumbNailSpacing));
+            matModelView2D.SetTranslation(fX, fY - fScrollPosition, 0.0f);
 
-          pContext->DrawStaticVertexBufferObjectTriangles2D(*pStaticVertexBufferObjectPhoto);
+            pContext->SetShaderProjectionAndModelViewMatricesRenderMode2D(opengl::MODE2D_TYPE::Y_INCREASES_DOWN_SCREEN_KEEP_DIMENSIONS_AND_ASPECT_RATIO, matScale * matModelView2D);
 
-          pContext->UnBindShader(*pShaderPhoto);
+            pContext->DrawStaticVertexBufferObjectTriangles2D(*pStaticVertexBufferObjectPhoto);
 
-          pContext->UnBindTexture(0, *pTexture);
+            pContext->UnBindShader(*pShaderPhoto);
+
+            pContext->UnBindTexture(0, *pTexture);
+
+            pContext->UnBindStaticVertexBufferObject2D(*pStaticVertexBufferObjectPhoto);
+          } else {
+            pContext->BindStaticVertexBufferObject2D(*pStaticVertexBufferObjectIcon);
+
+            opengl::cTexture* pTexture = pTextureMissing;
+
+            switch (photos[i]->state) {
+              case cPhotoEntry::STATE::FOLDER: {
+                pTexture = pTextureFolder;
+                break;
+              }
+              case cPhotoEntry::STATE::LOADING: {
+                pTexture = pTextureLoading;
+                break;
+              }
+            };
+
+            pContext->BindTexture(0, *pTexture);
+
+            pContext->BindShader(*pShaderIcon);
+
+            const size_t x = i % columns;
+            const size_t y = i / columns;
+            const float fX = fThumbNailSpacing + (float(x) * (fThumbNailWidth + fThumbNailSpacing));
+            const float fY = fThumbNailSpacing + (float(y) * (fThumbNailHeight + fThumbNailSpacing));
+            matModelView2D.SetTranslation(fX, fY - fScrollPosition, 0.0f);
+
+            pContext->SetShaderProjectionAndModelViewMatricesRenderMode2D(opengl::MODE2D_TYPE::Y_INCREASES_DOWN_SCREEN_KEEP_DIMENSIONS_AND_ASPECT_RATIO, matScale * matModelView2D);
+
+            pContext->DrawStaticVertexBufferObjectTriangles2D(*pStaticVertexBufferObjectIcon);
+
+            pContext->UnBindShader(*pShaderIcon);
+
+            pContext->UnBindTexture(0, *pTexture);
+
+            pContext->UnBindStaticVertexBufferObject2D(*pStaticVertexBufferObjectIcon);
+          }
         }
-
-        pContext->UnBindStaticVertexBufferObject2D(*pStaticVertexBufferObjectPhoto);
       }
 
       // Draw the filenames for the photos
@@ -405,7 +552,7 @@ namespace diesel
 
         opengl::cGeometryBuilder_v2_c4_t2 builderText(*pTextGeometryDataPtr);
 
-        const size_t n = photoNames.size();
+        const size_t n = photos.size();
         for (size_t i = 0; i < n; i++) {
           const size_t x = i % columns;
           const size_t y = i / columns;
@@ -418,7 +565,7 @@ namespace diesel
 
           // Create the text for this photo
           const float fRotationDegrees = 0.0f;
-          pFont->PushBack(builderText, photoNames[i], colour, spitfire::math::cVec2(fNameX, fNameY), fRotationDegrees, scale);
+          pFont->PushBack(builderText, spitfire::filesystem::GetFile(photos[i]->sFilePath), colour, spitfire::math::cVec2(fNameX, fNameY), fRotationDegrees, scale);
         }
 
 
