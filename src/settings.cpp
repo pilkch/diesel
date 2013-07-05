@@ -22,7 +22,7 @@ namespace diesel
 {
   void cSettings::Load()
   {
-    document.Save();
+    document.Load();
   }
 
   void cSettings::Save()
