@@ -421,7 +421,7 @@ namespace diesel
       LOG<<"cGtkmmOpenGLView::InitOpenGL gdk_gl_config_new_by_mode FAILED for double buffered rendering"<<std::endl;
       LOG<<"cGtkmmOpenGLView::InitOpenGL Trying single buffered rendering"<<std::endl;
 
-      /* Try single-buffered visual */
+      // Try single-buffered visual
       flags = GdkGLConfigMode(GDK_GL_MODE_RGBA | GDK_GL_MODE_DEPTH);
       pConfig = gdk_gl_config_new_by_mode(flags);
       if (pConfig == nullptr) LOG<<"cGtkmmOpenGLView::InitOpenGL gdk_gl_config_new_by_mode FAILED for single buffered rendering"<<std::endl;
@@ -461,9 +461,6 @@ namespace diesel
 
     const bool bSwap = true;
     gtk_widget_end_gl(pWidget, bSwap);
-
-    /* Delimits the end of the OpenGL execution. */
-    //gdk_gl_drawable_gl_end(gl_drawable);
 
     return TRUE;
   }
@@ -705,7 +702,7 @@ namespace diesel
   {
     //LOG<<"cGtkmmOpenGLView::idle_cb"<<std::endl;
 
-    /* update control data/params  in this function if needed */
+    // Update control data/params  in this function if needed
     GtkWidget* pWidget = GTK_WIDGET(pUserData);
 
     // Force a redraw
