@@ -783,6 +783,9 @@ namespace diesel
         if (!bKeyControl && !bKeyShift) {
           // Select only the photo we clicked on
           for (size_t i = 0; i < n; i++) photos[i]->bIsSelected = (i == index);
+        } else if (bKeyControl && !bKeyShift) {
+          // Toggle the selection of the photo we clicked on
+          photos[index]->bIsSelected = !photos[index]->bIsSelected;
         }
       } else if (!bKeyControl && !bKeyShift) {
         // Clear the selection
