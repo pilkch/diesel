@@ -6,7 +6,7 @@
 // Gtk headers
 #include <gdk/gdkkeysyms-compat.h>
 
-// Cairo headers
+// Cairomm headers
 #include <cairomm/context.h>
 
 // libopenglmm headers
@@ -33,10 +33,10 @@ namespace diesel
 
   cPhotoEntry::cPhotoEntry() :
     state(STATE::LOADING),
-    pTexture(nullptr)
+    pTexture(nullptr),
+    bIsSelected(false)
   {
   }
-
 
   // ** cGtkmmOpenGLView
 
@@ -52,11 +52,14 @@ namespace diesel
     pTextureMissing(nullptr),
     pTextureFolder(nullptr),
     pTextureLoading(nullptr),
+    pShaderSelectionRectangle(nullptr),
     pShaderPhoto(nullptr),
     pShaderIcon(nullptr),
+    pStaticVertexBufferObjectSelectionRectangle(nullptr),
     pStaticVertexBufferObjectPhoto(nullptr),
     pStaticVertexBufferObjectIcon(nullptr),
-    pFont(nullptr)
+    pFont(nullptr),
+    colourSelected(1.0f, 1.0f, 1.0f)
   {
     // Set our resolution
     resolution.width = 500;
@@ -90,6 +93,11 @@ namespace diesel
   GtkWidget* cGtkmmOpenGLView::GetWidget()
   {
     return Gtk::Widget::gobj();
+  }
+
+  void cGtkmmOpenGLView::SetSelectionColour(const spitfire::math::cColour& colour)
+  {
+    colourSelected = colour;
   }
 
   size_t cGtkmmOpenGLView::GetPageHeight() const
@@ -151,6 +159,30 @@ namespace diesel
 
     LOG<<"cGtkmmOpenGLView::GetPhotoAtPoint Clicked in blank space"<<std::endl;
     return false;
+  }
+
+  void cGtkmmOpenGLView::CreateVertexBufferObjectSelectionRectangle(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight)
+  {
+    ASSERT(pStaticVertexBufferObject != nullptr);
+
+    opengl::cGeometryDataPtr pGeometryDataPtr = opengl::CreateGeometryData();
+
+    const spitfire::math::cVec2 vMin(0.0f, 0.0f);
+    const spitfire::math::cVec2 vMax(fWidth, fHeight);
+
+    opengl::cGeometryBuilder_v2 builder(*pGeometryDataPtr);
+
+    // Front facing rectangle
+    builder.PushBack(spitfire::math::cVec2(vMax.x, vMin.y));
+    builder.PushBack(spitfire::math::cVec2(vMin.x, vMax.y));
+    builder.PushBack(spitfire::math::cVec2(vMax.x, vMax.y));
+    builder.PushBack(spitfire::math::cVec2(vMin.x, vMin.y));
+    builder.PushBack(spitfire::math::cVec2(vMin.x, vMax.y));
+    builder.PushBack(spitfire::math::cVec2(vMax.x, vMin.y));
+
+    pStaticVertexBufferObject->SetData(pGeometryDataPtr);
+
+    pStaticVertexBufferObject->Compile2D(system);
   }
 
   void cGtkmmOpenGLView::CreateVertexBufferObjectSquare(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight)
@@ -273,17 +305,24 @@ namespace diesel
       }
     }
 
+    pStaticVertexBufferObjectSelectionRectangle = pContext->CreateStaticVertexBufferObject();
+    ASSERT(pStaticVertexBufferObjectSelectionRectangle != nullptr);
+    const float fWidthAndHeight = max(fThumbNailWidth, fThumbNailHeight);
+    CreateVertexBufferObjectSelectionRectangle(pStaticVertexBufferObjectSelectionRectangle, fWidthAndHeight, fWidthAndHeight);
+
     // Create our vertex buffer object
     CreateVertexBufferObjectIcon();
 
     // Create our vertex buffer object
     CreateVertexBufferObjectPhoto();
 
-    // Create our shader
+    // Create our shaders
+    pShaderSelectionRectangle = pContext->CreateShader(TEXT("data/shaders/colour.vert"), TEXT("data/shaders/colour.frag"));
+    ASSERT(pShaderSelectionRectangle != nullptr);
+
     pShaderPhoto = pContext->CreateShader(TEXT("data/shaders/passthrough.vert"), TEXT("data/shaders/passthrough_recttexture.frag"));
     ASSERT(pShaderPhoto != nullptr);
 
-    // Create our shader
     pShaderIcon = pContext->CreateShader(TEXT("data/shaders/passthrough.vert"), TEXT("data/shaders/passthrough_squaretexture_alphamask.frag"));
     ASSERT(pShaderIcon != nullptr);
 
@@ -320,6 +359,11 @@ namespace diesel
       pFont = nullptr;
     }
 
+    if (pStaticVertexBufferObjectSelectionRectangle != nullptr) {
+      pContext->DestroyStaticVertexBufferObject(pStaticVertexBufferObjectSelectionRectangle);
+      pStaticVertexBufferObjectSelectionRectangle = nullptr;
+    }
+
     if (pStaticVertexBufferObjectIcon != nullptr) {
       pContext->DestroyStaticVertexBufferObject(pStaticVertexBufferObjectIcon);
       pStaticVertexBufferObjectIcon = nullptr;
@@ -338,6 +382,11 @@ namespace diesel
     if (pShaderPhoto != nullptr) {
       pContext->DestroyShader(pShaderPhoto);
       pShaderPhoto = nullptr;
+    }
+
+    if (pShaderSelectionRectangle != nullptr) {
+      pContext->DestroyShader(pShaderSelectionRectangle);
+      pShaderSelectionRectangle = nullptr;
     }
 
     const size_t n = photos.size();
@@ -445,11 +494,15 @@ namespace diesel
     ASSERT(pContext != nullptr);
     ASSERT(pContext->IsValid());
 
+    ASSERT(pStaticVertexBufferObjectSelectionRectangle != nullptr);
+    ASSERT(pStaticVertexBufferObjectSelectionRectangle->IsCompiled());
     ASSERT(pStaticVertexBufferObjectPhoto != nullptr);
     ASSERT(pStaticVertexBufferObjectPhoto->IsCompiled());
     ASSERT(pStaticVertexBufferObjectIcon != nullptr);
     ASSERT(pStaticVertexBufferObjectIcon->IsCompiled());
 
+    ASSERT(pShaderSelectionRectangle != nullptr);
+    ASSERT(pShaderSelectionRectangle->IsCompiledProgram());
     ASSERT(pShaderPhoto != nullptr);
     ASSERT(pShaderPhoto->IsCompiledProgram());
     ASSERT(pShaderIcon != nullptr);
@@ -474,6 +527,31 @@ namespace diesel
       {
         const size_t nPhotos = photos.size();
         for (size_t i = 0; i < nPhotos; i++) {
+          // Draw the selection rectangle
+          if (photos[i]->bIsSelected) {
+            // Draw the selection rectangle
+            pContext->BindStaticVertexBufferObject2D(*pStaticVertexBufferObjectSelectionRectangle);
+
+            pContext->BindShader(*pShaderSelectionRectangle);
+
+            pContext->SetShaderConstant("colour", colourSelected);
+
+            const size_t x = i % columns;
+            const size_t y = i / columns;
+            const float fX = fThumbNailSpacing + (float(x) * (fThumbNailWidth + fThumbNailSpacing));
+            const float fY = fThumbNailSpacing + (float(y) * (fThumbNailHeight + fThumbNailSpacing));
+            matModelView2D.SetTranslation(fX, fY - fScrollPosition, 0.0f);
+
+            pContext->SetShaderProjectionAndModelViewMatricesRenderMode2D(opengl::MODE2D_TYPE::Y_INCREASES_DOWN_SCREEN_KEEP_DIMENSIONS_AND_ASPECT_RATIO, matScale * matModelView2D);
+
+            pContext->DrawStaticVertexBufferObjectTriangles2D(*pStaticVertexBufferObjectSelectionRectangle);
+
+            pContext->UnBindShader(*pShaderSelectionRectangle);
+
+            pContext->UnBindStaticVertexBufferObject2D(*pStaticVertexBufferObjectSelectionRectangle);
+          }
+
+          // Draw the photo
           if (photos[i]->pTexture != nullptr) {
             pContext->BindStaticVertexBufferObject2D(*pStaticVertexBufferObjectPhoto);
 
@@ -499,6 +577,7 @@ namespace diesel
 
             pContext->UnBindStaticVertexBufferObject2D(*pStaticVertexBufferObjectPhoto);
           } else {
+            // Draw the icon
             pContext->BindStaticVertexBufferObject2D(*pStaticVertexBufferObjectIcon);
 
             opengl::cTexture* pTexture = pTextureMissing;
@@ -679,7 +758,7 @@ namespace diesel
         return true;
       }
       case GDK_0: {
-        if (pEvent->state & GDK_CONTROL_MASK) {
+        if ((pEvent->state & GDK_CONTROL_MASK) != 0) {
           // Reset the zoom
           SetScale(1.0f);
           parent.OnOpenGLViewContentChanged();
@@ -693,15 +772,24 @@ namespace diesel
     return false;
   }
 
-  bool cGtkmmOpenGLView::OnMouseDown(int button, int x, int y)
+  bool cGtkmmOpenGLView::OnMouseDown(int button, int x, int y, bool bKeyControl, bool bKeyShift)
   {
     LOG<<"cGtkmmOpenGLView::OnMouseDown"<<std::endl;
 
     if (button == 1) {
+      const size_t n = photos.size();
+
       size_t index = 0;
       if (GetPhotoAtPoint(index, spitfire::math::cVec2(x, y))) {
         LOG<<"cGtkmmOpenGLView::OnMouseDown item="<<index<<std::endl;
-
+        ASSERT(index < photos.size());
+        if (!bKeyControl && !bKeyShift) {
+          // Select only the photo we clicked on
+          for (size_t i = 0; i < n; i++) photos[i]->bIsSelected = (i == index);
+        }
+      } else if (!bKeyControl && !bKeyShift) {
+        // Clear the selection
+        for (size_t i = 0; i < n; i++) photos[i]->bIsSelected = false;
       }
       return true;
     }
@@ -709,25 +797,25 @@ namespace diesel
     return false;
   }
 
-  bool cGtkmmOpenGLView::OnMouseRelease(int button, int x, int y)
+  bool cGtkmmOpenGLView::OnMouseRelease(int button, int x, int y, bool bKeyControl, bool bKeyShift)
   {
     LOG<<"cGtkmmOpenGLView::OnMouseRelease"<<std::endl;
     return false;
   }
 
-  bool cGtkmmOpenGLView::OnMouseScrollUp(int x, int y)
+  bool cGtkmmOpenGLView::OnMouseScrollUp(int x, int y, bool bKeyControl, bool bKeyShift)
   {
     LOG<<"cGtkmmOpenGLView::OnMouseScrollUp"<<std::endl;
     return false;
   }
 
-  bool cGtkmmOpenGLView::OnMouseScrollDown(int x, int y)
+  bool cGtkmmOpenGLView::OnMouseScrollDown(int x, int y, bool bKeyControl, bool bKeyShift)
   {
     LOG<<"cGtkmmOpenGLView::OnMouseScrollDown"<<std::endl;
     return false;
   }
 
-  bool cGtkmmOpenGLView::OnMouseMove(int x, int y)
+  bool cGtkmmOpenGLView::OnMouseMove(int x, int y, bool bKeyControl, bool bKeyShift)
   {
     LOG<<"cGtkmmOpenGLView::OnMouseMove"<<std::endl;
     return false;

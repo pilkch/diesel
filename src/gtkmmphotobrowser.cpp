@@ -59,6 +59,11 @@ namespace diesel
     return boxPhotoView;
   }
 
+  void cGtkmmPhotoBrowser::SetSelectionColour(const spitfire::math::cColour& colour)
+  {
+    openglView.SetSelectionColour(colour);
+  }
+
   bool cGtkmmPhotoBrowser::event_box_key_press(GdkEventKey* pEvent)
   {
     ASSERT(pEvent != nullptr);
@@ -68,13 +73,17 @@ namespace diesel
   bool cGtkmmPhotoBrowser::event_box_button_press(GdkEventButton* pEvent)
   {
     ASSERT(pEvent != nullptr);
-    return openglView.OnMouseDown(pEvent->button, pEvent->x, pEvent->y);
+    const bool bKeyControl = ((pEvent->state & GDK_CONTROL_MASK) != 0);
+    const bool bKeyShift = ((pEvent->state & GDK_SHIFT_MASK) != 0);
+    return openglView.OnMouseDown(pEvent->button, pEvent->x, pEvent->y, bKeyControl, bKeyShift);
   }
 
   bool cGtkmmPhotoBrowser::event_box_button_release(GdkEventButton* pEvent)
   {
     ASSERT(pEvent != nullptr);
-    return openglView.OnMouseRelease(pEvent->button, pEvent->x, pEvent->y);
+    const bool bKeyControl = ((pEvent->state & GDK_CONTROL_MASK) != 0);
+    const bool bKeyShift = ((pEvent->state & GDK_SHIFT_MASK) != 0);
+    return openglView.OnMouseRelease(pEvent->button, pEvent->x, pEvent->y, bKeyControl, bKeyShift);
   }
 
   bool cGtkmmPhotoBrowser::event_box_scroll(GdkEventScroll* pEvent)
@@ -109,7 +118,9 @@ namespace diesel
   bool cGtkmmPhotoBrowser::event_box_motion_notify(GdkEventMotion* pEvent)
   {
     ASSERT(pEvent != nullptr);
-    return openglView.OnMouseMove(pEvent->x, pEvent->y);
+    const bool bKeyControl = ((pEvent->state & GDK_CONTROL_MASK) != 0);
+    const bool bKeyShift = ((pEvent->state & GDK_SHIFT_MASK) != 0);
+    return openglView.OnMouseMove(pEvent->x, pEvent->y, bKeyControl, bKeyShift);
   }
 
   void cGtkmmPhotoBrowser::OnScrollBarScrolled(const cGtkmmScrollBar& widget)

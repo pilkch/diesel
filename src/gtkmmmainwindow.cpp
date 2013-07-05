@@ -191,6 +191,18 @@ namespace diesel
 
     // Start the update checker now that we have finished doing the serious work
     updateChecker.Run();
+
+
+    {
+      // Get a typical selection colour for the selections on our photo browser
+      Gtk::Entry entry;
+      Glib::RefPtr<Gtk::StyleContext> pStyleContext = entry.get_style_context();
+      ASSERT(pStyleContext);
+
+      const Gdk::RGBA colour = pStyleContext->get_background_color(Gtk::STATE_FLAG_SELECTED);
+      const spitfire::math::cColour colourSelected(colour.get_red(), colour.get_green(), colour.get_blue(), colour.get_alpha());
+      photoBrowser.SetSelectionColour(colourSelected);
+    }
   }
 
   void cGtkmmMainWindow::Run()

@@ -37,6 +37,7 @@ namespace diesel
     string_t sFilePath;
     STATE state;
     opengl::cTexture* pTexture;
+    bool bIsSelected;
   };
 
   class cGtkmmPhotoBrowser;
@@ -51,6 +52,8 @@ namespace diesel
 
     void Init(int argc, char* argv[]);
 
+    void SetSelectionColour(const spitfire::math::cColour& colour);
+
     size_t GetPageHeight() const;
     size_t GetRequiredHeight() const;
 
@@ -62,11 +65,11 @@ namespace diesel
   protected:
     bool OnKeyPressEvent(GdkEventKey* event);
 
-    bool OnMouseDown(int button, int x, int y);
-    bool OnMouseRelease(int button, int x, int y);
-    bool OnMouseScrollUp(int x, int y);
-    bool OnMouseScrollDown(int x, int y);
-    bool OnMouseMove(int x, int y);
+    bool OnMouseDown(int button, int x, int y, bool bKeyControl, bool bKeyShift);
+    bool OnMouseRelease(int button, int x, int y, bool bKeyControl, bool bKeyShift);
+    bool OnMouseScrollUp(int x, int y, bool bKeyControl, bool bKeyShift);
+    bool OnMouseScrollDown(int x, int y, bool bKeyControl, bool bKeyShift);
+    bool OnMouseMove(int x, int y, bool bKeyControl, bool bKeyShift);
 
   private:
     const GtkWidget* GetWidget() const;
@@ -76,6 +79,7 @@ namespace diesel
 
     bool GetPhotoAtPoint(size_t& index, const spitfire::math::cVec2& point) const;
 
+    void CreateVertexBufferObjectSelectionRectangle(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight);
     void CreateVertexBufferObjectSquare(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight);
     void CreateVertexBufferObjectRect(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight, size_t textureWidth, size_t textureHeight);
     void CreateVertexBufferObjectIcon();
@@ -118,9 +122,11 @@ namespace diesel
     opengl::cTexture* pTextureFolder;
     opengl::cTexture* pTextureLoading;
 
+    opengl::cShader* pShaderSelectionRectangle;
     opengl::cShader* pShaderPhoto;
     opengl::cShader* pShaderIcon;
 
+    opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectSelectionRectangle;
     opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectPhoto;
     opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectIcon;
 
@@ -129,6 +135,8 @@ namespace diesel
 
     // Photos
     std::vector<cPhotoEntry*> photos;
+
+    spitfire::math::cColour colourSelected;
   };
 }
 

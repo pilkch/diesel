@@ -24,6 +24,8 @@ namespace diesel
     const Gtk::Widget& GetWidget() const;
     Gtk::Widget& GetWidget();
 
+    void SetSelectionColour(const spitfire::math::cColour& colour);
+
     bool IsOpenGLViewFocus() const;
 
   protected:
