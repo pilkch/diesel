@@ -195,8 +195,8 @@ namespace diesel
 
     {
       // Get a typical selection colour for the selections on our photo browser
-      Gtk::Entry entry;
-      Glib::RefPtr<Gtk::StyleContext> pStyleContext = entry.get_style_context();
+      Gtk::Table table;
+      Glib::RefPtr<Gtk::StyleContext> pStyleContext = table.get_style_context();
       ASSERT(pStyleContext);
 
       const Gdk::RGBA colour = pStyleContext->get_background_color(Gtk::STATE_FLAG_SELECTED);
