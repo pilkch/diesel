@@ -7,6 +7,9 @@
 // Gtkmm headers
 #include <gtkmm/main.h>
 
+// libgtkmm headers
+#include <libgtkmm/about.h>
+
 // Spitfire headers
 #include <spitfire/spitfire.h>
 
@@ -238,6 +241,9 @@ namespace diesel
 
   void cGtkmmMainWindow::OnMenuHelpAbout()
   {
+    LOG<<"cGtkmmMainWindow::OnMenuHelpAbout"<<std::endl;
+    gtkmm::cGtkmmAboutDialog about;
+    about.Run(*this);
   }
 
   void cGtkmmMainWindow::OnActionBrowseFiles()
