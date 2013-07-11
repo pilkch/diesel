@@ -13,15 +13,37 @@
 // Gtkmm headers
 #include <gtkmm/drawingarea.h>
 
+// libgtkmm headers
+#include <libgtkmm/dispatcher.h>
+
 // libopenglmm headers
 #include <libopenglmm/cFont.h>
 #include <libopenglmm/cSystem.h>
 
+#include <spitfire/util/signalobject.h>
+#include <spitfire/util/thread.h>
+
 // Diesel headers
-#include "diesel.h"
+#include "imageloadthread.h"
 
 namespace diesel
 {
+  class cGtkmmOpenGLView;
+
+  class cGtkmmOpenGLViewImageLoadedEvent
+  {
+  public:
+    cGtkmmOpenGLViewImageLoadedEvent(const string_t& sFilePath, IMAGE_SIZE imageSize, voodoo::cImage* pImage);
+    ~cGtkmmOpenGLViewImageLoadedEvent();
+
+    void EventFunction(cGtkmmOpenGLView& view);
+
+    string_t sFilePath;
+    IMAGE_SIZE imageSize;
+    voodoo::cImage* pImage;
+  };
+
+
   class cPhotoEntry
   {
   public:
@@ -42,15 +64,17 @@ namespace diesel
 
   class cGtkmmPhotoBrowser;
 
-  class cGtkmmOpenGLView : public Gtk::DrawingArea
+  class cGtkmmOpenGLView : public Gtk::DrawingArea, public cImageLoadHandler
   {
   public:
+    friend class cGtkmmOpenGLViewImageLoadedEvent;
     friend class cGtkmmPhotoBrowser;
 
     explicit cGtkmmOpenGLView(cGtkmmPhotoBrowser& parent);
     ~cGtkmmOpenGLView();
 
     void Init(int argc, char* argv[]);
+    void Destroy();
 
     void SetSelectionColour(const spitfire::math::cColour& colour);
 
@@ -100,7 +124,13 @@ namespace diesel
     static gboolean configure_cb(GtkWidget* pWidget, GdkEventConfigure* event, gpointer pUserData);
     static gboolean idle_cb(gpointer pUserData);
 
+    virtual void OnImageLoaded(const string_t& sFilePath, IMAGE_SIZE imageSize, voodoo::cImage* pImage) override;
+
+    void OnNotify();
+
     cGtkmmPhotoBrowser& parent;
+
+    cImageLoadThread imageLoadThread;
 
     bool bIsWireframe;
 
@@ -137,6 +167,10 @@ namespace diesel
     std::vector<cPhotoEntry*> photos;
 
     spitfire::math::cColour colourSelected;
+
+    gtkmm::cGtkmmNotifyMainThread notifyMainThread;
+    spitfire::util::cSignalObject soAction;
+    spitfire::util::cThreadSafeQueue<cGtkmmOpenGLViewImageLoadedEvent> eventQueue;
   };
 }
 

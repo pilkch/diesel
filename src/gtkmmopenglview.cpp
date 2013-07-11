@@ -25,6 +25,24 @@
 
 namespace diesel
 {
+  cGtkmmOpenGLViewImageLoadedEvent::cGtkmmOpenGLViewImageLoadedEvent(const string_t& _sFilePath, IMAGE_SIZE _imageSize, voodoo::cImage* _pImage) :
+    sFilePath(_sFilePath),
+    imageSize(_imageSize),
+    pImage(_pImage)
+  {
+  }
+
+  cGtkmmOpenGLViewImageLoadedEvent::~cGtkmmOpenGLViewImageLoadedEvent()
+  {
+    spitfire::SAFE_DELETE(pImage);
+  }
+
+  void cGtkmmOpenGLViewImageLoadedEvent::EventFunction(cGtkmmOpenGLView& view)
+  {
+    view.OnImageLoaded(sFilePath, imageSize, pImage);
+  }
+
+
   const float fThumbNailWidth = 100.0f;
   const float fThumbNailHeight = 100.0f;
   const float fThumbNailSpacing = 20.0f;
@@ -42,6 +60,7 @@ namespace diesel
 
   cGtkmmOpenGLView::cGtkmmOpenGLView(cGtkmmPhotoBrowser& _parent) :
     parent(_parent),
+    imageLoadThread(*this),
     bIsWireframe(false),
     pageHeight(500),
     requiredHeight(12000),
@@ -59,7 +78,9 @@ namespace diesel
     pStaticVertexBufferObjectPhoto(nullptr),
     pStaticVertexBufferObjectIcon(nullptr),
     pFont(nullptr),
-    colourSelected(1.0f, 1.0f, 1.0f)
+    colourSelected(1.0f, 1.0f, 1.0f),
+    soAction("cGtkmmOpenGLView::soAction"),
+    eventQueue(soAction)
   {
     // Set our resolution
     resolution.width = 500;
@@ -76,10 +97,28 @@ namespace diesel
     add_events(Gdk::BUTTON_PRESS_MASK | Gdk::POINTER_MOTION_MASK);
 
     UpdateColumnsPageHeightAndRequiredHeight();
+
+    imageLoadThread.Start();
+
+    notifyMainThread.Create(*this, &cGtkmmOpenGLView::OnNotify);
   }
 
   cGtkmmOpenGLView::~cGtkmmOpenGLView()
   {
+    Destroy();
+  }
+
+  void cGtkmmOpenGLView::Destroy()
+  {
+    imageLoadThread.StopNow();
+
+    // Destroy any further events
+    while (true) {
+      cGtkmmOpenGLViewImageLoadedEvent* pEvent = eventQueue.RemoveItemFromFront();
+      if (pEvent == nullptr) break;
+      else spitfire::SAFE_DELETE(pEvent);
+    }
+
     DestroyResources();
 
     DestroyOpenGL();
@@ -293,11 +332,9 @@ namespace diesel
         pEntry->state = cPhotoEntry::STATE::LOADING;
         if (photos.size() < 4) pEntry->state = cPhotoEntry::STATE::NOT_FOUND;
         else if (photos.size() < 8) pEntry->state = cPhotoEntry::STATE::FOLDER;
-        else if (photos.size() < 12) {
-          opengl::cTexture* pTexture = pContext->CreateTexture(iter.GetFullPath());
-          ASSERT(pTexture != nullptr);
-          pEntry->state = cPhotoEntry::STATE::LOADED;
-          pEntry->pTexture = pTexture;
+        else {
+          // Start loading the image in the background
+          imageLoadThread.LoadThumbnail(iter.GetFullPath(), IMAGE_SIZE::FULL);
         }
 
         pEntry->sFilePath = iter.GetFullPath();
@@ -710,6 +747,41 @@ namespace diesel
     gdk_window_invalidate_rect(gdk_gl_window_get_window(gtk_widget_get_gl_window(pWidget)), &dummyRect, TRUE);
 
     return TRUE;
+  }
+
+  void cGtkmmOpenGLView::OnNotify()
+  {
+    LOG<<"cGtkmmOpenGLView::OnNotify"<<std::endl;
+    ASSERT(spitfire::util::IsMainThread());
+    cGtkmmOpenGLViewImageLoadedEvent* pEvent = eventQueue.RemoveItemFromFront();
+    if (pEvent != nullptr) {
+      pEvent->EventFunction(*this);
+      spitfire::SAFE_DELETE(pEvent);
+    }
+  }
+
+  void cGtkmmOpenGLView::OnImageLoaded(const string_t& sFilePath, IMAGE_SIZE imageSize, voodoo::cImage* pImage)
+  {
+    LOG<<"cGtkmmOpenGLView::OnImageLoaded \""<<sFilePath<<"\""<<std::endl;
+
+    if (!spitfire::util::IsMainThread()) {
+      cGtkmmOpenGLViewImageLoadedEvent* pEvent = new cGtkmmOpenGLViewImageLoadedEvent(sFilePath, imageSize, pImage);
+      eventQueue.AddItemToBack(pEvent);
+      notifyMainThread.Notify();
+    } else {
+      LOG<<"cGtkmmOpenGLView::OnImageLoaded On main thread \""<<sFilePath<<"\""<<std::endl;
+      const size_t n = photos.size();
+      for (size_t i = 0; i < n; i++) {
+        if (photos[i]->sFilePath == sFilePath) {
+          cPhotoEntry* pEntry = photos[i];
+          opengl::cTexture* pTexture = pContext->CreateTextureFromImage(*pImage);
+          ASSERT(pTexture != nullptr);
+          pEntry->state = cPhotoEntry::STATE::LOADED;
+          pEntry->pTexture = pTexture;
+          break;
+        }
+      }
+    }
   }
 
   bool cGtkmmOpenGLView::OnKeyPressEvent(GdkEventKey* pEvent)
