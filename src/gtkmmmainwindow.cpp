@@ -19,7 +19,9 @@
 namespace diesel
 {
   cGtkmmMainWindow::cGtkmmMainWindow(int argc, char** argv) :
-    updateChecker(*this)
+    updateChecker(*this),
+    pMenuPopup(nullptr),
+    photoBrowser(*this)
   {
     settings.Load();
 
@@ -150,6 +152,83 @@ namespace diesel
     if (pMenubar != nullptr) boxMainWindow.pack_start(*pMenubar, Gtk::PACK_SHRINK);
 
 
+    // Photo browser right click menu
+    Glib::RefPtr<Gtk::ActionGroup> popupActionGroupRef;
+
+
+    // Right click menu
+    popupActionGroupRef = Gtk::ActionGroup::create();
+
+    // File|New sub menu:
+    // These menu actions would normally already exist for a main menu, because a context menu should
+    // not normally contain menu items that are only available via a context menu.
+    popupActionGroupRef->add(Gtk::Action::create("ContextMenu", "Context Menu"));
+
+    popupActionGroupRef->add(Gtk::Action::create("ContextAddFiles", "Add Files"),
+            sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionBrowseFiles));
+
+    popupActionGroupRef->add(Gtk::Action::create("ContextAddFolder", "Add Folder"),
+            Gtk::AccelKey("<control>P"),
+            sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionBrowseFolder));
+
+    popupActionGroupRef->add(Gtk::Action::create("ContextRemove", "Remove"),
+            sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionRemovePhoto));
+
+    //Edit Tags -> edits each track separately
+    //Batch Edit Tags -> edits all tracks at the same time
+
+    /*/popupActionGroupRef->add(Gtk::Action::create("ContextMoveToFolderMenu", "Move to Folder"));
+
+    popupActionGroupRef->add(Gtk::Action::create("ContextTrackMoveToFolderBrowse", "Browse..."),
+            sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionTrackMoveToFolderBrowse));
+
+    popupActionGroupRef->add(Gtk::Action::create("ContextTrackMoveToRubbishBin", "Move to the Rubbish Bin"),
+            sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionTrackMoveToRubbishBin));
+
+    popupActionGroupRef->add(Gtk::Action::create("ContextShowInFileManager", "Show in the File Manager"),
+            sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionTrackShowInFileManager));
+
+    popupActionGroupRef->add(Gtk::Action::create("ContextProperties", "Properties"),
+            sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionTrackProperties));*/
+
+    popupUIManagerRef = Gtk::UIManager::create();
+    popupUIManagerRef->insert_action_group(popupActionGroupRef);
+
+    add_accel_group(popupUIManagerRef->get_accel_group());
+
+    // Layout the actions in our popup menu
+    {
+      Glib::ustring ui_info =
+        "<ui>"
+        "  <popup name='PopupMenu'>"
+        "    <menuitem action='ContextAddFiles'/>"
+        "    <menuitem action='ContextAddFolder'/>"
+        "    <menuitem action='ContextRemove'/>"
+        /*"    <menu action='ContextMoveToFolderMenu'>"
+        "      <menuitem action='ContextTrackMoveToFolderBrowse'/>"
+        "    </menu>"
+        "    <menuitem action='ContextTrackMoveToRubbishBin'/>"
+        "    <menuitem action='ContextShowInFileManager'/>"
+        "    <menuitem action='ContextProperties'/>"*/
+        "  </popup>"
+        "</ui>";
+
+      try
+      {
+        popupUIManagerRef->add_ui_from_string(ui_info);
+      }
+      catch(const Glib::Error& ex)
+      {
+        std::cerr<<"building menus failed: "<<ex.what();
+      }
+    }
+
+    // Get the menu
+    pMenuPopup = dynamic_cast<Gtk::Menu*>(popupUIManagerRef->get_widget("/PopupMenu"));
+    if (pMenuPopup == nullptr) g_warning("Popup menu not found");
+    assert(pMenuPopup != nullptr);
+
+
     // In gtkmm 3 set_orientation is not supported so we create our own toolbar out of plain old buttons
     //Gtk::Toolbar* pToolbar = dynamic_cast<Gtk::Toolbar*>(m_refUIManager->get_widget("/ToolBar"));
     //if (pToolbar != nullptr) {
@@ -260,6 +339,20 @@ namespace diesel
 
   void cGtkmmMainWindow::OnActionStopLoading()
   {
+  }
+
+  void cGtkmmMainWindow::OnActionRemovePhoto()
+  {
+  }
+
+  void cGtkmmMainWindow::OnPhotoBrowserRightClick()
+  {
+    assert(pMenuPopup != nullptr);
+    pMenuPopup->show_all_children();
+    pMenuPopup->show_all();
+    const unsigned int button = 3;
+    const uint32_t time = GDK_CURRENT_TIME;
+    pMenuPopup->popup(button, time);
   }
 
   void cGtkmmMainWindow::OnNewVersionFound(int iMajorVersion, int iMinorVersion, const string_t& sDownloadPage)

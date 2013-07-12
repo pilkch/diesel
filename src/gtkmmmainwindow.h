@@ -28,6 +28,8 @@ namespace diesel
   protected:
     void OnMenuFileQuit();
 
+    void OnPhotoBrowserRightClick();
+
   private:
     virtual void OnNewVersionFound(int iMajorVersion, int iMinorVersion, const string_t& sDownloadPage) override;
 
@@ -40,6 +42,7 @@ namespace diesel
     void OnActionBrowseFolder();
     void OnActionAddFilesFromPicturesFolder();
     void OnActionStopLoading();
+    void OnActionRemovePhoto();
 
     cSettings settings;
 
@@ -48,6 +51,10 @@ namespace diesel
     // Menu and toolbar
     Glib::RefPtr<Gtk::UIManager> m_refUIManager;
     Glib::RefPtr<Gtk::ActionGroup> m_refActionGroup;
+
+    // Photo browser right click menu
+    Glib::RefPtr<Gtk::UIManager> popupUIManagerRef;
+    Gtk::Menu* pMenuPopup;
 
     // Layouts
     Gtk::VBox boxMainWindow;

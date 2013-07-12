@@ -12,10 +12,12 @@
 
 // Diesel headers
 #include "gtkmmphotobrowser.h"
+#include "gtkmmmainwindow.h"
 
 namespace diesel
 {
-  cGtkmmPhotoBrowser::cGtkmmPhotoBrowser() :
+  cGtkmmPhotoBrowser::cGtkmmPhotoBrowser(cGtkmmMainWindow& _parent) :
+    parent(_parent),
     openglView(*this),
     scrollBar(*this)
   {
@@ -75,6 +77,8 @@ namespace diesel
     ASSERT(pEvent != nullptr);
     const bool bKeyControl = ((pEvent->state & GDK_CONTROL_MASK) != 0);
     const bool bKeyShift = ((pEvent->state & GDK_SHIFT_MASK) != 0);
+    if (pEvent->type == GDK_2BUTTON_PRESS) return openglView.OnMouseDoubleClick(pEvent->button, pEvent->x, pEvent->y, bKeyControl, bKeyShift);
+
     return openglView.OnMouseDown(pEvent->button, pEvent->x, pEvent->y, bKeyControl, bKeyShift);
   }
 
@@ -136,6 +140,11 @@ namespace diesel
     const size_t page = openglView.GetPageHeight();
     const size_t step = page / 5;
     scrollBar.SetStepAndPageSize(step, page);
+  }
+
+  void cGtkmmPhotoBrowser::OnOpenGLViewRightClick()
+  {
+    parent.OnPhotoBrowserRightClick();
   }
 
   void cGtkmmPhotoBrowser::OnOpenGLViewScrollTop()

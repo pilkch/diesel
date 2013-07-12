@@ -845,7 +845,8 @@ namespace diesel
   {
     LOG<<"cGtkmmOpenGLView::OnMouseDown"<<std::endl;
 
-    if (button == 1) {
+    // Change the selection on left and right click
+    if ((button == 1) || (button == 3)) {
       const size_t n = photos.size();
 
       size_t index = 0;
@@ -863,16 +864,25 @@ namespace diesel
         // Clear the selection
         for (size_t i = 0; i < n; i++) photos[i]->bIsSelected = false;
       }
-      return true;
     }
 
-    return false;
+    return true;
   }
 
   bool cGtkmmOpenGLView::OnMouseRelease(int button, int x, int y, bool bKeyControl, bool bKeyShift)
   {
     LOG<<"cGtkmmOpenGLView::OnMouseRelease"<<std::endl;
-    return false;
+
+    // Handle right click
+    if (button == 3) parent.OnOpenGLViewRightClick();
+
+    return true;
+  }
+
+  bool cGtkmmOpenGLView::OnMouseDoubleClick(int button, int x, int y, bool bKeyControl, bool bKeyShift)
+  {
+    LOG<<"cGtkmmOpenGLView::OnMouseDoubleClick"<<std::endl;
+    return true;
   }
 
   bool cGtkmmOpenGLView::OnMouseScrollUp(int x, int y, bool bKeyControl, bool bKeyShift)
