@@ -118,6 +118,9 @@ namespace diesel
     void CreateResources();
     void DestroyResources();
 
+    void CreatePhotos();
+    void DestroyPhotos();
+
     void ResizeWidget(size_t width, size_t height);
 
     void DrawScene();
@@ -132,6 +135,8 @@ namespace diesel
     cGtkmmPhotoBrowser& parent;
 
     cImageLoadThread imageLoadThread;
+
+    string_t sFolderPath;
 
     bool bIsWireframe;
 

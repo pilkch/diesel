@@ -323,24 +323,7 @@ namespace diesel
 
     DestroyResources();
 
-    // Create our textures
-    for (spitfire::filesystem::cFolderIterator iter("/home/chris/Pictures/20091102 Mount Kosciuszko"); iter.IsValid(); iter.Next()) {
-      if (photos.size() > 16) break;
-
-      if (iter.IsFile()) {
-        cPhotoEntry* pEntry = new cPhotoEntry;
-        pEntry->state = cPhotoEntry::STATE::LOADING;
-        if (photos.size() < 4) pEntry->state = cPhotoEntry::STATE::NOT_FOUND;
-        else if (photos.size() < 8) pEntry->state = cPhotoEntry::STATE::FOLDER;
-        else {
-          // Start loading the image in the background
-          imageLoadThread.LoadThumbnail(iter.GetFullPath(), IMAGE_SIZE::FULL);
-        }
-
-        pEntry->sFilePath = iter.GetFullPath();
-        photos.push_back(pEntry);
-      }
-    }
+    CreatePhotos();
 
     pStaticVertexBufferObjectSelectionRectangle = pContext->CreateStaticVertexBufferObject();
     ASSERT(pStaticVertexBufferObjectSelectionRectangle != nullptr);
@@ -426,6 +409,33 @@ namespace diesel
       pShaderSelectionRectangle = nullptr;
     }
 
+    DestroyPhotos();
+  }
+
+  void cGtkmmOpenGLView::CreatePhotos()
+  {
+    // Create our textures
+    for (spitfire::filesystem::cFolderIterator iter(sFolderPath); iter.IsValid(); iter.Next()) {
+      if (photos.size() > 16) break;
+
+      if (iter.IsFile()) {
+        cPhotoEntry* pEntry = new cPhotoEntry;
+        pEntry->state = cPhotoEntry::STATE::LOADING;
+        if (photos.size() < 4) pEntry->state = cPhotoEntry::STATE::NOT_FOUND;
+        else if (photos.size() < 8) pEntry->state = cPhotoEntry::STATE::FOLDER;
+        else {
+          // Start loading the image in the background
+          imageLoadThread.LoadThumbnail(iter.GetFullPath(), IMAGE_SIZE::FULL);
+        }
+
+        pEntry->sFilePath = iter.GetFullPath();
+        photos.push_back(pEntry);
+      }
+    }
+  }
+
+  void cGtkmmOpenGLView::DestroyPhotos()
+  {
     const size_t n = photos.size();
     for (size_t i = 0; i < n; i++) {
       opengl::cTexture* pTexture = photos[i]->pTexture;
