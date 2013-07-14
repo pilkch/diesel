@@ -66,6 +66,16 @@ namespace diesel
     openglView.SetSelectionColour(colour);
   }
 
+  string_t cGtkmmPhotoBrowser::GetFolder() const
+  {
+    return openglView.GetFolder();
+  }
+
+  void cGtkmmPhotoBrowser::SetFolder(const string_t& sFolderPath)
+  {
+    openglView.SetFolder(sFolderPath);
+  }
+
   bool cGtkmmPhotoBrowser::event_box_key_press(GdkEventKey* pEvent)
   {
     ASSERT(pEvent != nullptr);

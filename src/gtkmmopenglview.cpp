@@ -139,6 +139,22 @@ namespace diesel
     colourSelected = colour;
   }
 
+  string_t cGtkmmOpenGLView::GetFolder() const
+  {
+    return sFolderPath;
+  }
+
+  void cGtkmmOpenGLView::SetFolder(const string_t& _sFolderPath)
+  {
+    if (sFolderPath != _sFolderPath) {
+      sFolderPath = _sFolderPath;
+
+      // Reload our photos
+      DestroyPhotos();
+      CreatePhotos();
+    }
+  }
+
   size_t cGtkmmOpenGLView::GetPageHeight() const
   {
     return pageHeight;
@@ -414,6 +430,9 @@ namespace diesel
 
   void cGtkmmOpenGLView::CreatePhotos()
   {
+    // If we don't have a folder to show then we can just return
+    if (sFolderPath.empty()) return;
+
     // Create our textures
     for (spitfire::filesystem::cFolderIterator iter(sFolderPath); iter.IsValid(); iter.Next()) {
       if (photos.size() > 16) break;

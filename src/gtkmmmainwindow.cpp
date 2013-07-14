@@ -9,6 +9,7 @@
 
 // libgtkmm headers
 #include <libgtkmm/about.h>
+#include <libgtkmm/filebrowse.h>
 
 // Spitfire headers
 #include <spitfire/spitfire.h>
@@ -21,6 +22,7 @@ namespace diesel
   cGtkmmMainWindow::cGtkmmMainWindow(int argc, char** argv) :
     updateChecker(*this),
     pMenuPopup(nullptr),
+    comboBoxFolder(true),
     photoBrowser(*this)
   {
     settings.Load();
@@ -249,10 +251,30 @@ namespace diesel
 
 
     // Controls
+    comboBoxFolder.signal_changed().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionChangeFolder));
     buttonStopLoading.signal_clicked().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionStopLoading));
+
+    // Add the previous paths
+    settings.GetPreviousPhotoBrowserFolders(previousFolders);
+    std::list<string_t>::const_iterator iter(previousFolders.begin());
+    const std::list<string_t>::const_iterator iterEnd(previousFolders.end());
+    while (iter != iterEnd) {
+      comboBoxFolder.append(*iter);
+
+      iter++;
+    }
+
+    // Add the "Browse..." items
+    comboBoxFolder.append("Browse...");
+
+    const string_t sFolder = settings.GetLastPhotoBrowserFolder();
+    comboBoxFolder.set_active_text(sFolder);
 
     photoBrowser.Init(argc, argv);
 
+    photoBrowser.SetFolder(sFolder);
+
+    boxControls.pack_start(comboBoxFolder, Gtk::PACK_SHRINK);
     boxControls.pack_start(photoBrowser.GetWidget(), Gtk::PACK_EXPAND_WIDGET);
 
     boxControlsAndToolbar.pack_start(boxControls, Gtk::PACK_EXPAND_WIDGET);
@@ -300,6 +322,9 @@ namespace diesel
     // Tell the update checker thread to stop now
     if (updateChecker.IsRunning()) updateChecker.StopThreadNow();
 
+    // Get the previous paths
+    settings.SetPreviousPhotoBrowserFolders(previousFolders);
+
     //hide(); //Closes the main window to stop the Gtk::Main::run().
     Gtk::Main::quit();
 
@@ -331,10 +356,39 @@ namespace diesel
 
   void cGtkmmMainWindow::OnActionBrowseFolder()
   {
+    // Browse for the folder
+    gtkmm::cGtkmmFolderDialog dialog;
+    dialog.SetType(gtkmm::cGtkmmFolderDialog::TYPE::SELECT);
+    dialog.SetCaption(TEXT("Select photo folder"));
+    dialog.SetDefaultFolder(settings.GetLastPhotoBrowserFolder());
+    if (dialog.Run(*this)) {
+      LOG<<"cGtkmmMainWindow::OnActionBrowseFolder Selected folder"<<std::endl;
+      ChangeFolder(dialog.GetSelectedFolder());
+    }
   }
 
   void cGtkmmMainWindow::OnActionAddFilesFromPicturesFolder()
   {
+  }
+
+  void cGtkmmMainWindow::ChangeFolder(const string_t& sFolder)
+  {
+    // Update our settings
+    settings.SetLastPhotoBrowserFolder(sFolder);
+    settings.Save();
+
+    // Add our folder to the list of folders
+    comboBoxFolder.append(sFolder);
+
+    // Update the photo browser
+    photoBrowser.SetFolder(sFolder);
+  }
+
+  void cGtkmmMainWindow::OnActionChangeFolder()
+  {
+    Glib::ustring sText = comboBoxFolder.get_active_text();
+    if (sText == "Browse...") OnActionBrowseFolder();
+    else if (!sText.empty()) ChangeFolder(sText);
   }
 
   void cGtkmmMainWindow::OnActionStopLoading()

@@ -38,15 +38,20 @@ namespace diesel
     void OnMenuEditPreferences();
     void OnMenuHelpAbout();
 
+    void OnActionChangeFolder();
     void OnActionBrowseFiles();
     void OnActionBrowseFolder();
     void OnActionAddFilesFromPicturesFolder();
     void OnActionStopLoading();
     void OnActionRemovePhoto();
 
+    void ChangeFolder(const string_t& sFolder);
+
     cSettings settings;
 
     spitfire::util::cUpdateChecker updateChecker;
+
+    std::list<string_t> previousFolders;
 
     // Menu and toolbar
     Glib::RefPtr<Gtk::UIManager> m_refUIManager;
@@ -65,6 +70,7 @@ namespace diesel
     Gtk::HBox boxStatusBar;
 
     // Controls
+    Gtk::ComboBoxText comboBoxFolder;
     Gtk::Button buttonAddFiles;
     Gtk::Button buttonAddFolder;
 

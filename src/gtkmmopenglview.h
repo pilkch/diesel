@@ -78,6 +78,9 @@ namespace diesel
 
     void SetSelectionColour(const spitfire::math::cColour& colour);
 
+    string_t GetFolder() const;
+    void SetFolder(const string_t& sFolderPath);
+
     size_t GetPageHeight() const;
     size_t GetRequiredHeight() const;
 
