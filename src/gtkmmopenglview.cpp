@@ -193,6 +193,9 @@ namespace diesel
   void cGtkmmOpenGLView::SetFolder(const string_t& _sFolderPath)
   {
     if (sFolderPath != _sFolderPath) {
+      // Clear the request queue as soon as possible so that we don't waste time loading images from the old folder
+      imageLoadThread.ClearRequestQueue();
+
       sFolderPath = _sFolderPath;
 
       // Reload our photos

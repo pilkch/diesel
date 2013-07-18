@@ -46,6 +46,17 @@ namespace diesel
     requestQueue.AddItemToBack(new cImageLoadRequest(sFilePath, imageSize));
   }
 
+  void cImageLoadThread::ClearRequestQueue()
+  {
+    // Remove and delete events until there are no events left
+    while (true) {
+      cImageLoadRequest* pRequest = requestQueue.RemoveItemFromFront();
+      if (pRequest == nullptr) break;
+
+      spitfire::SAFE_DELETE(pRequest);
+    }
+  }
+
   void cImageLoadThread::ThreadFunction()
   {
     LOG<<"cImageLoadThread::ThreadFunction"<<std::endl;
@@ -90,15 +101,11 @@ namespace diesel
 
       // Try to avoid hogging the CPU
       spitfire::util::SleepThisThreadMS(1);
+      spitfire::util::YieldThisThread();
     }
 
     // Remove any further events because we don't care any more
-    while (true) {
-      cImageLoadRequest* pRequest = requestQueue.RemoveItemFromFront();
-      if (pRequest == nullptr) break;
-
-      spitfire::SAFE_DELETE(pRequest);
-    }
+    ClearRequestQueue();
 
     LOG<<"cImageLoadThread::ThreadFunction returning"<<std::endl;
   }

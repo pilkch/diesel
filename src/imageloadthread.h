@@ -54,6 +54,7 @@ namespace diesel
     void StopNow();
 
     void LoadThumbnail(const string_t& sFilePath, IMAGE_SIZE imageSize);
+    void ClearRequestQueue();
 
   private:
     virtual void ThreadFunction() override;
