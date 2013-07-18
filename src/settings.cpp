@@ -42,35 +42,25 @@ namespace diesel
 
   void cSettings::GetPreviousPhotoBrowserFolders(std::list<string_t>& folders) const
   {
-    folders.clear();
+    std::vector<string_t> vFolders;
+    document.GetListOfValues(TEXT("settings"), TEXT("path"), TEXT("recentPhotoBrowserFolder"), vFolders);
 
-    // Get the count
-    const size_t n = document.GetValue(TEXT("settings"), TEXT("path"), TEXT("recentPhotoBrowserFolderCount"), 0);
-
-    // Get each path
-    string_t sValue;
-    for (size_t i = 0; i < n; i++) {
-      sValue = document.GetValue<string_t>(TEXT("settings"), TEXT("path"), TEXT("recentPhotoBrowserFolder") + spitfire::string::ToString(i), TEXT(""));
-      if (!sValue.empty()) folders.push_back(sValue);
-    }
+    const size_t n = vFolders.size();
+    for (size_t i = 0; i < n; i++) folders.push_back(vFolders[i]);
   }
 
   void cSettings::SetPreviousPhotoBrowserFolders(const std::list<string_t>& folders)
   {
-    // Set the count
-    const size_t n = folders.size();
-    document.SetValue(TEXT("settings"), TEXT("path"), TEXT("recentPhotoBrowserFolderCount"), n);
-
-    // Add each path
-    size_t i = 0;
+    std::vector<string_t> vFolders;
     std::list<string_t>::const_iterator iter(folders.begin());
     const std::list<string_t>::const_iterator iterEnd(folders.end());
     while (iter != iterEnd) {
-      document.SetValue(TEXT("settings"), TEXT("path"), TEXT("recentPhotoBrowserFolder") + spitfire::string::ToString(i), *iter);
+      vFolders.push_back(*iter);
 
       iter++;
-      i++;
     }
+
+    document.SetListOfValues(TEXT("settings"), TEXT("path"), TEXT("recentPhotoBrowserFolder"), vFolders);
   }
 
   string_t cSettings::GetLastPhotoBrowserFolder() const
