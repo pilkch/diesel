@@ -25,6 +25,28 @@
 
 namespace diesel
 {
+  class cGtkmmOpenGLViewEvent
+  {
+  public:
+    virtual ~cGtkmmOpenGLViewEvent() {}
+
+    virtual void EventFunction(cGtkmmOpenGLView& view) = 0;
+  };
+
+
+  class cGtkmmOpenGLViewImageLoadedEvent : public cGtkmmOpenGLViewEvent
+  {
+  public:
+    cGtkmmOpenGLViewImageLoadedEvent(const string_t& sFilePath, IMAGE_SIZE imageSize, voodoo::cImage* pImage);
+    ~cGtkmmOpenGLViewImageLoadedEvent();
+
+    virtual void EventFunction(cGtkmmOpenGLView& view) override;
+
+    string_t sFilePath;
+    IMAGE_SIZE imageSize;
+    voodoo::cImage* pImage;
+  };
+
   cGtkmmOpenGLViewImageLoadedEvent::cGtkmmOpenGLViewImageLoadedEvent(const string_t& _sFilePath, IMAGE_SIZE _imageSize, voodoo::cImage* _pImage) :
     sFilePath(_sFilePath),
     imageSize(_imageSize),
@@ -40,6 +62,29 @@ namespace diesel
   void cGtkmmOpenGLViewImageLoadedEvent::EventFunction(cGtkmmOpenGLView& view)
   {
     view.OnImageLoaded(sFilePath, imageSize, pImage);
+  }
+
+
+  class cGtkmmOpenGLViewImageErrorEvent : public cGtkmmOpenGLViewEvent
+  {
+  public:
+    cGtkmmOpenGLViewImageErrorEvent(const string_t& sFilePath, IMAGE_SIZE imageSize);
+
+    virtual void EventFunction(cGtkmmOpenGLView& view) override;
+
+    string_t sFilePath;
+    IMAGE_SIZE imageSize;
+  };
+
+  cGtkmmOpenGLViewImageErrorEvent::cGtkmmOpenGLViewImageErrorEvent(const string_t& _sFilePath, IMAGE_SIZE _imageSize) :
+    sFilePath(_sFilePath),
+    imageSize(_imageSize)
+  {
+  }
+
+  void cGtkmmOpenGLViewImageErrorEvent::EventFunction(cGtkmmOpenGLView& view)
+  {
+    view.OnImageError(sFilePath, imageSize);
   }
 
 
@@ -71,6 +116,7 @@ namespace diesel
     pTextureMissing(nullptr),
     pTextureFolder(nullptr),
     pTextureLoading(nullptr),
+    pTextureLoadingError(nullptr),
     pShaderSelectionRectangle(nullptr),
     pShaderPhoto(nullptr),
     pShaderIcon(nullptr),
@@ -114,7 +160,7 @@ namespace diesel
 
     // Destroy any further events
     while (true) {
-      cGtkmmOpenGLViewImageLoadedEvent* pEvent = eventQueue.RemoveItemFromFront();
+      cGtkmmOpenGLViewEvent* pEvent = eventQueue.RemoveItemFromFront();
       if (pEvent == nullptr) break;
       else spitfire::SAFE_DELETE(pEvent);
     }
@@ -373,10 +419,16 @@ namespace diesel
     ASSERT(pTextureFolder != nullptr);
     pTextureLoading = pContext->CreateTexture("data/textures/icon_stopwatch.png");
     ASSERT(pTextureLoading != nullptr);
+    pTextureLoadingError = pContext->CreateTexture("data/textures/icon_loading_error.png");
+    ASSERT(pTextureLoadingError != nullptr);
   }
 
   void cGtkmmOpenGLView::DestroyResources()
   {
+    if (pTextureLoadingError != nullptr) {
+      pContext->DestroyTexture(pTextureLoadingError);
+      pTextureLoadingError = nullptr;
+    }
     if (pTextureLoading != nullptr) {
       pContext->DestroyTexture(pTextureLoading);
       pTextureLoading = nullptr;
@@ -435,19 +487,16 @@ namespace diesel
 
     // Create our textures
     for (spitfire::filesystem::cFolderIterator iter(sFolderPath); iter.IsValid(); iter.Next()) {
-      if (photos.size() > 16) break;
-
       if (iter.IsFile()) {
         cPhotoEntry* pEntry = new cPhotoEntry;
-        pEntry->state = cPhotoEntry::STATE::LOADING;
-        if (photos.size() < 4) pEntry->state = cPhotoEntry::STATE::NOT_FOUND;
-        else if (photos.size() < 8) pEntry->state = cPhotoEntry::STATE::FOLDER;
+        pEntry->sFilePath = iter.GetFullPath();
+        if (spitfire::filesystem::IsFolder(pEntry->sFilePath)) pEntry->state = cPhotoEntry::STATE::FOLDER;
         else {
           // Start loading the image in the background
-          imageLoadThread.LoadThumbnail(iter.GetFullPath(), IMAGE_SIZE::FULL);
+          pEntry->state = cPhotoEntry::STATE::LOADING;
+          imageLoadThread.LoadThumbnail(pEntry->sFilePath, IMAGE_SIZE::FULL);
         }
 
-        pEntry->sFilePath = iter.GetFullPath();
         photos.push_back(pEntry);
       }
     }
@@ -654,6 +703,10 @@ namespace diesel
                 pTexture = pTextureLoading;
                 break;
               }
+              case cPhotoEntry::STATE::LOADING_ERROR: {
+                pTexture = pTextureLoadingError;
+                break;
+              }
             };
 
             pContext->BindTexture(0, *pTexture);
@@ -782,10 +835,31 @@ namespace diesel
   {
     LOG<<"cGtkmmOpenGLView::OnNotify"<<std::endl;
     ASSERT(spitfire::util::IsMainThread());
-    cGtkmmOpenGLViewImageLoadedEvent* pEvent = eventQueue.RemoveItemFromFront();
+    cGtkmmOpenGLViewEvent* pEvent = eventQueue.RemoveItemFromFront();
     if (pEvent != nullptr) {
       pEvent->EventFunction(*this);
       spitfire::SAFE_DELETE(pEvent);
+    }
+  }
+
+  void cGtkmmOpenGLView::OnImageError(const string_t& sFilePath, IMAGE_SIZE imageSize)
+  {
+    LOG<<"cGtkmmOpenGLView::OnImageError \""<<sFilePath<<"\""<<std::endl;
+
+    if (!spitfire::util::IsMainThread()) {
+      cGtkmmOpenGLViewImageErrorEvent* pEvent = new cGtkmmOpenGLViewImageErrorEvent(sFilePath, imageSize);
+      eventQueue.AddItemToBack(pEvent);
+      notifyMainThread.Notify();
+    } else {
+      LOG<<"cGtkmmOpenGLView::OnImageError On main thread \""<<sFilePath<<"\""<<std::endl;
+      const size_t n = photos.size();
+      for (size_t i = 0; i < n; i++) {
+        if (photos[i]->sFilePath == sFilePath) {
+          cPhotoEntry* pEntry = photos[i];
+          pEntry->state = cPhotoEntry::STATE::LOADING_ERROR;
+          break;
+        }
+      }
     }
   }
 
@@ -928,7 +1002,7 @@ namespace diesel
 
   bool cGtkmmOpenGLView::OnMouseMove(int x, int y, bool bKeyControl, bool bKeyShift)
   {
-    LOG<<"cGtkmmOpenGLView::OnMouseMove"<<std::endl;
+    //LOG<<"cGtkmmOpenGLView::OnMouseMove"<<std::endl;
     return false;
   }
 

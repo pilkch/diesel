@@ -67,7 +67,13 @@ namespace diesel
               pImage->LoadFromFile(pRequest->sFilePath);
 
               // Notify the handler
-              handler.OnImageLoaded(pRequest->sFilePath, pRequest->imageSize, pImage);
+              if (pImage->IsValid()) handler.OnImageLoaded(pRequest->sFilePath, pRequest->imageSize, pImage);
+              else {
+                handler.OnImageError(pRequest->sFilePath, pRequest->imageSize);
+
+                // Delete the image
+                delete pImage;
+              }
             }
             break;
           }

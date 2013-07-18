@@ -40,7 +40,8 @@ namespace diesel
     virtual ~cImageLoadHandler() {}
 
   private:
-    virtual void OnImageLoaded(const string_t& sFilePath, IMAGE_SIZE size, voodoo::cImage* pImage) = 0;
+    virtual void OnImageError(const string_t& sFilePath, IMAGE_SIZE imageSize) = 0;
+    virtual void OnImageLoaded(const string_t& sFilePath, IMAGE_SIZE imageSize, voodoo::cImage* pImage) = 0;
   };
 
   class cImageLoadThread : protected spitfire::util::cThread

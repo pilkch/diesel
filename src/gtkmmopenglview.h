@@ -28,22 +28,6 @@
 
 namespace diesel
 {
-  class cGtkmmOpenGLView;
-
-  class cGtkmmOpenGLViewImageLoadedEvent
-  {
-  public:
-    cGtkmmOpenGLViewImageLoadedEvent(const string_t& sFilePath, IMAGE_SIZE imageSize, voodoo::cImage* pImage);
-    ~cGtkmmOpenGLViewImageLoadedEvent();
-
-    void EventFunction(cGtkmmOpenGLView& view);
-
-    string_t sFilePath;
-    IMAGE_SIZE imageSize;
-    voodoo::cImage* pImage;
-  };
-
-
   class cPhotoEntry
   {
   public:
@@ -53,7 +37,8 @@ namespace diesel
       NOT_FOUND,
       FOLDER,
       LOADING,
-      LOADED
+      LOADED,
+      LOADING_ERROR,
     };
 
     string_t sFilePath;
@@ -64,10 +49,15 @@ namespace diesel
 
   class cGtkmmPhotoBrowser;
 
+  class cGtkmmOpenGLViewEvent;
+  class cGtkmmOpenGLViewImageLoadedEvent;
+  class cGtkmmOpenGLViewImageErrorEvent;
+
   class cGtkmmOpenGLView : public Gtk::DrawingArea, public cImageLoadHandler
   {
   public:
     friend class cGtkmmOpenGLViewImageLoadedEvent;
+    friend class cGtkmmOpenGLViewImageErrorEvent;
     friend class cGtkmmPhotoBrowser;
 
     explicit cGtkmmOpenGLView(cGtkmmPhotoBrowser& parent);
@@ -131,6 +121,7 @@ namespace diesel
     static gboolean configure_cb(GtkWidget* pWidget, GdkEventConfigure* event, gpointer pUserData);
     static gboolean idle_cb(gpointer pUserData);
 
+    virtual void OnImageError(const string_t& sFilePath, IMAGE_SIZE imageSize) override;
     virtual void OnImageLoaded(const string_t& sFilePath, IMAGE_SIZE imageSize, voodoo::cImage* pImage) override;
 
     void OnNotify();
@@ -160,6 +151,7 @@ namespace diesel
     opengl::cTexture* pTextureMissing;
     opengl::cTexture* pTextureFolder;
     opengl::cTexture* pTextureLoading;
+    opengl::cTexture* pTextureLoadingError;
 
     opengl::cShader* pShaderSelectionRectangle;
     opengl::cShader* pShaderPhoto;
@@ -179,7 +171,7 @@ namespace diesel
 
     gtkmm::cGtkmmNotifyMainThread notifyMainThread;
     spitfire::util::cSignalObject soAction;
-    spitfire::util::cThreadSafeQueue<cGtkmmOpenGLViewImageLoadedEvent> eventQueue;
+    spitfire::util::cThreadSafeQueue<cGtkmmOpenGLViewEvent> eventQueue;
   };
 }
 
