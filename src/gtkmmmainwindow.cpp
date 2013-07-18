@@ -251,7 +251,7 @@ namespace diesel
 
 
     // Controls
-    comboBoxFolder.signal_changed().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionChangeFolder));
+    comboBoxFolder.get_entry()->signal_changed().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionChangeFolder));
     buttonStopLoading.signal_clicked().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionStopLoading));
 
     // Add the previous paths
@@ -362,8 +362,11 @@ namespace diesel
     dialog.SetCaption(TEXT("Select photo folder"));
     dialog.SetDefaultFolder(settings.GetLastPhotoBrowserFolder());
     if (dialog.Run(*this)) {
-      LOG<<"cGtkmmMainWindow::OnActionBrowseFolder Selected folder"<<std::endl;
+      // Change the folder
       ChangeFolder(dialog.GetSelectedFolder());
+
+      // Update the combobox text
+      comboBoxFolder.set_active_text(dialog.GetSelectedFolder());
     }
   }
 
@@ -373,20 +376,58 @@ namespace diesel
 
   void cGtkmmMainWindow::ChangeFolder(const string_t& sFolder)
   {
+    LOG<<"cGtkmmMainWindow::ChangeFolder \""<<sFolder<<"\""<<std::endl;
+
+    // Check that the folder exists
+    if (!spitfire::filesystem::DirectoryExists(sFolder)) {
+      LOG<<"cGtkmmMainWindow::ChangeFolder Folder doesn't exist, returning"<<std::endl;
+      return;
+    }
+
+    // Check if the folder already exists
+    bool bFound = false;
+    std::list<string_t>::const_iterator iter(previousFolders.begin());
+    const std::list<string_t>::const_iterator iterEnd(previousFolders.end());
+    while (iter != iterEnd) {
+      if (*iter == sFolder) {
+        bFound = true;
+        break;
+      }
+
+      iter++;
+    }
+
+    if (!bFound) {
+      LOG<<"cGtkmmMainWindow::ChangeFolder Folder was not in the list, adding it"<<std::endl;
+
+      // Add the folder
+      previousFolders.push_front(sFolder);
+
+      // Clamp the number of folders
+      const size_t n = previousFolders.size();
+      for (size_t i = 15; i < n; i++) previousFolders.pop_back();
+
+      // Add our folder to the list of folders
+      comboBoxFolder.prepend(sFolder);
+
+      // Clamp the number of folders in the combobox too
+      for (size_t i = 15; i < n; i++) comboBoxFolder.remove_text(i);
+    }
+
+    LOG<<"cGtkmmMainWindow::ChangeFolder Updating the settings"<<std::endl;
     // Update our settings
     settings.SetLastPhotoBrowserFolder(sFolder);
+    if (bFound) settings.SetPreviousPhotoBrowserFolders(previousFolders);
     settings.Save();
 
-    // Add our folder to the list of folders
-    comboBoxFolder.append(sFolder);
-
+    LOG<<"cGtkmmMainWindow::ChangeFolder Update the photo browser"<<std::endl;
     // Update the photo browser
     photoBrowser.SetFolder(sFolder);
   }
 
   void cGtkmmMainWindow::OnActionChangeFolder()
   {
-    Glib::ustring sText = comboBoxFolder.get_active_text();
+    Glib::ustring sText = comboBoxFolder.get_entry_text();
     if (sText == "Browse...") OnActionBrowseFolder();
     else if (!sText.empty()) ChangeFolder(sText);
   }
