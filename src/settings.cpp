@@ -69,6 +69,7 @@ namespace diesel
       document.SetValue(TEXT("settings"), TEXT("path"), TEXT("recentPhotoBrowserFolder") + spitfire::string::ToString(i), *iter);
 
       iter++;
+      i++;
     }
   }
 
