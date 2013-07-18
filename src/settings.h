@@ -23,7 +23,7 @@ namespace diesel
     string_t GetIgnoreUpdateVersion() const;
     void SetIgnoreUpdateVersion(const string_t& sVersion);
 
-    void GetPreviousPhotoBrowserFolders(std::list<string_t>& folders);
+    void GetPreviousPhotoBrowserFolders(std::list<string_t>& folders) const;
     void SetPreviousPhotoBrowserFolders(const std::list<string_t>& folders);
 
     string_t GetLastPhotoBrowserFolder() const;

@@ -40,7 +40,7 @@ namespace diesel
     document.SetValue(TEXT("settings"), TEXT("update"), TEXT("ignoredVersion"), sVersion);
   }
 
-  void cSettings::GetPreviousPhotoBrowserFolders(std::list<string_t>& folders)
+  void cSettings::GetPreviousPhotoBrowserFolders(std::list<string_t>& folders) const
   {
     folders.clear();
 
