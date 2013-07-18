@@ -268,11 +268,13 @@ namespace diesel
     comboBoxFolder.append("Browse...");
 
     const string_t sFolder = settings.GetLastPhotoBrowserFolder();
-    comboBoxFolder.set_active_text(sFolder);
 
     photoBrowser.Init(argc, argv);
 
-    photoBrowser.SetFolder(sFolder);
+    ChangeFolder(sFolder);
+
+    // Update the combobox text
+    comboBoxFolder.set_active_text(sFolder);
 
     boxControls.pack_start(comboBoxFolder, Gtk::PACK_SHRINK);
     boxControls.pack_start(photoBrowser.GetWidget(), Gtk::PACK_EXPAND_WIDGET);
