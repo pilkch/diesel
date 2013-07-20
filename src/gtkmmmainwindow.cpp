@@ -16,6 +16,7 @@
 
 // Diesel headers
 #include "gtkmmmainwindow.h"
+#include "gtkmmpreferencesdialog.h"
 
 namespace diesel
 {
@@ -350,6 +351,12 @@ namespace diesel
 
   void cGtkmmMainWindow::OnMenuEditPreferences()
   {
+    LOG<<"cGtkmmMainWindow::OnMenuEditPreferences"<<std::endl;
+    cGtkmmPreferencesDialog dialog(settings, *this);
+    if (dialog.Run()) {
+      // Update our state from the settings
+      ApplySettings();
+    }
   }
 
   void cGtkmmMainWindow::OnMenuHelpAbout()
