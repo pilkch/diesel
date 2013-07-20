@@ -125,6 +125,8 @@ namespace diesel
     pStaticVertexBufferObjectIcon(nullptr),
     pFont(nullptr),
     colourSelected(1.0f, 1.0f, 1.0f),
+    bIsModeSinglePhoto(false),
+    currentSinglePhoto(0),
     soAction("cGtkmmOpenGLView::soAction"),
     eventQueue(soAction)
   {
@@ -604,6 +606,77 @@ namespace diesel
     parent.OnOpenGLViewContentChanged();
   }
 
+  void cGtkmmOpenGLView::RenderPhoto(size_t index, const spitfire::math::cMat4& matScale)
+  {
+    spitfire::math::cMat4 matModelView2D;
+
+    if (photos[index]->pTexture != nullptr) {
+      pContext->BindStaticVertexBufferObject2D(*pStaticVertexBufferObjectPhoto);
+
+      opengl::cTexture* pTexture = photos[index]->pTexture;
+
+      pContext->BindTexture(0, *pTexture);
+
+      pContext->BindShader(*pShaderPhoto);
+
+      const size_t x = index % columns;
+      const size_t y = index / columns;
+      const float fX = fThumbNailSpacing + (float(x) * (fThumbNailWidth + fThumbNailSpacing));
+      const float fY = fThumbNailSpacing + (float(y) * (fThumbNailHeight + fThumbNailSpacing));
+      matModelView2D.SetTranslation(fX, fY - fScrollPosition, 0.0f);
+
+      pContext->SetShaderProjectionAndModelViewMatricesRenderMode2D(opengl::MODE2D_TYPE::Y_INCREASES_DOWN_SCREEN_KEEP_DIMENSIONS_AND_ASPECT_RATIO, matScale * matModelView2D);
+
+      pContext->DrawStaticVertexBufferObjectTriangles2D(*pStaticVertexBufferObjectPhoto);
+
+      pContext->UnBindShader(*pShaderPhoto);
+
+      pContext->UnBindTexture(0, *pTexture);
+
+      pContext->UnBindStaticVertexBufferObject2D(*pStaticVertexBufferObjectPhoto);
+    } else {
+      // Draw the icon
+      pContext->BindStaticVertexBufferObject2D(*pStaticVertexBufferObjectIcon);
+
+      opengl::cTexture* pTexture = pTextureMissing;
+
+      switch (photos[index]->state) {
+        case cPhotoEntry::STATE::FOLDER: {
+          pTexture = pTextureFolder;
+          break;
+        }
+        case cPhotoEntry::STATE::LOADING: {
+          pTexture = pTextureLoading;
+          break;
+        }
+        case cPhotoEntry::STATE::LOADING_ERROR: {
+          pTexture = pTextureLoadingError;
+          break;
+        }
+      };
+
+      pContext->BindTexture(0, *pTexture);
+
+      pContext->BindShader(*pShaderIcon);
+
+      const size_t x = index % columns;
+      const size_t y = index / columns;
+      const float fX = fThumbNailSpacing + (float(x) * (fThumbNailWidth + fThumbNailSpacing));
+      const float fY = fThumbNailSpacing + (float(y) * (fThumbNailHeight + fThumbNailSpacing));
+      matModelView2D.SetTranslation(fX, fY - fScrollPosition, 0.0f);
+
+      pContext->SetShaderProjectionAndModelViewMatricesRenderMode2D(opengl::MODE2D_TYPE::Y_INCREASES_DOWN_SCREEN_KEEP_DIMENSIONS_AND_ASPECT_RATIO, matScale * matModelView2D);
+
+      pContext->DrawStaticVertexBufferObjectTriangles2D(*pStaticVertexBufferObjectIcon);
+
+      pContext->UnBindShader(*pShaderIcon);
+
+      pContext->UnBindTexture(0, *pTexture);
+
+      pContext->UnBindStaticVertexBufferObject2D(*pStaticVertexBufferObjectIcon);
+    }
+  }
+
   void cGtkmmOpenGLView::DrawScene()
   {
     ASSERT(pContext != nullptr);
@@ -633,13 +706,81 @@ namespace diesel
     {
       pContext->BeginRenderMode2D(opengl::MODE2D_TYPE::Y_INCREASES_DOWN_SCREEN_KEEP_DIMENSIONS_AND_ASPECT_RATIO);
 
-      spitfire::math::cMat4 matModelView2D;
-
       spitfire::math::cMat4 matScale;
       matScale.SetScale(fScale, fScale, 1.0f);
 
-      // Draw the photos
-      {
+      if (bIsModeSinglePhoto) {
+        // Single photo mode
+
+        if (currentSinglePhoto < photos.size()) {
+          // Render the photo
+          RenderPhoto(currentSinglePhoto, matScale);
+        }
+
+        // Render the filename for the photo
+        assert(pFont != nullptr);
+        assert(pFont->IsValid());
+
+        // The font is designed for use with contexts with a width of 1.0 so we need to scale it here
+        const float fTextScale = 500.0f; // Fixed scale
+        const spitfire::math::cVec2 scale(fTextScale, fTextScale);
+
+        const spitfire::math::cColour colour(1.0f, 1.0f, 1.0f, 1.0f);
+
+        opengl::cGeometryDataPtr pTextGeometryDataPtr = opengl::CreateGeometryData();
+
+        opengl::cGeometryBuilder_v2_c4_t2 builderText(*pTextGeometryDataPtr);
+
+        const size_t index = currentSinglePhoto;
+
+        {
+          const size_t x = index % columns;
+          const size_t y = index / columns;
+          const float fPhotoX = fThumbNailSpacing + (float(x) * (fThumbNailWidth + fThumbNailSpacing));
+          const float fPhotoY = fThumbNailSpacing + (float(y) * (fThumbNailHeight + fThumbNailSpacing));
+
+          // Place the text below the photo
+          const float fNameX = fPhotoX;
+          const float fNameY = fPhotoY + fThumbNailHeight;
+
+          // Create the text for this photo
+          const float fRotationDegrees = 0.0f;
+          pFont->PushBack(builderText, spitfire::filesystem::GetFile(photos[index]->sFilePath), colour, spitfire::math::cVec2(fNameX, fNameY), fRotationDegrees, scale);
+        }
+
+
+        if (pTextGeometryDataPtr->nVertexCount != 0) {
+          // Compile the vertex buffer object
+          opengl::cStaticVertexBufferObject* pVBOText = pContext->CreateStaticVertexBufferObject();
+
+          pVBOText->SetData(pTextGeometryDataPtr);
+
+          pVBOText->Compile2D(system);
+
+          // Bind the vertex buffer object
+          pContext->BindStaticVertexBufferObject2D(*pVBOText);
+
+          // Set the position of the text
+          spitfire::math::cMat4 matModelView2D;
+          matModelView2D.SetTranslation(0.0f, -fScrollPosition, 0.0f);
+
+          pContext->BindFont(*pFont);
+
+          pContext->SetShaderProjectionAndModelViewMatricesRenderMode2D(opengl::MODE2D_TYPE::Y_INCREASES_DOWN_SCREEN_KEEP_DIMENSIONS_AND_ASPECT_RATIO, matScale * matModelView2D);
+
+          pContext->DrawStaticVertexBufferObjectTriangles2D(*pVBOText);
+
+          pContext->UnBindFont(*pFont);
+
+          // Unbind the vertex buffer object
+          pContext->UnBindStaticVertexBufferObject2D(*pVBOText);
+
+          pContext->DestroyStaticVertexBufferObject(pVBOText);
+        }
+      } else {
+        spitfire::math::cMat4 matModelView2D;
+
+        // Photo browsing mode
         const size_t nPhotos = photos.size();
         for (size_t i = 0; i < nPhotos; i++) {
           // Draw the selection rectangle
@@ -666,77 +807,11 @@ namespace diesel
             pContext->UnBindStaticVertexBufferObject2D(*pStaticVertexBufferObjectSelectionRectangle);
           }
 
-          // Draw the photo
-          if (photos[i]->pTexture != nullptr) {
-            pContext->BindStaticVertexBufferObject2D(*pStaticVertexBufferObjectPhoto);
-
-            opengl::cTexture* pTexture = photos[i]->pTexture;
-
-            pContext->BindTexture(0, *pTexture);
-
-            pContext->BindShader(*pShaderPhoto);
-
-            const size_t x = i % columns;
-            const size_t y = i / columns;
-            const float fX = fThumbNailSpacing + (float(x) * (fThumbNailWidth + fThumbNailSpacing));
-            const float fY = fThumbNailSpacing + (float(y) * (fThumbNailHeight + fThumbNailSpacing));
-            matModelView2D.SetTranslation(fX, fY - fScrollPosition, 0.0f);
-
-            pContext->SetShaderProjectionAndModelViewMatricesRenderMode2D(opengl::MODE2D_TYPE::Y_INCREASES_DOWN_SCREEN_KEEP_DIMENSIONS_AND_ASPECT_RATIO, matScale * matModelView2D);
-
-            pContext->DrawStaticVertexBufferObjectTriangles2D(*pStaticVertexBufferObjectPhoto);
-
-            pContext->UnBindShader(*pShaderPhoto);
-
-            pContext->UnBindTexture(0, *pTexture);
-
-            pContext->UnBindStaticVertexBufferObject2D(*pStaticVertexBufferObjectPhoto);
-          } else {
-            // Draw the icon
-            pContext->BindStaticVertexBufferObject2D(*pStaticVertexBufferObjectIcon);
-
-            opengl::cTexture* pTexture = pTextureMissing;
-
-            switch (photos[i]->state) {
-              case cPhotoEntry::STATE::FOLDER: {
-                pTexture = pTextureFolder;
-                break;
-              }
-              case cPhotoEntry::STATE::LOADING: {
-                pTexture = pTextureLoading;
-                break;
-              }
-              case cPhotoEntry::STATE::LOADING_ERROR: {
-                pTexture = pTextureLoadingError;
-                break;
-              }
-            };
-
-            pContext->BindTexture(0, *pTexture);
-
-            pContext->BindShader(*pShaderIcon);
-
-            const size_t x = i % columns;
-            const size_t y = i / columns;
-            const float fX = fThumbNailSpacing + (float(x) * (fThumbNailWidth + fThumbNailSpacing));
-            const float fY = fThumbNailSpacing + (float(y) * (fThumbNailHeight + fThumbNailSpacing));
-            matModelView2D.SetTranslation(fX, fY - fScrollPosition, 0.0f);
-
-            pContext->SetShaderProjectionAndModelViewMatricesRenderMode2D(opengl::MODE2D_TYPE::Y_INCREASES_DOWN_SCREEN_KEEP_DIMENSIONS_AND_ASPECT_RATIO, matScale * matModelView2D);
-
-            pContext->DrawStaticVertexBufferObjectTriangles2D(*pStaticVertexBufferObjectIcon);
-
-            pContext->UnBindShader(*pShaderIcon);
-
-            pContext->UnBindTexture(0, *pTexture);
-
-            pContext->UnBindStaticVertexBufferObject2D(*pStaticVertexBufferObjectIcon);
-          }
+          // Render the photo
+          RenderPhoto(i, matScale);
         }
-      }
 
-      // Draw the filenames for the photos
-      {
+        // Render the filenames for the photos
         assert(pFont != nullptr);
         assert(pFont->IsValid());
 
@@ -988,6 +1063,25 @@ namespace diesel
   bool cGtkmmOpenGLView::OnMouseDoubleClick(int button, int x, int y, bool bKeyControl, bool bKeyShift)
   {
     LOG<<"cGtkmmOpenGLView::OnMouseDoubleClick"<<std::endl;
+
+    // Enter single photo mode
+    if (button == 1) {
+      if (!bIsModeSinglePhoto) {
+        size_t index = 0;
+        if (GetPhotoAtPoint(index, spitfire::math::cVec2(x, y))) {
+          ASSERT(index < photos.size());
+          if (!bKeyControl && !bKeyShift) {
+            // Enter single photo mode
+            bIsModeSinglePhoto = true;
+            currentSinglePhoto = index;
+          }
+        }
+      } else {
+        // Exit single photo mode
+        bIsModeSinglePhoto = false;
+      }
+    }
+
     return true;
   }
 

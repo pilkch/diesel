@@ -116,6 +116,8 @@ namespace diesel
 
     void ResizeWidget(size_t width, size_t height);
 
+    void RenderPhoto(size_t index, const spitfire::math::cMat4& matScale);
+
     void DrawScene();
 
     static gboolean configure_cb(GtkWidget* pWidget, GdkEventConfigure* event, gpointer pUserData);
@@ -168,6 +170,9 @@ namespace diesel
     std::vector<cPhotoEntry*> photos;
 
     spitfire::math::cColour colourSelected;
+
+    bool bIsModeSinglePhoto;
+    size_t currentSinglePhoto;
 
     gtkmm::cGtkmmNotifyMainThread notifyMainThread;
     spitfire::util::cSignalObject soAction;
