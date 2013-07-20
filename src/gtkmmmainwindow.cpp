@@ -254,27 +254,7 @@ namespace diesel
     comboBoxFolder.get_entry()->signal_changed().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionChangeFolder));
     buttonStopLoading.signal_clicked().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionStopLoading));
 
-    // Add the previous paths
-    settings.GetPreviousPhotoBrowserFolders(previousFolders);
-    std::list<string_t>::const_iterator iter(previousFolders.begin());
-    const std::list<string_t>::const_iterator iterEnd(previousFolders.end());
-    while (iter != iterEnd) {
-      comboBoxFolder.append(*iter);
-
-      iter++;
-    }
-
-    // Add the "Browse..." items
-    comboBoxFolder.append("Browse...");
-
-    const string_t sFolder = settings.GetLastPhotoBrowserFolder();
-
     photoBrowser.Init(argc, argv);
-
-    ChangeFolder(sFolder);
-
-    // Update the combobox text
-    comboBoxFolder.set_active_text(sFolder);
 
     boxControls.pack_start(comboBoxFolder, Gtk::PACK_SHRINK);
     boxControls.pack_start(photoBrowser.GetWidget(), Gtk::PACK_EXPAND_WIDGET);
@@ -293,12 +273,6 @@ namespace diesel
     add(boxMainWindow);
 
 
-    show_all_children();
-
-    // Start the update checker now that we have finished doing the serious work
-    updateChecker.Run();
-
-
     {
       // Get a typical selection colour for the selections on our photo browser
       Gtk::Table table;
@@ -309,11 +283,44 @@ namespace diesel
       const spitfire::math::cColour colourSelected(colour.get_red(), colour.get_green(), colour.get_blue(), colour.get_alpha());
       photoBrowser.SetSelectionColour(colourSelected);
     }
+
+    ApplySettings();
+
+    show_all_children();
+
+    // Start the update checker now that we have finished doing the serious work
+    updateChecker.Run();
   }
 
   void cGtkmmMainWindow::Run()
   {
     Gtk::Main::run(*this);
+  }
+
+  void cGtkmmMainWindow::ApplySettings()
+  {
+    comboBoxFolder.remove_all();
+    comboBoxFolder.set_active_text("");
+
+    // Add the previous paths
+    settings.GetPreviousPhotoBrowserFolders(previousFolders);
+    std::list<string_t>::const_iterator iter(previousFolders.begin());
+    const std::list<string_t>::const_iterator iterEnd(previousFolders.end());
+    while (iter != iterEnd) {
+      comboBoxFolder.append(*iter);
+
+      iter++;
+    }
+
+    // Add the "Browse..." items
+    comboBoxFolder.append("Browse...");
+
+    const string_t sFolder = settings.GetLastPhotoBrowserFolder();
+
+    ChangeFolder(sFolder);
+
+    // Update the combobox text
+    comboBoxFolder.set_active_text(sFolder);
   }
 
   void cGtkmmMainWindow::OnMenuFileQuit()

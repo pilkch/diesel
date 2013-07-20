@@ -45,6 +45,8 @@ namespace diesel
     void OnActionStopLoading();
     void OnActionRemovePhoto();
 
+    void ApplySettings();
+
     void ChangeFolder(const string_t& sFolder);
 
     cSettings settings;
