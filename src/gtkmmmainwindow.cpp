@@ -318,9 +318,7 @@ namespace diesel
 
     const string_t sFolder = settings.GetLastPhotoBrowserFolder();
 
-    ChangeFolder(sFolder);
-
-    // Update the combobox text
+    // Set the combobox text (This will also callback and change the folder on the photo browser)
     comboBoxFolder.set_active_text(sFolder);
   }
 
