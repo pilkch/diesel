@@ -172,6 +172,8 @@ namespace diesel
     // Text
     opengl::cFont* pFont;
 
+    bool bIsConfigureCalled;
+
     // Photos
     std::vector<cPhotoEntry*> photos;
 

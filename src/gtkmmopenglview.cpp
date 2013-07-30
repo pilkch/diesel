@@ -166,6 +166,7 @@ namespace diesel
     pStaticVertexBufferObjectPhoto(nullptr),
     pStaticVertexBufferObjectIcon(nullptr),
     pFont(nullptr),
+    bIsConfigureCalled(false),
     colourSelected(1.0f, 1.0f, 1.0f),
     bIsModeSinglePhoto(false),
     currentSinglePhoto(0),
@@ -242,9 +243,11 @@ namespace diesel
 
       sFolderPath = _sFolderPath;
 
-      // Reload our photos
-      DestroyPhotos();
-      CreatePhotos();
+      if (bIsConfigureCalled) {
+        // Reload our photos
+        DestroyPhotos();
+        CreatePhotos();
+      }
     }
   }
 
@@ -605,6 +608,7 @@ namespace diesel
 
     cGtkmmOpenGLView* pThis = (cGtkmmOpenGLView*)pUserData;
     ASSERT(pThis != nullptr);
+    pThis->bIsConfigureCalled = true;
     pThis->ResizeWidget(alloc.width, alloc.height);
     pThis->CreateResources();
 
@@ -1018,6 +1022,7 @@ namespace diesel
       for (size_t i = 0; i < n; i++) {
         if (photos[i]->sFilePath == sFilePath) {
           cPhotoEntry* pEntry = photos[i];
+          ASSERT(pEntry->pTexture == nullptr);
           opengl::cTexture* pTexture = pContext->CreateTextureFromImage(*pImage);
           ASSERT(pTexture != nullptr);
           pEntry->state = cPhotoEntry::STATE::LOADED;
