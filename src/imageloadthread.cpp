@@ -101,7 +101,7 @@ namespace diesel
         const std::list<string_t>::const_iterator iterEnd = files.end();
         for (std::list<string_t>::const_iterator iter = files.begin(); iter != iterEnd; iter++) {
 
-          if (IsToStop()) break;
+          if (IsToStop() || loadingProcessInterface.IsToStop()) break;
 
           const string_t sFilePath = *iter;
           /*
@@ -124,6 +124,9 @@ namespace diesel
           voodoo::cImage* pImage = new voodoo::cImage;
 
           pImage->LoadFromFile(sFilePath);
+
+          // Loading the image can take a while so we need to check again if we should stop
+          if (IsToStop() || loadingProcessInterface.IsToStop()) break;
 
           // Notify the handler
           if (pImage->IsValid()) handler.OnImageLoaded(sFilePath, pRequest->imageSize, pImage);
