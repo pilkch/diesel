@@ -49,6 +49,20 @@ namespace diesel
   void cImageLoadThread::StopLoading()
   {
     loadingProcessInterface.SetStop();
+
+    // Remove all the remaining events
+    ClearEventQueue();
+  }
+
+  void cImageLoadThread::ClearEventQueue()
+  {
+    // Remove and delete all events on the queue
+    while (true) {
+      cFolderLoadRequest* pEvent = requestQueue.RemoveItemFromFront();
+      if (pEvent == nullptr) break;
+
+      spitfire::SAFE_DELETE(pEvent);
+    }
   }
 
   void cImageLoadThread::ThreadFunction()
@@ -134,12 +148,7 @@ namespace diesel
     }
 
     // Remove any further events because we don't care any more
-    while (true) {
-      cFolderLoadRequest* pRequest = requestQueue.RemoveItemFromFront();
-      if (pRequest == nullptr) break;
-
-      spitfire::SAFE_DELETE(pRequest);
-    };
+    ClearEventQueue();
 
     LOG<<"cImageLoadThread::ThreadFunction returning"<<std::endl;
   }

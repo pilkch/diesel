@@ -54,6 +54,8 @@ namespace diesel
   private:
     virtual void ThreadFunction() override;
 
+    void ClearEventQueue();
+
     cImageLoadHandler& handler;
 
     spitfire::util::cSignalObject soAction;
