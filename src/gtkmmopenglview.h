@@ -50,12 +50,16 @@ namespace diesel
   class cGtkmmPhotoBrowser;
 
   class cGtkmmOpenGLViewEvent;
+  class cGtkmmOpenGLViewFolderFoundEvent;
+  class cGtkmmOpenGLViewImageLoadingEvent;
   class cGtkmmOpenGLViewImageLoadedEvent;
   class cGtkmmOpenGLViewImageErrorEvent;
 
   class cGtkmmOpenGLView : public Gtk::DrawingArea, public cImageLoadHandler
   {
   public:
+    friend class cGtkmmOpenGLViewFolderFoundEvent;
+    friend class cGtkmmOpenGLViewImageLoadingEvent;
     friend class cGtkmmOpenGLViewImageLoadedEvent;
     friend class cGtkmmOpenGLViewImageErrorEvent;
     friend class cGtkmmPhotoBrowser;
@@ -123,8 +127,10 @@ namespace diesel
     static gboolean configure_cb(GtkWidget* pWidget, GdkEventConfigure* event, gpointer pUserData);
     static gboolean idle_cb(gpointer pUserData);
 
-    virtual void OnImageError(const string_t& sFilePath, IMAGE_SIZE imageSize) override;
+    virtual void OnFolderFound(const string_t& sFolderPath) override;
+    virtual void OnImageLoading(const string_t& sFilePath) override;
     virtual void OnImageLoaded(const string_t& sFilePath, IMAGE_SIZE imageSize, voodoo::cImage* pImage) override;
+    virtual void OnImageError(const string_t& sFilePath, IMAGE_SIZE imageSize) override;
 
     void OnNotify();
 

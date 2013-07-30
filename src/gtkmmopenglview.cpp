@@ -34,6 +34,48 @@ namespace diesel
   };
 
 
+  class cGtkmmOpenGLViewFolderFoundEvent : public cGtkmmOpenGLViewEvent
+  {
+  public:
+    cGtkmmOpenGLViewFolderFoundEvent(const string_t& sFilePath);
+
+    virtual void EventFunction(cGtkmmOpenGLView& view) override;
+
+    string_t sFilePath;
+  };
+
+  cGtkmmOpenGLViewFolderFoundEvent::cGtkmmOpenGLViewFolderFoundEvent(const string_t& _sFilePath) :
+    sFilePath(_sFilePath)
+  {
+  }
+
+  void cGtkmmOpenGLViewFolderFoundEvent::EventFunction(cGtkmmOpenGLView& view)
+  {
+    view.OnFolderFound(sFilePath);
+  }
+
+
+  class cGtkmmOpenGLViewImageLoadingEvent : public cGtkmmOpenGLViewEvent
+  {
+  public:
+    cGtkmmOpenGLViewImageLoadingEvent(const string_t& sFilePath);
+
+    virtual void EventFunction(cGtkmmOpenGLView& view) override;
+
+    string_t sFilePath;
+  };
+
+  cGtkmmOpenGLViewImageLoadingEvent::cGtkmmOpenGLViewImageLoadingEvent(const string_t& _sFilePath) :
+    sFilePath(_sFilePath)
+  {
+  }
+
+  void cGtkmmOpenGLViewImageLoadingEvent::EventFunction(cGtkmmOpenGLView& view)
+  {
+    view.OnImageLoading(sFilePath);
+  }
+
+
   class cGtkmmOpenGLViewImageLoadedEvent : public cGtkmmOpenGLViewEvent
   {
   public:
@@ -196,7 +238,7 @@ namespace diesel
   {
     if (sFolderPath != _sFolderPath) {
       // Clear the request queue as soon as possible so that we don't waste time loading images from the old folder
-      imageLoadThread.ClearRequestQueue();
+      imageLoadThread.StopLoading();
 
       sFolderPath = _sFolderPath;
 
@@ -490,21 +532,8 @@ namespace diesel
     // If we don't have a folder to show then we can just return
     if (sFolderPath.empty()) return;
 
-    // Create our textures
-    for (spitfire::filesystem::cFolderIterator iter(sFolderPath); iter.IsValid(); iter.Next()) {
-      if (iter.IsFile()) {
-        cPhotoEntry* pEntry = new cPhotoEntry;
-        pEntry->sFilePath = iter.GetFullPath();
-        if (spitfire::filesystem::IsFolder(pEntry->sFilePath)) pEntry->state = cPhotoEntry::STATE::FOLDER;
-        else {
-          // Start loading the image in the background
-          pEntry->state = cPhotoEntry::STATE::LOADING;
-          imageLoadThread.LoadThumbnail(pEntry->sFilePath, IMAGE_SIZE::FULL);
-        }
-
-        photos.push_back(pEntry);
-      }
-    }
+    // Tell our image loading thread to start loading the folder
+    imageLoadThread.LoadFolder(sFolderPath, IMAGE_SIZE::FULL);
   }
 
   void cGtkmmOpenGLView::DestroyPhotos()
@@ -917,6 +946,40 @@ namespace diesel
     if (pEvent != nullptr) {
       pEvent->EventFunction(*this);
       spitfire::SAFE_DELETE(pEvent);
+    }
+  }
+
+  void cGtkmmOpenGLView::OnFolderFound(const string_t& sFolderPath)
+  {
+    LOG<<"cGtkmmOpenGLView::OnFolderFound \""<<sFolderPath<<"\""<<std::endl;
+
+    if (!spitfire::util::IsMainThread()) {
+      cGtkmmOpenGLViewFolderFoundEvent* pEvent = new cGtkmmOpenGLViewFolderFoundEvent(sFolderPath);
+      eventQueue.AddItemToBack(pEvent);
+      notifyMainThread.Notify();
+    } else {
+      LOG<<"cGtkmmOpenGLView::OnFolderFound On main thread \""<<sFolderPath<<"\""<<std::endl;
+      cPhotoEntry* pEntry = new cPhotoEntry;
+      pEntry->sFilePath = sFolderPath;
+      pEntry->state = cPhotoEntry::STATE::FOLDER;
+      photos.push_back(pEntry);
+    }
+  }
+
+  void cGtkmmOpenGLView::OnImageLoading(const string_t& sFilePath)
+  {
+    LOG<<"cGtkmmOpenGLView::OnImageLoading \""<<sFilePath<<"\""<<std::endl;
+
+    if (!spitfire::util::IsMainThread()) {
+      cGtkmmOpenGLViewImageLoadingEvent* pEvent = new cGtkmmOpenGLViewImageLoadingEvent(sFilePath);
+      eventQueue.AddItemToBack(pEvent);
+      notifyMainThread.Notify();
+    } else {
+      LOG<<"cGtkmmOpenGLView::OnImageLoading On main thread \""<<sFilePath<<"\""<<std::endl;
+      cPhotoEntry* pEntry = new cPhotoEntry;
+      pEntry->sFilePath = sFilePath;
+      pEntry->state = cPhotoEntry::STATE::LOADING;
+      photos.push_back(pEntry);
     }
   }
 

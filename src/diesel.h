@@ -4,14 +4,20 @@
 // Spitfire headers
 #include <spitfire/util/string.h>
 
-#define DIESEL_WEB_SERVER_PORT 38001
+#define DIESEL_WEB_SERVER_PORT 38002
 
-#define INVALID_TRACK nullptr
+#define INVALID_PHOTO nullptr
 
 namespace diesel
 {
   using spitfire::char_t;
   using spitfire::string_t;
+
+  enum class IMAGE_SIZE {
+    SMALL,
+    MEDIUM,
+    FULL
+  };
 }
 
 #endif // DIESEL_H
