@@ -24,6 +24,7 @@ namespace diesel
     updateChecker(*this),
     pMenuPopup(nullptr),
     comboBoxFolder(true),
+    statusBar("0 photos"),
     photoBrowser(*this)
   {
     settings.Load();
@@ -263,6 +264,11 @@ namespace diesel
     boxControlsAndToolbar.pack_start(boxControls, Gtk::PACK_EXPAND_WIDGET);
     boxControlsAndToolbar.pack_start(boxToolbar, Gtk::PACK_SHRINK);
 
+    buttonStopLoading.signal_clicked().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionStopLoading));
+
+    // Hide the stop button until we start loading some files
+    buttonStopLoading.hide();
+
     boxStatusBar.pack_start(statusBar, Gtk::PACK_SHRINK);
     boxStatusBar.pack_start(buttonStopLoading, Gtk::PACK_SHRINK);
     //... show progress bar indeterminate when we are loading any files or playlists
@@ -284,6 +290,12 @@ namespace diesel
       const spitfire::math::cColour colourSelected(colour.get_red(), colour.get_green(), colour.get_blue(), colour.get_alpha());
       photoBrowser.SetSelectionColour(colourSelected);
     }
+
+
+    // Register our icon theme and update our icons
+    iconTheme.RegisterThemeChangedListener(*this);
+
+    UpdateIcons();
 
     ApplySettings();
 
@@ -320,6 +332,25 @@ namespace diesel
 
     // Set the combobox text (This will also callback and change the folder on the photo browser)
     comboBoxFolder.set_active_text(sFolder);
+  }
+
+  void cGtkmmMainWindow::OnThemeChanged()
+  {
+    UpdateIcons();
+  }
+
+  void cGtkmmMainWindow::UpdateIcons()
+  {
+    /*Gtk::Image* pImageFile = new Gtk::Image;
+    iconTheme.LoadStockIcon(sICON_ADD, *pImageFile);
+    buttonAddFiles.set_image(*pImageFile);
+    Gtk::Image* pImageDirectory = new Gtk::Image;
+    iconTheme.LoadStockIcon(sICON_DIRECTORY, *pImageDirectory);
+    buttonAddFolder.set_image(*pImageDirectory);*/
+
+    Gtk::Image* pImageStop = new Gtk::Image;
+    iconTheme.LoadStockIconWithSizePixels(sICON_STOP, 16, *pImageStop);
+    buttonStopLoading.set_image(*pImageStop);
   }
 
   void cGtkmmMainWindow::OnMenuFileQuit()
@@ -446,8 +477,54 @@ namespace diesel
     else if (!sText.empty()) ChangeFolder(sText);
   }
 
+  void cGtkmmMainWindow::UpdateStatusBar()
+  {
+    std::ostringstream o;
+    const size_t nSelectedCount = photoBrowser.GetSelectedPhotoCount();
+    if (nSelectedCount != 0) {
+      o<<nSelectedCount;
+      o<<" selected of ";
+    }
+    const size_t nTotal = photoBrowser.GetPhotoCount();
+    o<<nTotal;
+    o<<" photos and folders";
+    const size_t nLoadedCount = photoBrowser.GetLoadedPhotoCount();
+    const size_t nLoading = (nTotal - nLoadedCount);
+    if (nLoading != 0) {
+      o<<", loading ";
+      o<<nLoading;
+      o<<" photos";
+    }
+    statusBar.set_text(o.str());
+
+    // Show the stop button if we are currently loading tracks
+    if (nLoading != 0) buttonStopLoading.show();
+    else buttonStopLoading.hide();
+  }
+
+  void cGtkmmMainWindow::OnPhotoBrowserLoadedFileOrFolder()
+  {
+    UpdateStatusBar();
+  }
+
+  void cGtkmmMainWindow::OnPhotoBrowserFileFound()
+  {
+    UpdateStatusBar();
+  }
+
+  void cGtkmmMainWindow::OnPhotoBrowserLoadedFilesClear()
+  {
+    UpdateStatusBar();
+  }
+
+  void cGtkmmMainWindow::OnPhotoBrowserSelectionChanged()
+  {
+    UpdateStatusBar();
+  }
+
   void cGtkmmMainWindow::OnActionStopLoading()
   {
+    photoBrowser.StopLoading();
   }
 
   void cGtkmmMainWindow::OnActionRemovePhoto()

@@ -81,6 +81,12 @@ namespace diesel
     float GetScale() const;
     void SetScale(float fScale);
 
+    size_t GetPhotoCount() const;
+    size_t GetLoadedPhotoCount() const;
+    size_t GetSelectedPhotoCount() const;
+
+    void StopLoading();
+
     void OnScrollBarScrolled(float fValue);
 
   protected:

@@ -42,6 +42,9 @@ namespace diesel
 
   void cImageLoadThread::LoadFolder(const string_t& sFolderPath, IMAGE_SIZE imageSize)
   {
+    // If we are adding a folder request then we can reset our loading process interface
+    loadingProcessInterface.Reset();
+
     // Add an event to the queue
     requestQueue.AddItemToBack(new cFolderLoadRequest(sFolderPath, imageSize));
   }

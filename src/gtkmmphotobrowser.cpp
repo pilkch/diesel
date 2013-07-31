@@ -76,6 +76,26 @@ namespace diesel
     openglView.SetFolder(sFolderPath);
   }
 
+  size_t cGtkmmPhotoBrowser::GetPhotoCount() const
+  {
+    return openglView.GetPhotoCount();
+  }
+
+  size_t cGtkmmPhotoBrowser::GetLoadedPhotoCount() const
+  {
+    return openglView.GetLoadedPhotoCount();
+  }
+
+  size_t cGtkmmPhotoBrowser::GetSelectedPhotoCount() const
+  {
+    return openglView.GetSelectedPhotoCount();
+  }
+
+  void cGtkmmPhotoBrowser::StopLoading()
+  {
+    openglView.StopLoading();
+  }
+
   bool cGtkmmPhotoBrowser::event_box_key_press(GdkEventKey* pEvent)
   {
     ASSERT(pEvent != nullptr);
@@ -175,5 +195,25 @@ namespace diesel
   void cGtkmmPhotoBrowser::OnOpenGLViewScrollPageDown()
   {
     scrollBar.PageDown();
+  }
+
+  void cGtkmmPhotoBrowser::OnOpenGLViewLoadedFileOrFolder()
+  {
+    parent.OnPhotoBrowserLoadedFileOrFolder();
+  }
+
+  void cGtkmmPhotoBrowser::OnOpenGLViewFileFound()
+  {
+    parent.OnPhotoBrowserFileFound();
+  }
+
+  void cGtkmmPhotoBrowser::OnOpenGLViewLoadedFilesClear()
+  {
+    parent.OnPhotoBrowserLoadedFilesClear();
+  }
+
+  void cGtkmmPhotoBrowser::OnOpenGLViewSelectionChanged()
+  {
+    parent.OnPhotoBrowserSelectionChanged();
   }
 }

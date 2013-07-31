@@ -4,6 +4,9 @@
 // Gtkmm headers
 #include <gtkmm.h>
 
+// libgtkmm headers
+#include <libgtkmm/icontheme.h>
+
 // Spitfire headers
 #include <spitfire/util/updatechecker.h>
 
@@ -17,6 +20,7 @@ namespace diesel
   class cGtkmmMainWindow : public Gtk::Window, public spitfire::util::cUpdateCheckerHandler
   {
   public:
+    friend class gtkmm::cIconTheme;
     friend class cGtkmmOpenGLView;
     friend class cGtkmmScrollBar;
     friend class cGtkmmPhotoBrowser;
@@ -26,9 +30,16 @@ namespace diesel
     void Run();
 
   protected:
+    void OnThemeChanged();
+
     void OnMenuFileQuit();
 
     void OnPhotoBrowserRightClick();
+
+    void OnPhotoBrowserLoadedFileOrFolder();
+    void OnPhotoBrowserFileFound();
+    void OnPhotoBrowserLoadedFilesClear();
+    void OnPhotoBrowserSelectionChanged();
 
   private:
     virtual void OnNewVersionFound(int iMajorVersion, int iMinorVersion, const string_t& sDownloadPage) override;
@@ -48,6 +59,9 @@ namespace diesel
     void ApplySettings();
 
     void ChangeFolder(const string_t& sFolder);
+
+    void UpdateIcons();
+    void UpdateStatusBar();
 
     cSettings settings;
 
@@ -81,6 +95,8 @@ namespace diesel
     Gtk::Button buttonStopLoading;
 
     cGtkmmPhotoBrowser photoBrowser;
+
+    gtkmm::cIconTheme iconTheme;
   };
 }
 

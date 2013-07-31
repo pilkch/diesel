@@ -251,6 +251,56 @@ namespace diesel
     }
   }
 
+  void cGtkmmOpenGLView::StopLoading()
+  {
+    imageLoadThread.StopLoading();
+
+    std::vector<cPhotoEntry*>::iterator iter = photos.begin();
+    const std::vector<cPhotoEntry*>::iterator iterEnd = photos.end();
+    while (iter != iterEnd) {
+      if ((*iter)->state == cPhotoEntry::STATE::LOADING) (*iter)->state = cPhotoEntry::STATE::LOADING_ERROR;
+
+      iter++;
+    }
+
+    parent.OnOpenGLViewLoadedFileOrFolder();
+  }
+
+  size_t cGtkmmOpenGLView::GetPhotoCount() const
+  {
+    return photos.size();
+  }
+
+  size_t cGtkmmOpenGLView::GetLoadedPhotoCount() const
+  {
+    size_t i = 0;
+
+    std::vector<cPhotoEntry*>::const_iterator iter = photos.begin();
+    const std::vector<cPhotoEntry*>::const_iterator iterEnd = photos.end();
+    while (iter != iterEnd) {
+      if ((*iter)->state != cPhotoEntry::STATE::LOADING) i++;
+
+      iter++;
+    }
+
+    return i;
+  }
+
+  size_t cGtkmmOpenGLView::GetSelectedPhotoCount() const
+  {
+    size_t i = 0;
+
+    std::vector<cPhotoEntry*>::const_iterator iter = photos.begin();
+    const std::vector<cPhotoEntry*>::const_iterator iterEnd = photos.end();
+    while (iter != iterEnd) {
+      if ((*iter)->bIsSelected) i++;
+
+      iter++;
+    }
+
+    return i;
+  }
+
   size_t cGtkmmOpenGLView::GetPageHeight() const
   {
     return pageHeight;
@@ -534,6 +584,9 @@ namespace diesel
   {
     // If we don't have a folder to show then we can just return
     if (sFolderPath.empty()) return;
+
+    // Reset our files loaded and total count
+    parent.OnOpenGLViewLoadedFilesClear();
 
     // Tell our image loading thread to start loading the folder
     imageLoadThread.LoadFolder(sFolderPath, IMAGE_SIZE::FULL);
@@ -967,6 +1020,8 @@ namespace diesel
       pEntry->sFilePath = sFolderPath;
       pEntry->state = cPhotoEntry::STATE::FOLDER;
       photos.push_back(pEntry);
+
+      parent.OnOpenGLViewLoadedFileOrFolder(); // A folder counts as a loaded file
     }
   }
 
@@ -984,6 +1039,8 @@ namespace diesel
       pEntry->sFilePath = sFilePath;
       pEntry->state = cPhotoEntry::STATE::LOADING;
       photos.push_back(pEntry);
+
+      parent.OnOpenGLViewFileFound();
     }
   }
 
@@ -1005,6 +1062,8 @@ namespace diesel
           break;
         }
       }
+
+      parent.OnOpenGLViewLoadedFileOrFolder();
     }
   }
 
@@ -1030,6 +1089,8 @@ namespace diesel
           break;
         }
       }
+
+      parent.OnOpenGLViewLoadedFileOrFolder();
     }
   }
 
@@ -1113,6 +1174,8 @@ namespace diesel
         // Clear the selection
         for (size_t i = 0; i < n; i++) photos[i]->bIsSelected = false;
       }
+
+      parent.OnOpenGLViewSelectionChanged();
     }
 
     return true;
