@@ -43,7 +43,8 @@ namespace diesel
 
     string_t sFilePath;
     STATE state;
-    opengl::cTexture* pTexture;
+    opengl::cTexture* pTexturePhoto;
+    opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectPhoto;
     bool bIsSelected;
   };
 
@@ -111,7 +112,7 @@ namespace diesel
     void CreateVertexBufferObjectSquare(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight);
     void CreateVertexBufferObjectRect(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight, size_t textureWidth, size_t textureHeight);
     void CreateVertexBufferObjectIcon();
-    void CreateVertexBufferObjectPhoto();
+    void CreateVertexBufferObjectPhoto(opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectPhoto, size_t textureWidth, size_t textureHeight);
 
     virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr) override;
 
@@ -172,7 +173,6 @@ namespace diesel
     opengl::cShader* pShaderIcon;
 
     opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectSelectionRectangle;
-    opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectPhoto;
     opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectIcon;
 
     // Text

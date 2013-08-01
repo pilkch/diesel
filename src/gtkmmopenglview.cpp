@@ -138,7 +138,8 @@ namespace diesel
 
   cPhotoEntry::cPhotoEntry() :
     state(STATE::LOADING),
-    pTexture(nullptr),
+    pTexturePhoto(nullptr),
+    pStaticVertexBufferObjectPhoto(nullptr),
     bIsSelected(false)
   {
   }
@@ -163,7 +164,6 @@ namespace diesel
     pShaderPhoto(nullptr),
     pShaderIcon(nullptr),
     pStaticVertexBufferObjectSelectionRectangle(nullptr),
-    pStaticVertexBufferObjectPhoto(nullptr),
     pStaticVertexBufferObjectIcon(nullptr),
     pFont(nullptr),
     bIsConfigureCalled(false),
@@ -445,18 +445,21 @@ namespace diesel
     CreateVertexBufferObjectSquare(pStaticVertexBufferObjectIcon, fWidthAndHeight, fWidthAndHeight);
   }
 
-  void cGtkmmOpenGLView::CreateVertexBufferObjectPhoto()
+  void cGtkmmOpenGLView::CreateVertexBufferObjectPhoto(opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectPhoto, size_t textureWidth, size_t textureHeight)
   {
-    // TODO: We need to cache a few sizes, every time we encounter a newly sized photo we need to create a new vertex buffer object
-    pStaticVertexBufferObjectPhoto = pContext->CreateStaticVertexBufferObject();
     ASSERT(pStaticVertexBufferObjectPhoto != nullptr);
-    const size_t textureWidth = 3040;
-    const size_t textureHeight = 2024;
     const float fRatio = float(textureWidth) / float(textureHeight);
     const float fWidth = fThumbNailWidth;
     const float fHeight = fWidth * (1.0f / fRatio);
     CreateVertexBufferObjectRect(pStaticVertexBufferObjectPhoto, fWidth, fHeight, textureWidth, textureHeight);
   }
+
+  /*void cGtkmmOpenGLView::CreateVertexBufferObjectPhotos()
+  {
+    if (pTexture != nullptr) {
+
+    }
+  }*/
 
   void cGtkmmOpenGLView::CreateResources()
   {
@@ -472,13 +475,10 @@ namespace diesel
       CreateVertexBufferObjectIcon();
 
       // Recreate the vertex buffer object
-      if (pStaticVertexBufferObjectPhoto != nullptr) {
-        pContext->DestroyStaticVertexBufferObject(pStaticVertexBufferObjectPhoto);
-        pStaticVertexBufferObjectPhoto = nullptr;
-      }
+      //DestroyVertexBufferObjectPhotos();
 
-      // Create our vertex buffer object
-      CreateVertexBufferObjectPhoto();
+      // Create our vertex buffer objects
+      //CreateVertexBufferObjectPhotos();
 
       return;
     }
@@ -495,8 +495,8 @@ namespace diesel
     // Create our vertex buffer object
     CreateVertexBufferObjectIcon();
 
-    // Create our vertex buffer object
-    CreateVertexBufferObjectPhoto();
+    // Create our vertex buffer objects
+    //CreateVertexBufferObjectPhotos();
 
     // Create our shaders
     pShaderSelectionRectangle = pContext->CreateShader(TEXT("data/shaders/colour.vert"), TEXT("data/shaders/colour.frag"));
@@ -557,10 +557,15 @@ namespace diesel
       pStaticVertexBufferObjectIcon = nullptr;
     }
 
-    if (pStaticVertexBufferObjectPhoto != nullptr) {
-      pContext->DestroyStaticVertexBufferObject(pStaticVertexBufferObjectPhoto);
-      pStaticVertexBufferObjectPhoto = nullptr;
-    }
+    /*DestroyStaticVertexBufferObjectPhotos();
+
+    DestroyStaticVertexBufferObjectPhotos()
+    {
+      if (pStaticVertexBufferObjectPhoto != nullptr) {
+        pContext->DestroyStaticVertexBufferObject(pStaticVertexBufferObjectPhoto);
+        pStaticVertexBufferObjectPhoto = nullptr;
+      }
+    }*/
 
     if (pShaderIcon != nullptr) {
       pContext->DestroyShader(pShaderIcon);
@@ -596,8 +601,11 @@ namespace diesel
   {
     const size_t n = photos.size();
     for (size_t i = 0; i < n; i++) {
-      opengl::cTexture* pTexture = photos[i]->pTexture;
+      opengl::cTexture* pTexture = photos[i]->pTexturePhoto;
       if (pTexture != nullptr) pContext->DestroyTexture(pTexture);
+
+      opengl::cStaticVertexBufferObject* pStaticVertexBufferObject = photos[i]->pStaticVertexBufferObjectPhoto;
+      if (pStaticVertexBufferObject != nullptr) pContext->DestroyStaticVertexBufferObject(pStaticVertexBufferObject);
 
       spitfire::SAFE_DELETE(photos[i]);
     }
@@ -696,10 +704,13 @@ namespace diesel
   {
     spitfire::math::cMat4 matModelView2D;
 
-    if (photos[index]->pTexture != nullptr) {
-      pContext->BindStaticVertexBufferObject2D(*pStaticVertexBufferObjectPhoto);
+    opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectPhoto = photos[index]->pStaticVertexBufferObjectPhoto;
 
-      opengl::cTexture* pTexture = photos[index]->pTexture;
+    opengl::cTexture* pTexture = photos[index]->pTexturePhoto;
+
+    if ((pTexture != nullptr) && pTexture->IsValid() && (pStaticVertexBufferObjectPhoto != nullptr) && pStaticVertexBufferObjectPhoto->IsCompiled()) {
+
+      pContext->BindStaticVertexBufferObject2D(*pStaticVertexBufferObjectPhoto);
 
       pContext->BindTexture(0, *pTexture);
 
@@ -770,8 +781,6 @@ namespace diesel
 
     ASSERT(pStaticVertexBufferObjectSelectionRectangle != nullptr);
     ASSERT(pStaticVertexBufferObjectSelectionRectangle->IsCompiled());
-    ASSERT(pStaticVertexBufferObjectPhoto != nullptr);
-    ASSERT(pStaticVertexBufferObjectPhoto->IsCompiled());
     ASSERT(pStaticVertexBufferObjectIcon != nullptr);
     ASSERT(pStaticVertexBufferObjectIcon->IsCompiled());
 
@@ -1081,11 +1090,20 @@ namespace diesel
       for (size_t i = 0; i < n; i++) {
         if (photos[i]->sFilePath == sFilePath) {
           cPhotoEntry* pEntry = photos[i];
-          ASSERT(pEntry->pTexture == nullptr);
-          opengl::cTexture* pTexture = pContext->CreateTextureFromImage(*pImage);
-          ASSERT(pTexture != nullptr);
+          ASSERT(pEntry->pTexturePhoto == nullptr);
+          ASSERT(pEntry->pStaticVertexBufferObjectPhoto == nullptr);
+
           pEntry->state = cPhotoEntry::STATE::LOADED;
-          pEntry->pTexture = pTexture;
+
+          // Create the texture
+          pEntry->pTexturePhoto = pContext->CreateTextureFromImage(*pImage);
+          ASSERT(pEntry->pTexturePhoto != nullptr);
+
+          // Create the static vertex buffer object
+          pEntry->pStaticVertexBufferObjectPhoto = pContext->CreateStaticVertexBufferObject();
+          CreateVertexBufferObjectPhoto(pEntry->pStaticVertexBufferObjectPhoto, pEntry->pTexturePhoto->GetWidth(), pEntry->pTexturePhoto->GetHeight());
+          ASSERT(pEntry->pStaticVertexBufferObjectPhoto != nullptr);
+
           break;
         }
       }
