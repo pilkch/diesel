@@ -264,8 +264,6 @@ namespace diesel
     boxControlsAndToolbar.pack_start(boxControls, Gtk::PACK_EXPAND_WIDGET);
     boxControlsAndToolbar.pack_start(boxToolbar, Gtk::PACK_SHRINK);
 
-    buttonStopLoading.signal_clicked().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionStopLoading));
-
     // Hide the stop button until we start loading some files
     buttonStopLoading.hide();
 
