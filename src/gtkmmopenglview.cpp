@@ -410,7 +410,7 @@ namespace diesel
     pStaticVertexBufferObject->Compile2D(system);
   }
 
-  void cGtkmmOpenGLView::CreateVertexBufferObjectRect(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight, size_t textureWidth, size_t textureHeight)
+  void cGtkmmOpenGLView::CreateVertexBufferObjectRect(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fX, float fY, float fWidth, float fHeight, size_t textureWidth, size_t textureHeight)
   {
     ASSERT(pStaticVertexBufferObject != nullptr);
 
@@ -419,8 +419,8 @@ namespace diesel
     const float fTextureWidth = textureWidth;
     const float fTextureHeight = textureHeight;
 
-    const spitfire::math::cVec2 vMin(0.0f, 0.0f);
-    const spitfire::math::cVec2 vMax(fWidth, fHeight);
+    const spitfire::math::cVec2 vMin(fX, fY);
+    const spitfire::math::cVec2 vMax(vMin.x + fWidth, vMin.y + fHeight);
 
     opengl::cGeometryBuilder_v2_t2 builder(*pGeometryDataPtr);
 
@@ -455,7 +455,10 @@ namespace diesel
       fHeight = fThumbNailHeight;
       fWidth = fHeight * fRatio;
     }
-    CreateVertexBufferObjectRect(pStaticVertexBufferObjectPhoto, fWidth, fHeight, textureWidth, textureHeight);
+    // Center the photo
+    const float fX = 0.5f * (fThumbNailWidth - fWidth);
+    const float fY = 0.5f * (fThumbNailHeight - fHeight);
+    CreateVertexBufferObjectRect(pStaticVertexBufferObjectPhoto, fX, fY, fWidth, fHeight, textureWidth, textureHeight);
   }
 
   /*void cGtkmmOpenGLView::CreateVertexBufferObjectPhotos()
