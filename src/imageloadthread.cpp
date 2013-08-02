@@ -112,16 +112,18 @@ namespace diesel
         std::map<string_t, cPhoto*> files;
 
         for (spitfire::filesystem::cFolderIterator iter(pRequest->sFolderPath); iter.IsValid(); iter.Next()) {
-          const string_t sFilePath = iter.GetFullPath();
-          const string_t sFileNameNoExtension = spitfire::filesystem::GetFileNoExtension(iter.GetFileOrFolder());
-
           if (iter.IsFolder()) {
-            // Tell the handler that we found a folder
-            handler.OnFolderFound(sFileNameNoExtension);
+            const string_t sFolderName = iter.GetFileOrFolder();
 
-            folders.push_back(sFileNameNoExtension);
+            // Tell the handler that we found a folder
+            handler.OnFolderFound(sFolderName);
+
+            folders.push_back(sFolderName);
             continue;
           }
+
+          const string_t sFilePath = iter.GetFullPath();
+          const string_t sFileNameNoExtension = spitfire::filesystem::GetFileNoExtension(iter.GetFileOrFolder());
 
           const string_t sExtension = spitfire::filesystem::GetExtension(iter.GetFileOrFolder());
           const string_t sExtensionLower = spitfire::string::ToLower(sExtension);
