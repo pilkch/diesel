@@ -449,8 +449,12 @@ namespace diesel
   {
     ASSERT(pStaticVertexBufferObjectPhoto != nullptr);
     const float fRatio = float(textureWidth) / float(textureHeight);
-    const float fWidth = fThumbNailWidth;
-    const float fHeight = fWidth * (1.0f / fRatio);
+    float fWidth = fThumbNailWidth;
+    float fHeight = fWidth * (1.0f / fRatio);
+    if (fHeight > fThumbNailHeight) {
+      fHeight = fThumbNailHeight;
+      fWidth = fHeight * fRatio;
+    }
     CreateVertexBufferObjectRect(pStaticVertexBufferObjectPhoto, fWidth, fHeight, textureWidth, textureHeight);
   }
 
