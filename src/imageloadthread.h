@@ -11,9 +11,22 @@
 
 // Diesel headers
 #include "diesel.h"
+#include "imagecachemanager.h"
 
 namespace diesel
 {
+  // Supported files
+  //
+  // Diesel handles raw, dng and image files
+  // Raw files are nef, crw, etc.
+  // Dng files are dng
+  // Image files are jpg, png, etc.
+  //
+  // Diesel will convert a raw file to dng if a dng file doesn't exist already
+  // It will then create full sized images and thumbnails from the dng if it exists, or the image files if no raw or dng files exist and only the image files are available
+  //
+
+
   class cFolderLoadRequest
   {
   public:
@@ -33,10 +46,10 @@ namespace diesel
     virtual ~cImageLoadHandler() {}
 
   private:
-    virtual void OnFolderFound(const string_t& sFolderPath) = 0;
-    virtual void OnImageLoading(const string_t& sFilePath) = 0;
-    virtual void OnImageLoaded(const string_t& sFilePath, IMAGE_SIZE imageSize, voodoo::cImage* pImage) = 0;
-    virtual void OnImageError(const string_t& sFilePath, IMAGE_SIZE imageSize) = 0;
+    virtual void OnFolderFound(const string_t& sFolderName) = 0;
+    virtual void OnFileFound(const string_t& sFileNameNoExtension) = 0;
+    virtual void OnImageLoaded(const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize, voodoo::cImage* pImage) = 0;
+    virtual void OnImageError(const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize) = 0;
   };
 
   class cImageLoadThread : protected spitfire::util::cThread

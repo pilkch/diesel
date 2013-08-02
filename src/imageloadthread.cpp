@@ -7,6 +7,31 @@
 
 namespace diesel
 {
+  // ** cPhoto
+
+  class cPhoto
+  {
+  public:
+    cPhoto();
+
+    string_t sFilePath;
+
+    // NOTE: The camera may have created a raw, dng, image, or a combination of these.  The user may also have converted to dng or exported an image
+    bool bHasRaw; // Nef, crw, etc.
+    bool bHasDNG;
+    bool bHasImage; // Jpg, png, etc.
+  };
+
+  inline cPhoto::cPhoto() :
+    bHasRaw(false),
+    bHasDNG(false),
+    bHasImage(false)
+  {
+  }
+
+
+  // ** cFolderLoadRequest
+
   cFolderLoadRequest::cFolderLoadRequest(const string_t& _sFolderPath, IMAGE_SIZE _imageSize) :
     sFolderPath(_sFolderPath),
     imageSize(_imageSize)
@@ -82,62 +107,140 @@ namespace diesel
       cFolderLoadRequest* pRequest = requestQueue.RemoveItemFromFront();
       if (pRequest != nullptr) {
 
-
-
         // Collect a list of the files in this directory
-        std::list<string_t> files;
+        std::list<string_t> folders;
+        std::map<string_t, cPhoto*> files;
 
         for (spitfire::filesystem::cFolderIterator iter(pRequest->sFolderPath); iter.IsValid(); iter.Next()) {
           const string_t sFilePath = iter.GetFullPath();
+          const string_t sFileNameNoExtension = spitfire::filesystem::GetFileNoExtension(iter.GetFileOrFolder());
+
           if (iter.IsFolder()) {
             // Tell the handler that we found a folder
-            handler.OnFolderFound(sFilePath);
-          } else {
-            // Tell the handler that we found an image file
-            handler.OnImageLoading(sFilePath);
+            handler.OnFolderFound(sFileNameNoExtension);
 
-            files.push_back(sFilePath);
+            folders.push_back(sFileNameNoExtension);
+            continue;
+          }
+
+          const string_t sExtension = spitfire::filesystem::GetExtension(iter.GetFileOrFolder());
+          const string_t sExtensionLower = spitfire::string::ToLower(sExtension);
+          if (!util::IsFileTypeSupported(sExtensionLower)) continue;
+
+          // Change the extension of all supported files to lower case
+          if (sExtensionLower != sExtension) {
+            const string_t sFrom = spitfire::filesystem::MakeFilePath(pRequest->sFolderPath, sFileNameNoExtension + sExtension);
+            const string_t sTo = spitfire::filesystem::MakeFilePath(pRequest->sFolderPath, sFileNameNoExtension + sExtensionLower);
+            LOG<<"cImageLoadThread::ThreadFunction Moving file from \""<<sFrom<<"\" to\""<<sTo<<"\""<<std::endl;
+            spitfire::filesystem::MoveFile(sFrom, sTo);
+          }
+
+          cPhoto* pPhoto = nullptr;
+
+          std::map<string_t, cPhoto*>::iterator found = files.find(sFileNameNoExtension);
+          if (found != files.end()) pPhoto = found->second;
+          else {
+            // Add a new photo
+            pPhoto = new cPhoto;
+            files[sFileNameNoExtension] = pPhoto;
+            pPhoto->sFilePath = sFilePath;
+          }
+
+          if (util::IsFileTypeRaw(sExtensionLower)) pPhoto->bHasRaw = true;
+          else if (sExtensionLower == TEXT(".dng")) pPhoto->bHasDNG = true;
+          else if (util::IsFileTypeImage(sExtensionLower)) pPhoto->bHasImage = true;
+        }
+
+
+        {
+          // Tell the handler about the files that were found
+          std::map<string_t, cPhoto*>::const_iterator iter = files.begin();
+          const std::map<string_t, cPhoto*>::const_iterator iterEnd = files.end();
+          while (iter != iterEnd) {
+            handler.OnFileFound(iter->first);
+
+            iter++;
           }
         }
 
-        // Now go back and actually load the images
-        const std::list<string_t>::const_iterator iterEnd = files.end();
-        for (std::list<string_t>::const_iterator iter = files.begin(); iter != iterEnd; iter++) {
 
+        // Load the images
+        std::map<string_t, cPhoto*>::iterator iter = files.begin();
+        const std::map<string_t, cPhoto*>::iterator iterEnd = files.end();
+        while (iter != iterEnd) {
           if (IsToStop() || loadingProcessInterface.IsToStop()) break;
 
-          const string_t sFilePath = *iter;
-          /*
-          if (sFilePath == raw) sFilePath = imageCacheManager.GetOrCreateDNGForRawFile(sFilePath);
-          else if (sFilePath == jpg) ...
+          const string_t sFileNameNoExtension = iter->first;
 
-          if (jpg) {
-            Create thumbnail from jpg
-            Load and return
-          } else {
-            // If we have a raw file then we need to convert it and load
-            if (raw) sFilePath = imageCacheManager.GetOrCreateDNGForRawFile(sFilePath);
+          // Convert from raw to dng
+          cPhoto* pPhoto = iter->second;
+          if (pPhoto->bHasRaw && !pPhoto->bHasDNG) {
+            const string_t sExtension = util::FindFileExtensionForRawFile(pRequest->sFolderPath, sFileNameNoExtension);
+            ASSERT(!sExtension.empty());
 
-            Create thumbnail from dng
-            Load and return
+            const string_t sFilePathRAW = spitfire::filesystem::MakeFilePath(pRequest->sFolderPath, sFileNameNoExtension + sExtension);
+
+            // Convert the file to dng and use the dng
+            const string_t sFilePathDNG = imageCacheManager.GetOrCreateDNGForRawFile(sFilePathRAW);
+            if (sFilePathDNG.empty()) {
+              // There was an error converting to dng so we need to notify the handler
+              handler.OnImageError(sFileNameNoExtension, pRequest->imageSize);
+
+              iter++;
+
+              continue;
+            }
+
+            pPhoto->bHasDNG = true;
           }
 
-          const string_t sThumbnailFilePath = imageCacheManager.GetOrCreateThumbnailForFile(sFilePath, pRequest->imageSize);*/
+          string_t sThumbnailFilePath;
 
-          voodoo::cImage* pImage = new voodoo::cImage;
+          if (pPhoto->bHasDNG) {
+            const string_t sFilePathDNG = spitfire::filesystem::MakeFilePath(pRequest->sFolderPath, sFileNameNoExtension + TEXT(".dng"));
 
-          pImage->LoadFromFile(sFilePath);
+            // Create thumbnail from dng
+            sThumbnailFilePath = imageCacheManager.GetOrCreateThumbnailForDNGFile(sFilePathDNG, pRequest->imageSize);
+
+          } else {
+            ASSERT(pPhoto->bHasImage);
+            const string_t sExtension = util::FindFileExtensionForImageFile(pRequest->sFolderPath, sFileNameNoExtension);
+            ASSERT(!sExtension.empty());
+            const string_t sFilePathImage = spitfire::filesystem::MakeFilePath(pRequest->sFolderPath, sFileNameNoExtension + sExtension);
+
+            // Create thumbnail from image
+            sThumbnailFilePath = imageCacheManager.GetOrCreateThumbnailForImageFile(sFilePathImage, pRequest->imageSize);
+          }
 
           // Loading the image can take a while so we need to check again if we should stop
           if (IsToStop() || loadingProcessInterface.IsToStop()) break;
 
+          // Load the thumbnail image
+          voodoo::cImage* pImage = new voodoo::cImage;
+
+          ASSERT(!sThumbnailFilePath.empty());
+          pImage->LoadFromFile(sThumbnailFilePath);
+
           // Notify the handler
-          if (pImage->IsValid()) handler.OnImageLoaded(sFilePath, pRequest->imageSize, pImage);
+          if (pImage->IsValid()) handler.OnImageLoaded(sFileNameNoExtension, pRequest->imageSize, pImage);
           else {
-            handler.OnImageError(sFilePath, pRequest->imageSize);
+            handler.OnImageError(sFileNameNoExtension, pRequest->imageSize);
 
             // Delete the image
             delete pImage;
+          }
+
+          iter++;
+        }
+
+        {
+          // Delete the photos
+          std::map<string_t, cPhoto*>::iterator iter = files.begin();
+          const std::map<string_t, cPhoto*>::iterator iterEnd = files.end();
+          while (iter != iterEnd) {
+            spitfire::SAFE_DELETE(iter->second);
+
+            iter++;
           }
         }
 

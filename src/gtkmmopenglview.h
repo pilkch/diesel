@@ -41,7 +41,7 @@ namespace diesel
       LOADING_ERROR,
     };
 
-    string_t sFilePath;
+    string_t sFileNameNoExtension;
     STATE state;
     opengl::cTexture* pTexturePhoto;
     opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectPhoto;
@@ -52,7 +52,7 @@ namespace diesel
 
   class cGtkmmOpenGLViewEvent;
   class cGtkmmOpenGLViewFolderFoundEvent;
-  class cGtkmmOpenGLViewImageLoadingEvent;
+  class cGtkmmOpenGLViewFileFoundEvent;
   class cGtkmmOpenGLViewImageLoadedEvent;
   class cGtkmmOpenGLViewImageErrorEvent;
 
@@ -60,7 +60,7 @@ namespace diesel
   {
   public:
     friend class cGtkmmOpenGLViewFolderFoundEvent;
-    friend class cGtkmmOpenGLViewImageLoadingEvent;
+    friend class cGtkmmOpenGLViewFileFoundEvent;
     friend class cGtkmmOpenGLViewImageLoadedEvent;
     friend class cGtkmmOpenGLViewImageErrorEvent;
     friend class cGtkmmPhotoBrowser;
@@ -134,10 +134,10 @@ namespace diesel
     static gboolean configure_cb(GtkWidget* pWidget, GdkEventConfigure* event, gpointer pUserData);
     static gboolean idle_cb(gpointer pUserData);
 
-    virtual void OnFolderFound(const string_t& sFolderPath) override;
-    virtual void OnImageLoading(const string_t& sFilePath) override;
-    virtual void OnImageLoaded(const string_t& sFilePath, IMAGE_SIZE imageSize, voodoo::cImage* pImage) override;
-    virtual void OnImageError(const string_t& sFilePath, IMAGE_SIZE imageSize) override;
+    virtual void OnFolderFound(const string_t& sFolderName) override;
+    virtual void OnFileFound(const string_t& sFileNameNoExtension) override;
+    virtual void OnImageLoaded(const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize, voodoo::cImage* pImage) override;
+    virtual void OnImageError(const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize) override;
 
     void OnNotify();
 

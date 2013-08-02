@@ -37,60 +37,60 @@ namespace diesel
   class cGtkmmOpenGLViewFolderFoundEvent : public cGtkmmOpenGLViewEvent
   {
   public:
-    cGtkmmOpenGLViewFolderFoundEvent(const string_t& sFilePath);
+    cGtkmmOpenGLViewFolderFoundEvent(const string_t& sFolderName);
 
     virtual void EventFunction(cGtkmmOpenGLView& view) override;
 
-    string_t sFilePath;
+    string_t sFolderName;
   };
 
-  cGtkmmOpenGLViewFolderFoundEvent::cGtkmmOpenGLViewFolderFoundEvent(const string_t& _sFilePath) :
-    sFilePath(_sFilePath)
+  cGtkmmOpenGLViewFolderFoundEvent::cGtkmmOpenGLViewFolderFoundEvent(const string_t& _sFolderName) :
+    sFolderName(_sFolderName)
   {
   }
 
   void cGtkmmOpenGLViewFolderFoundEvent::EventFunction(cGtkmmOpenGLView& view)
   {
-    view.OnFolderFound(sFilePath);
+    view.OnFolderFound(sFolderName);
   }
 
 
-  class cGtkmmOpenGLViewImageLoadingEvent : public cGtkmmOpenGLViewEvent
+  class cGtkmmOpenGLViewFileFoundEvent : public cGtkmmOpenGLViewEvent
   {
   public:
-    cGtkmmOpenGLViewImageLoadingEvent(const string_t& sFilePath);
+    cGtkmmOpenGLViewFileFoundEvent(const string_t& sFileNameNoExtension);
 
     virtual void EventFunction(cGtkmmOpenGLView& view) override;
 
-    string_t sFilePath;
+    string_t sFileNameNoExtension;
   };
 
-  cGtkmmOpenGLViewImageLoadingEvent::cGtkmmOpenGLViewImageLoadingEvent(const string_t& _sFilePath) :
-    sFilePath(_sFilePath)
+  cGtkmmOpenGLViewFileFoundEvent::cGtkmmOpenGLViewFileFoundEvent(const string_t& _sFileNameNoExtension) :
+    sFileNameNoExtension(_sFileNameNoExtension)
   {
   }
 
-  void cGtkmmOpenGLViewImageLoadingEvent::EventFunction(cGtkmmOpenGLView& view)
+  void cGtkmmOpenGLViewFileFoundEvent::EventFunction(cGtkmmOpenGLView& view)
   {
-    view.OnImageLoading(sFilePath);
+    view.OnFileFound(sFileNameNoExtension);
   }
 
 
   class cGtkmmOpenGLViewImageLoadedEvent : public cGtkmmOpenGLViewEvent
   {
   public:
-    cGtkmmOpenGLViewImageLoadedEvent(const string_t& sFilePath, IMAGE_SIZE imageSize, voodoo::cImage* pImage);
+    cGtkmmOpenGLViewImageLoadedEvent(const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize, voodoo::cImage* pImage);
     ~cGtkmmOpenGLViewImageLoadedEvent();
 
     virtual void EventFunction(cGtkmmOpenGLView& view) override;
 
-    string_t sFilePath;
+    string_t sFileNameNoExtension;
     IMAGE_SIZE imageSize;
     voodoo::cImage* pImage;
   };
 
-  cGtkmmOpenGLViewImageLoadedEvent::cGtkmmOpenGLViewImageLoadedEvent(const string_t& _sFilePath, IMAGE_SIZE _imageSize, voodoo::cImage* _pImage) :
-    sFilePath(_sFilePath),
+  cGtkmmOpenGLViewImageLoadedEvent::cGtkmmOpenGLViewImageLoadedEvent(const string_t& _sFileNameNoExtension, IMAGE_SIZE _imageSize, voodoo::cImage* _pImage) :
+    sFileNameNoExtension(_sFileNameNoExtension),
     imageSize(_imageSize),
     pImage(_pImage)
   {
@@ -103,30 +103,30 @@ namespace diesel
 
   void cGtkmmOpenGLViewImageLoadedEvent::EventFunction(cGtkmmOpenGLView& view)
   {
-    view.OnImageLoaded(sFilePath, imageSize, pImage);
+    view.OnImageLoaded(sFileNameNoExtension, imageSize, pImage);
   }
 
 
   class cGtkmmOpenGLViewImageErrorEvent : public cGtkmmOpenGLViewEvent
   {
   public:
-    cGtkmmOpenGLViewImageErrorEvent(const string_t& sFilePath, IMAGE_SIZE imageSize);
+    cGtkmmOpenGLViewImageErrorEvent(const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize);
 
     virtual void EventFunction(cGtkmmOpenGLView& view) override;
 
-    string_t sFilePath;
+    string_t sFileNameNoExtension;
     IMAGE_SIZE imageSize;
   };
 
-  cGtkmmOpenGLViewImageErrorEvent::cGtkmmOpenGLViewImageErrorEvent(const string_t& _sFilePath, IMAGE_SIZE _imageSize) :
-    sFilePath(_sFilePath),
+  cGtkmmOpenGLViewImageErrorEvent::cGtkmmOpenGLViewImageErrorEvent(const string_t& _sFileNameNoExtension, IMAGE_SIZE _imageSize) :
+    sFileNameNoExtension(_sFileNameNoExtension),
     imageSize(_imageSize)
   {
   }
 
   void cGtkmmOpenGLViewImageErrorEvent::EventFunction(cGtkmmOpenGLView& view)
   {
-    view.OnImageError(sFilePath, imageSize);
+    view.OnImageError(sFileNameNoExtension, imageSize);
   }
 
 
@@ -594,7 +594,7 @@ namespace diesel
     parent.OnOpenGLViewLoadedFilesClear();
 
     // Tell our image loading thread to start loading the folder
-    imageLoadThread.LoadFolder(sFolderPath, IMAGE_SIZE::FULL);
+    imageLoadThread.LoadFolder(sFolderPath, IMAGE_SIZE::SMALL);
   }
 
   void cGtkmmOpenGLView::DestroyPhotos()
@@ -840,7 +840,7 @@ namespace diesel
 
           // Create the text for this photo
           const float fRotationDegrees = 0.0f;
-          pFont->PushBack(builderText, spitfire::filesystem::GetFile(photos[index]->sFilePath), colour, spitfire::math::cVec2(fNameX, fNameY), fRotationDegrees, scale);
+          pFont->PushBack(builderText, photos[index]->sFileNameNoExtension, colour, spitfire::math::cVec2(fNameX, fNameY), fRotationDegrees, scale);
         }
 
 
@@ -933,7 +933,7 @@ namespace diesel
 
           // Create the text for this photo
           const float fRotationDegrees = 0.0f;
-          pFont->PushBack(builderText, spitfire::filesystem::GetFile(photos[i]->sFilePath), colour, spitfire::math::cVec2(fNameX, fNameY), fRotationDegrees, scale);
+          pFont->PushBack(builderText, photos[i]->sFileNameNoExtension, colour, spitfire::math::cVec2(fNameX, fNameY), fRotationDegrees, scale);
         }
 
 
@@ -1014,19 +1014,18 @@ namespace diesel
       spitfire::SAFE_DELETE(pEvent);
     }
   }
-
-  void cGtkmmOpenGLView::OnFolderFound(const string_t& sFolderPath)
+  void cGtkmmOpenGLView::OnFolderFound(const string_t& sFolderName)
   {
-    LOG<<"cGtkmmOpenGLView::OnFolderFound \""<<sFolderPath<<"\""<<std::endl;
+    LOG<<"cGtkmmOpenGLView::OnFolderFound \""<<sFolderName<<"\""<<std::endl;
 
     if (!spitfire::util::IsMainThread()) {
-      cGtkmmOpenGLViewFolderFoundEvent* pEvent = new cGtkmmOpenGLViewFolderFoundEvent(sFolderPath);
+      cGtkmmOpenGLViewFolderFoundEvent* pEvent = new cGtkmmOpenGLViewFolderFoundEvent(sFolderName);
       eventQueue.AddItemToBack(pEvent);
       notifyMainThread.Notify();
     } else {
-      LOG<<"cGtkmmOpenGLView::OnFolderFound On main thread \""<<sFolderPath<<"\""<<std::endl;
+      LOG<<"cGtkmmOpenGLView::OnFolderFound On main thread \""<<sFolderName<<"\""<<std::endl;
       cPhotoEntry* pEntry = new cPhotoEntry;
-      pEntry->sFilePath = sFolderPath;
+      pEntry->sFileNameNoExtension = sFolderName;
       pEntry->state = cPhotoEntry::STATE::FOLDER;
       photos.push_back(pEntry);
 
@@ -1034,18 +1033,18 @@ namespace diesel
     }
   }
 
-  void cGtkmmOpenGLView::OnImageLoading(const string_t& sFilePath)
+  void cGtkmmOpenGLView::OnFileFound(const string_t& sFileNameNoExtension)
   {
-    LOG<<"cGtkmmOpenGLView::OnImageLoading \""<<sFilePath<<"\""<<std::endl;
+    LOG<<"cGtkmmOpenGLView::OnFileFound \""<<sFileNameNoExtension<<"\""<<std::endl;
 
     if (!spitfire::util::IsMainThread()) {
-      cGtkmmOpenGLViewImageLoadingEvent* pEvent = new cGtkmmOpenGLViewImageLoadingEvent(sFilePath);
+      cGtkmmOpenGLViewFileFoundEvent* pEvent = new cGtkmmOpenGLViewFileFoundEvent(sFileNameNoExtension);
       eventQueue.AddItemToBack(pEvent);
       notifyMainThread.Notify();
     } else {
-      LOG<<"cGtkmmOpenGLView::OnImageLoading On main thread \""<<sFilePath<<"\""<<std::endl;
+      LOG<<"cGtkmmOpenGLView::OnFileFound On main thread \""<<sFileNameNoExtension<<"\""<<std::endl;
       cPhotoEntry* pEntry = new cPhotoEntry;
-      pEntry->sFilePath = sFilePath;
+      pEntry->sFileNameNoExtension = sFileNameNoExtension;
       pEntry->state = cPhotoEntry::STATE::LOADING;
       photos.push_back(pEntry);
 
@@ -1053,19 +1052,19 @@ namespace diesel
     }
   }
 
-  void cGtkmmOpenGLView::OnImageError(const string_t& sFilePath, IMAGE_SIZE imageSize)
+  void cGtkmmOpenGLView::OnImageError(const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize)
   {
-    LOG<<"cGtkmmOpenGLView::OnImageError \""<<sFilePath<<"\""<<std::endl;
+    LOG<<"cGtkmmOpenGLView::OnImageError \""<<sFileNameNoExtension<<"\""<<std::endl;
 
     if (!spitfire::util::IsMainThread()) {
-      cGtkmmOpenGLViewImageErrorEvent* pEvent = new cGtkmmOpenGLViewImageErrorEvent(sFilePath, imageSize);
+      cGtkmmOpenGLViewImageErrorEvent* pEvent = new cGtkmmOpenGLViewImageErrorEvent(sFileNameNoExtension, imageSize);
       eventQueue.AddItemToBack(pEvent);
       notifyMainThread.Notify();
     } else {
-      LOG<<"cGtkmmOpenGLView::OnImageError On main thread \""<<sFilePath<<"\""<<std::endl;
+      LOG<<"cGtkmmOpenGLView::OnImageError On main thread \""<<sFileNameNoExtension<<"\""<<std::endl;
       const size_t n = photos.size();
       for (size_t i = 0; i < n; i++) {
-        if (photos[i]->sFilePath == sFilePath) {
+        if (photos[i]->sFileNameNoExtension == sFileNameNoExtension) {
           cPhotoEntry* pEntry = photos[i];
           pEntry->state = cPhotoEntry::STATE::LOADING_ERROR;
           break;
@@ -1076,19 +1075,19 @@ namespace diesel
     }
   }
 
-  void cGtkmmOpenGLView::OnImageLoaded(const string_t& sFilePath, IMAGE_SIZE imageSize, voodoo::cImage* pImage)
+  void cGtkmmOpenGLView::OnImageLoaded(const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize, voodoo::cImage* pImage)
   {
-    LOG<<"cGtkmmOpenGLView::OnImageLoaded \""<<sFilePath<<"\""<<std::endl;
+    LOG<<"cGtkmmOpenGLView::OnImageLoaded \""<<sFileNameNoExtension<<"\""<<std::endl;
 
     if (!spitfire::util::IsMainThread()) {
-      cGtkmmOpenGLViewImageLoadedEvent* pEvent = new cGtkmmOpenGLViewImageLoadedEvent(sFilePath, imageSize, pImage);
+      cGtkmmOpenGLViewImageLoadedEvent* pEvent = new cGtkmmOpenGLViewImageLoadedEvent(sFileNameNoExtension, imageSize, pImage);
       eventQueue.AddItemToBack(pEvent);
       notifyMainThread.Notify();
     } else {
-      LOG<<"cGtkmmOpenGLView::OnImageLoaded On main thread \""<<sFilePath<<"\""<<std::endl;
+      LOG<<"cGtkmmOpenGLView::OnImageLoaded On main thread \""<<sFileNameNoExtension<<"\""<<std::endl;
       const size_t n = photos.size();
       for (size_t i = 0; i < n; i++) {
-        if (photos[i]->sFilePath == sFilePath) {
+        if (photos[i]->sFileNameNoExtension == sFileNameNoExtension) {
           cPhotoEntry* pEntry = photos[i];
           ASSERT(pEntry->pTexturePhoto == nullptr);
           ASSERT(pEntry->pStaticVertexBufferObjectPhoto == nullptr);

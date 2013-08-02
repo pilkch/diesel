@@ -83,6 +83,7 @@ AUX_SOURCE_DIRECTORY(./../src/ PROJECT_SOURCE_FILES)
 SET(LIBRARY_SPITFIRE_SOURCE_DIRECTORY spitfire/)
 SET(LIBRARY_SPITFIRE_SOURCE_FILES
 spitfire.cpp
+algorithm/md5.cpp
 communication/http.cpp communication/network.cpp
 math/cColour.cpp math/cVec2.cpp math/cVec3.cpp math/cVec4.cpp math/cMat3.cpp math/cMat4.cpp math/cQuaternion.cpp
 storage/csv.cpp storage/document.cpp storage/file.cpp storage/filesystem.cpp storage/settings.cpp storage/xml.cpp
