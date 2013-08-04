@@ -1150,6 +1150,39 @@ namespace diesel
   bool cGtkmmOpenGLView::OnKeyPressEvent(GdkEventKey* pEvent)
   {
     LOG<<"cGtkmmOpenGLView::OnKeyPressEvent"<<std::endl;
+
+    // Handle single photo mode
+    if (bIsModeSinglePhoto) {
+      switch (pEvent->keyval) {
+        case GDK_Left:
+        case GDK_Up:
+        case GDK_Page_Up: {
+          if (currentSinglePhoto != 0) currentSinglePhoto--;
+          return true;
+        }
+        case GDK_Right:
+        case GDK_Down:
+        case GDK_Page_Down:
+        case GDK_space: {
+          if (currentSinglePhoto + 1 < photos.size()) currentSinglePhoto++;
+          return true;
+        }
+        case GDK_Home: {
+          currentSinglePhoto = 0;
+          return true;
+        }
+        case GDK_End: {
+          if (!photos.empty()) currentSinglePhoto = photos.size() - 1;
+          return true;
+        }
+        case GDK_Escape: {
+          bIsModeSinglePhoto = false;
+          return true;
+        }
+      }
+    }
+
+    // Handle default keys
     switch (pEvent->keyval) {
       #ifdef BUILD_DEBUG
       case GDK_w: {
@@ -1157,18 +1190,7 @@ namespace diesel
         return true;
       }
       #endif
-      /*case GDK_Up:
-      case GDK_Left:
-        choice--;
-        if (choice < 0)
-            choice = names.size() - 1;
-        return true;
-      case GDK_Down:
-      case GDK_Right:
-        choice++;
-        if (choice >= names.size())
-            choice = 0;
-        return true;
+      /*
       case GDK_Return:
         entersig.emit("yo");
         cout << "YES!" << endl;
