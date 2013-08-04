@@ -2,6 +2,7 @@
 #include <spitfire/storage/filesystem.h>
 
 // Diesel headers
+#include "imagecachemanager.h"
 #include "imageloadthread.h"
 #include "util.h"
 
@@ -93,9 +94,77 @@ namespace diesel
     }
   }
 
+  bool cImageLoadThread::GetOrCreateDNGForRawFile(const string_t& sFolderPath, const string_t& sFileNameNoExtension, cPhoto& photo)
+  {
+    const string_t sExtension = util::FindFileExtensionForRawFile(sFolderPath, sFileNameNoExtension);
+    ASSERT(!sExtension.empty());
+
+    const string_t sFilePathRAW = spitfire::filesystem::MakeFilePath(sFolderPath, sFileNameNoExtension + sExtension);
+
+    // Convert the file to dng and use the dng
+    const string_t sFilePathDNG = cImageCacheManager::GetOrCreateDNGForRawFile(sFilePathRAW);
+    if (sFilePathDNG.empty()) {
+      // There was an error converting to dng so we need to notify the handler
+      handler.OnImageError(sFileNameNoExtension);
+
+      return false;
+    }
+
+    photo.bHasDNG = true;
+
+    return true;
+  }
+
+  string_t cImageLoadThread::GetOrCreateThumbnail(const string_t& sFolderPath, const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize, cPhoto& photo)
+  {
+    string_t sThumbnailFilePath;
+
+    if (photo.bHasDNG) {
+      const string_t sFilePathDNG = spitfire::filesystem::MakeFilePath(sFolderPath, sFileNameNoExtension + TEXT(".dng"));
+
+      // Create thumbnail from dng
+      sThumbnailFilePath = cImageCacheManager::GetOrCreateThumbnailForDNGFile(sFilePathDNG, imageSize);
+
+    } else {
+      ASSERT(photo.bHasImage);
+      const string_t sExtension = util::FindFileExtensionForImageFile(sFolderPath, sFileNameNoExtension);
+      ASSERT(!sExtension.empty());
+      const string_t sFilePathImage = spitfire::filesystem::MakeFilePath(sFolderPath, sFileNameNoExtension + sExtension);
+
+      // Create thumbnail from image
+      sThumbnailFilePath = cImageCacheManager::GetOrCreateThumbnailForImageFile(sFilePathImage, imageSize);
+    }
+
+    return sThumbnailFilePath;
+  }
+
+  void cImageLoadThread::LoadThumbnailImage(const string_t& sThumbnailFilePath, const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize)
+  {
+    ASSERT(!sThumbnailFilePath.empty());
+
+    // Load the thumbnail image
+    voodoo::cImage* pImage = new voodoo::cImage;
+
+    pImage->LoadFromFile(sThumbnailFilePath);
+
+    // Notify the handler
+    if (pImage->IsValid()) handler.OnImageLoaded(sFileNameNoExtension, imageSize, pImage);
+    else {
+      handler.OnImageError(sFileNameNoExtension);
+
+      // Delete the image
+      delete pImage;
+    }
+  }
+
   void cImageLoadThread::ThreadFunction()
   {
     LOG<<"cImageLoadThread::ThreadFunction"<<std::endl;
+
+    std::list<string_t> folders;
+    std::map<string_t, cPhoto*> files;
+
+    string_t sFolderPath;
 
     while (true) {
       //LOG<<"cImageLoadThread::ThreadFunction Loop"<<std::endl;
@@ -106,12 +175,27 @@ namespace diesel
       //LOG<<"cImageLoadThread::ThreadFunction Loop getting event"<<std::endl;
       cFolderLoadRequest* pRequest = requestQueue.RemoveItemFromFront();
       if (pRequest != nullptr) {
+        // Remove the known folders
+        folders.clear();
+
+        {
+          // Delete the photos
+          std::map<string_t, cPhoto*>::iterator iter = files.begin();
+          const std::map<string_t, cPhoto*>::iterator iterEnd = files.end();
+          while (iter != iterEnd) {
+            spitfire::SAFE_DELETE(iter->second);
+
+            iter++;
+          }
+
+          files.clear();
+        }
+
+        // Change our folder
+        sFolderPath = pRequest->sFolderPath;
 
         // Collect a list of the files in this directory
-        std::list<string_t> folders;
-        std::map<string_t, cPhoto*> files;
-
-        for (spitfire::filesystem::cFolderIterator iter(pRequest->sFolderPath); iter.IsValid(); iter.Next()) {
+        for (spitfire::filesystem::cFolderIterator iter(sFolderPath); iter.IsValid(); iter.Next()) {
           if (iter.IsFolder()) {
             const string_t sFolderName = iter.GetFileOrFolder();
 
@@ -131,8 +215,8 @@ namespace diesel
 
           // Change the extension of all supported files to lower case
           if (sExtensionLower != sExtension) {
-            const string_t sFrom = spitfire::filesystem::MakeFilePath(pRequest->sFolderPath, sFileNameNoExtension + sExtension);
-            const string_t sTo = spitfire::filesystem::MakeFilePath(pRequest->sFolderPath, sFileNameNoExtension + sExtensionLower);
+            const string_t sFrom = spitfire::filesystem::MakeFilePath(sFolderPath, sFileNameNoExtension + sExtension);
+            const string_t sTo = spitfire::filesystem::MakeFilePath(sFolderPath, sFileNameNoExtension + sExtensionLower);
             LOG<<"cImageLoadThread::ThreadFunction Moving file from \""<<sFrom<<"\" to\""<<sTo<<"\""<<std::endl;
             spitfire::filesystem::MoveFile(sFrom, sTo);
           }
@@ -176,74 +260,30 @@ namespace diesel
 
           // Convert from raw to dng
           cPhoto* pPhoto = iter->second;
+          ASSERT(pPhoto != nullptr);
           if (pPhoto->bHasRaw && !pPhoto->bHasDNG) {
-            const string_t sExtension = util::FindFileExtensionForRawFile(pRequest->sFolderPath, sFileNameNoExtension);
-            ASSERT(!sExtension.empty());
-
-            const string_t sFilePathRAW = spitfire::filesystem::MakeFilePath(pRequest->sFolderPath, sFileNameNoExtension + sExtension);
-
-            // Convert the file to dng and use the dng
-            const string_t sFilePathDNG = imageCacheManager.GetOrCreateDNGForRawFile(sFilePathRAW);
-            if (sFilePathDNG.empty()) {
-              // There was an error converting to dng so we need to notify the handler
-              handler.OnImageError(sFileNameNoExtension, pRequest->imageSize);
-
+            if (!GetOrCreateDNGForRawFile(sFolderPath, sFileNameNoExtension, *pPhoto)) {
+              // If the conversion failed then we need to skip to the next file
               iter++;
-
               continue;
             }
-
-            pPhoto->bHasDNG = true;
           }
 
-          string_t sThumbnailFilePath;
+          // Creating a dng file can take a while so we need to check again if we should stop
+          if (IsToStop() || loadingProcessInterface.IsToStop()) break;
 
-          if (pPhoto->bHasDNG) {
-            const string_t sFilePathDNG = spitfire::filesystem::MakeFilePath(pRequest->sFolderPath, sFileNameNoExtension + TEXT(".dng"));
 
-            // Create thumbnail from dng
-            sThumbnailFilePath = imageCacheManager.GetOrCreateThumbnailForDNGFile(sFilePathDNG, pRequest->imageSize);
 
-          } else {
-            ASSERT(pPhoto->bHasImage);
-            const string_t sExtension = util::FindFileExtensionForImageFile(pRequest->sFolderPath, sFileNameNoExtension);
-            ASSERT(!sExtension.empty());
-            const string_t sFilePathImage = spitfire::filesystem::MakeFilePath(pRequest->sFolderPath, sFileNameNoExtension + sExtension);
-
-            // Create thumbnail from image
-            sThumbnailFilePath = imageCacheManager.GetOrCreateThumbnailForImageFile(sFilePathImage, pRequest->imageSize);
-          }
+          const string_t sThumbnailFilePath = GetOrCreateThumbnail(sFolderPath, sFileNameNoExtension, IMAGE_SIZE::THUMBNAIL, *pPhoto);
 
           // Loading the image can take a while so we need to check again if we should stop
           if (IsToStop() || loadingProcessInterface.IsToStop()) break;
 
-          // Load the thumbnail image
-          voodoo::cImage* pImage = new voodoo::cImage;
 
-          ASSERT(!sThumbnailFilePath.empty());
-          pImage->LoadFromFile(sThumbnailFilePath);
 
-          // Notify the handler
-          if (pImage->IsValid()) handler.OnImageLoaded(sFileNameNoExtension, pRequest->imageSize, pImage);
-          else {
-            handler.OnImageError(sFileNameNoExtension, pRequest->imageSize);
-
-            // Delete the image
-            delete pImage;
-          }
+          LoadThumbnailImage(sThumbnailFilePath, sFileNameNoExtension, IMAGE_SIZE::THUMBNAIL);
 
           iter++;
-        }
-
-        {
-          // Delete the photos
-          std::map<string_t, cPhoto*>::iterator iter = files.begin();
-          const std::map<string_t, cPhoto*>::iterator iterEnd = files.end();
-          while (iter != iterEnd) {
-            spitfire::SAFE_DELETE(iter->second);
-
-            iter++;
-          }
         }
 
         //LOG<<"cImageLoadThread::ThreadFunction Loop deleting event"<<std::endl;
@@ -256,6 +296,19 @@ namespace diesel
       // Try to avoid hogging the CPU
       spitfire::util::SleepThisThreadMS(1);
       spitfire::util::YieldThisThread();
+    }
+
+    {
+      // Delete the photos
+      std::map<string_t, cPhoto*>::iterator iter = files.begin();
+      const std::map<string_t, cPhoto*>::iterator iterEnd = files.end();
+      while (iter != iterEnd) {
+        spitfire::SAFE_DELETE(iter->second);
+
+        iter++;
+      }
+
+      files.clear();
     }
 
     // Remove any further events because we don't care any more

@@ -11,7 +11,6 @@
 
 // Diesel headers
 #include "diesel.h"
-#include "imagecachemanager.h"
 
 namespace diesel
 {
@@ -68,6 +67,10 @@ namespace diesel
     virtual void ThreadFunction() override;
 
     void ClearEventQueue();
+
+    bool GetOrCreateDNGForRawFile(const string_t& sFolderPath, const string_t& sFileNameNoExtension, cPhoto& photo);
+    string_t GetOrCreateThumbnail(const string_t& sFolderPath, const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize, cPhoto& photo);
+    void LoadThumbnailImage(const string_t& sThumbnailFilePath, const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize);
 
     cImageLoadHandler& handler;
 
