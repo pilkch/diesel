@@ -723,11 +723,13 @@ namespace diesel
 
       pContext->BindShader(*pShaderPhoto);
 
-      const size_t x = index % columns;
-      const size_t y = index / columns;
-      const float fX = fThumbNailSpacing + (float(x) * (fThumbNailWidth + fThumbNailSpacing));
-      const float fY = fThumbNailSpacing + (float(y) * (fThumbNailHeight + fThumbNailSpacing));
-      matModelView2D.SetTranslation(fX, fY - fScrollPosition, 0.0f);
+      if (!bIsModeSinglePhoto) {
+        const size_t x = index % columns;
+        const size_t y = index / columns;
+        const float fX = fThumbNailSpacing + (float(x) * (fThumbNailWidth + fThumbNailSpacing));
+        const float fY = fThumbNailSpacing + (float(y) * (fThumbNailHeight + fThumbNailSpacing));
+        matModelView2D.SetTranslation(fX, fY - fScrollPosition, 0.0f);
+      }
 
       pContext->SetShaderProjectionAndModelViewMatricesRenderMode2D(opengl::MODE2D_TYPE::Y_INCREASES_DOWN_SCREEN_KEEP_DIMENSIONS_AND_ASPECT_RATIO, matScale * matModelView2D);
 
@@ -805,19 +807,22 @@ namespace diesel
     if (bIsWireframe) pContext->EnableWireframe();
 
     // Render the photos
-    {
+    if (!photos.empty()) {
       pContext->BeginRenderMode2D(opengl::MODE2D_TYPE::Y_INCREASES_DOWN_SCREEN_KEEP_DIMENSIONS_AND_ASPECT_RATIO);
 
       spitfire::math::cMat4 matScale;
-      matScale.SetScale(fScale, fScale, 1.0f);
 
       if (bIsModeSinglePhoto) {
         // Single photo mode
 
-        if (currentSinglePhoto < photos.size()) {
-          // Render the photo
-          RenderPhoto(currentSinglePhoto, matScale);
-        }
+        matScale.SetScale(10.0f * fScale, 10.0f * fScale, 1.0f);
+
+        // Clamp the index to the possible photos
+        ASSERT(!photos.empty());
+        if (currentSinglePhoto >= photos.size()) currentSinglePhoto = photos.size() - 1;
+
+        // Render the photo
+        RenderPhoto(currentSinglePhoto, matScale);
 
         // Render the filename for the photo
         assert(pFont != nullptr);
@@ -880,9 +885,12 @@ namespace diesel
           pContext->DestroyStaticVertexBufferObject(pVBOText);
         }
       } else {
+        // Photo browsing mode
+
+        matScale.SetScale(fScale, fScale, 1.0f);
+
         spitfire::math::cMat4 matModelView2D;
 
-        // Photo browsing mode
         const size_t nPhotos = photos.size();
         for (size_t i = 0; i < nPhotos; i++) {
           // Draw the selection rectangle
