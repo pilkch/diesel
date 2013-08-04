@@ -90,14 +90,9 @@ namespace diesel
     size_t size = 0;
 
     switch (imageSize) {
-      case IMAGE_SIZE::SMALL: {
-        sFileJPG = "small.jpg";
+      case IMAGE_SIZE::THUMBNAIL: {
+        sFileJPG = "thumbnail.jpg";
         size = 200;
-        break;
-      }
-      case IMAGE_SIZE::MEDIUM: {
-        sFileJPG = "medium.jpg";
-        size = 600;
         break;
       }
     }
@@ -167,16 +162,10 @@ namespace diesel
     size_t height = 0;
 
     switch (imageSize) {
-      case IMAGE_SIZE::SMALL: {
-        sFileJPG = "small.jpg";
+      case IMAGE_SIZE::THUMBNAIL: {
+        sFileJPG = "thumbnail.jpg";
         width = 200;
         height = 200;
-        break;
-      }
-      case IMAGE_SIZE::MEDIUM: {
-        sFileJPG = "medium.jpg";
-        width = 600;
-        height = 600;
         break;
       }
     }

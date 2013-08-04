@@ -26,14 +26,45 @@ namespace diesel
   //
 
 
-  class cFolderLoadRequest
+  class cFolderLoadThumbnailsRequest
   {
   public:
-    cFolderLoadRequest(const string_t& sFolderPath, IMAGE_SIZE imageSize);
+    cFolderLoadThumbnailsRequest(const string_t& sFolderPath);
 
     string_t sFolderPath;
-    IMAGE_SIZE imageSize;
   };
+
+  class cFileLoadFullHighPriorityRequest
+  {
+  public:
+    cFileLoadFullHighPriorityRequest(const string_t& sFileNameNoExtension);
+
+    string_t sFileNameNoExtension;
+  };
+
+
+  // ** cPhoto
+
+  class cPhoto
+  {
+  public:
+    cPhoto();
+
+    string_t sFilePath;
+
+    // NOTE: The camera may have created a raw, dng, image, or a combination of these.  The user may also have converted to dng or exported an image
+    bool bHasRaw; // Nef, crw, etc.
+    bool bHasDNG;
+    bool bHasImage; // Jpg, png, etc.
+  };
+
+  inline cPhoto::cPhoto() :
+    bHasRaw(false),
+    bHasDNG(false),
+    bHasImage(false)
+  {
+  }
+
 
   class cImageLoadThread;
 
@@ -48,7 +79,7 @@ namespace diesel
     virtual void OnFolderFound(const string_t& sFolderName) = 0;
     virtual void OnFileFound(const string_t& sFileNameNoExtension) = 0;
     virtual void OnImageLoaded(const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize, voodoo::cImage* pImage) = 0;
-    virtual void OnImageError(const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize) = 0;
+    virtual void OnImageError(const string_t& sFileNameNoExtension) = 0;
   };
 
   class cImageLoadThread : protected spitfire::util::cThread
@@ -60,7 +91,8 @@ namespace diesel
     void StopSoon();
     void StopNow();
 
-    void LoadFolder(const string_t& sFolderPath, IMAGE_SIZE imageSize);
+    void LoadFolderThumbnails(const string_t& sFolderPath);
+    void LoadFileFullHighPriority(const string_t& sFilePath);
     void StopLoading();
 
   private:
@@ -72,14 +104,15 @@ namespace diesel
     string_t GetOrCreateThumbnail(const string_t& sFolderPath, const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize, cPhoto& photo);
     void LoadThumbnailImage(const string_t& sThumbnailFilePath, const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize);
 
+    void HandleHighPriorityRequestQueue(const string_t& sFolderPath, std::map<string_t, cPhoto*>& files);
+
     cImageLoadHandler& handler;
 
     spitfire::util::cSignalObject soAction;
 
-    spitfire::util::cThreadSafeQueue<cFolderLoadRequest> requestQueue;
+    spitfire::util::cThreadSafeQueue<cFolderLoadThumbnailsRequest> requestQueue;
 
-    cImageCacheManager imageCacheManager;
-
+    spitfire::util::cThreadSafeQueue<cFileLoadFullHighPriorityRequest> highPriorityRequestQueue;
 
     class cLoadingProcessInterface : public spitfire::util::cProcessInterface
     {

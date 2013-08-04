@@ -110,23 +110,21 @@ namespace diesel
   class cGtkmmOpenGLViewImageErrorEvent : public cGtkmmOpenGLViewEvent
   {
   public:
-    cGtkmmOpenGLViewImageErrorEvent(const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize);
+    explicit cGtkmmOpenGLViewImageErrorEvent(const string_t& sFileNameNoExtension);
 
     virtual void EventFunction(cGtkmmOpenGLView& view) override;
 
     string_t sFileNameNoExtension;
-    IMAGE_SIZE imageSize;
   };
 
-  cGtkmmOpenGLViewImageErrorEvent::cGtkmmOpenGLViewImageErrorEvent(const string_t& _sFileNameNoExtension, IMAGE_SIZE _imageSize) :
-    sFileNameNoExtension(_sFileNameNoExtension),
-    imageSize(_imageSize)
+  cGtkmmOpenGLViewImageErrorEvent::cGtkmmOpenGLViewImageErrorEvent(const string_t& _sFileNameNoExtension) :
+    sFileNameNoExtension(_sFileNameNoExtension)
   {
   }
 
   void cGtkmmOpenGLViewImageErrorEvent::EventFunction(cGtkmmOpenGLView& view)
   {
-    view.OnImageError(sFileNameNoExtension, imageSize);
+    view.OnImageError(sFileNameNoExtension);
   }
 
 
@@ -138,8 +136,10 @@ namespace diesel
 
   cPhotoEntry::cPhotoEntry() :
     state(STATE::LOADING),
-    pTexturePhoto(nullptr),
-    pStaticVertexBufferObjectPhoto(nullptr),
+    pTexturePhotoThumbnail(nullptr),
+    pTexturePhotoFull(nullptr),
+    pStaticVertexBufferObjectPhotoThumbnail(nullptr),
+    pStaticVertexBufferObjectPhotoFull(nullptr),
     bIsSelected(false)
   {
   }
@@ -601,18 +601,18 @@ namespace diesel
     parent.OnOpenGLViewLoadedFilesClear();
 
     // Tell our image loading thread to start loading the folder
-    imageLoadThread.LoadFolder(sFolderPath, IMAGE_SIZE::SMALL);
+    imageLoadThread.LoadFolderThumbnails(sFolderPath);
   }
 
   void cGtkmmOpenGLView::DestroyPhotos()
   {
     const size_t n = photos.size();
     for (size_t i = 0; i < n; i++) {
-      opengl::cTexture* pTexture = photos[i]->pTexturePhoto;
-      if (pTexture != nullptr) pContext->DestroyTexture(pTexture);
+      if (photos[i]->pTexturePhotoThumbnail != nullptr) pContext->DestroyTexture(photos[i]->pTexturePhotoThumbnail);
+      if (photos[i]->pTexturePhotoFull != nullptr) pContext->DestroyTexture(photos[i]->pTexturePhotoFull);
 
-      opengl::cStaticVertexBufferObject* pStaticVertexBufferObject = photos[i]->pStaticVertexBufferObjectPhoto;
-      if (pStaticVertexBufferObject != nullptr) pContext->DestroyStaticVertexBufferObject(pStaticVertexBufferObject);
+      if (photos[i]->pStaticVertexBufferObjectPhotoThumbnail != nullptr) pContext->DestroyStaticVertexBufferObject(photos[i]->pStaticVertexBufferObjectPhotoThumbnail);
+      if (photos[i]->pStaticVertexBufferObjectPhotoFull != nullptr) pContext->DestroyStaticVertexBufferObject(photos[i]->pStaticVertexBufferObjectPhotoFull);
 
       spitfire::SAFE_DELETE(photos[i]);
     }
@@ -711,9 +711,16 @@ namespace diesel
   {
     spitfire::math::cMat4 matModelView2D;
 
-    opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectPhoto = photos[index]->pStaticVertexBufferObjectPhoto;
+    opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectPhoto = photos[index]->pStaticVertexBufferObjectPhotoThumbnail;
 
-    opengl::cTexture* pTexture = photos[index]->pTexturePhoto;
+    opengl::cTexture* pTexture = photos[index]->pTexturePhotoThumbnail;
+
+    if (bIsModeSinglePhoto && (photos[index]->pTexturePhotoFull != nullptr) && (photos[index]->pStaticVertexBufferObjectPhotoFull != nullptr)) {
+      ASSERT(photos[index]->pTexturePhotoFull != nullptr);
+      ASSERT(photos[index]->pStaticVertexBufferObjectPhotoFull != nullptr);
+      pTexture = photos[index]->pTexturePhotoFull;
+      pStaticVertexBufferObjectPhoto = photos[index]->pStaticVertexBufferObjectPhotoFull;
+    }
 
     if ((pTexture != nullptr) && pTexture->IsValid() && (pStaticVertexBufferObjectPhoto != nullptr) && pStaticVertexBufferObjectPhoto->IsCompiled()) {
 
@@ -1067,12 +1074,12 @@ namespace diesel
     }
   }
 
-  void cGtkmmOpenGLView::OnImageError(const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize)
+  void cGtkmmOpenGLView::OnImageError(const string_t& sFileNameNoExtension)
   {
     LOG<<"cGtkmmOpenGLView::OnImageError \""<<sFileNameNoExtension<<"\""<<std::endl;
 
     if (!spitfire::util::IsMainThread()) {
-      cGtkmmOpenGLViewImageErrorEvent* pEvent = new cGtkmmOpenGLViewImageErrorEvent(sFileNameNoExtension, imageSize);
+      cGtkmmOpenGLViewImageErrorEvent* pEvent = new cGtkmmOpenGLViewImageErrorEvent(sFileNameNoExtension);
       eventQueue.AddItemToBack(pEvent);
       notifyMainThread.Notify();
     } else {
@@ -1104,19 +1111,33 @@ namespace diesel
       for (size_t i = 0; i < n; i++) {
         if (photos[i]->sFileNameNoExtension == sFileNameNoExtension) {
           cPhotoEntry* pEntry = photos[i];
-          ASSERT(pEntry->pTexturePhoto == nullptr);
-          ASSERT(pEntry->pStaticVertexBufferObjectPhoto == nullptr);
-
           pEntry->state = cPhotoEntry::STATE::LOADED;
 
-          // Create the texture
-          pEntry->pTexturePhoto = pContext->CreateTextureFromImage(*pImage);
-          ASSERT(pEntry->pTexturePhoto != nullptr);
+          if (imageSize == IMAGE_SIZE::THUMBNAIL) {
+            ASSERT(pEntry->pTexturePhotoThumbnail == nullptr);
+            ASSERT(pEntry->pStaticVertexBufferObjectPhotoThumbnail == nullptr);
 
-          // Create the static vertex buffer object
-          pEntry->pStaticVertexBufferObjectPhoto = pContext->CreateStaticVertexBufferObject();
-          CreateVertexBufferObjectPhoto(pEntry->pStaticVertexBufferObjectPhoto, pEntry->pTexturePhoto->GetWidth(), pEntry->pTexturePhoto->GetHeight());
-          ASSERT(pEntry->pStaticVertexBufferObjectPhoto != nullptr);
+            // Create the texture
+            pEntry->pTexturePhotoThumbnail = pContext->CreateTextureFromImage(*pImage);
+            ASSERT(pEntry->pTexturePhotoThumbnail != nullptr);
+
+            // Create the static vertex buffer object
+            pEntry->pStaticVertexBufferObjectPhotoThumbnail = pContext->CreateStaticVertexBufferObject();
+            CreateVertexBufferObjectPhoto(pEntry->pStaticVertexBufferObjectPhotoThumbnail, pEntry->pTexturePhotoThumbnail->GetWidth(), pEntry->pTexturePhotoThumbnail->GetHeight());
+            ASSERT(pEntry->pStaticVertexBufferObjectPhotoThumbnail != nullptr);
+          } else {
+            ASSERT(pEntry->pTexturePhotoFull == nullptr);
+            ASSERT(pEntry->pStaticVertexBufferObjectPhotoFull == nullptr);
+
+            // Create the texture
+            pEntry->pTexturePhotoFull = pContext->CreateTextureFromImage(*pImage);
+            ASSERT(pEntry->pTexturePhotoFull != nullptr);
+
+            // Create the static vertex buffer object
+            pEntry->pStaticVertexBufferObjectPhotoFull = pContext->CreateStaticVertexBufferObject();
+            CreateVertexBufferObjectPhoto(pEntry->pStaticVertexBufferObjectPhotoFull, pEntry->pTexturePhotoFull->GetWidth(), pEntry->pTexturePhotoFull->GetHeight());
+            ASSERT(pEntry->pStaticVertexBufferObjectPhotoFull != nullptr);
+          }
 
           break;
         }
@@ -1237,6 +1258,9 @@ namespace diesel
             // Enter single photo mode
             bIsModeSinglePhoto = true;
             currentSinglePhoto = index;
+
+            // Tell our image loading thread to start loading the full sized version of this image
+            if (photos[index]->pTexturePhotoFull == nullptr) imageLoadThread.LoadFileFullHighPriority(photos[index]->sFileNameNoExtension);
           }
         }
       } else {

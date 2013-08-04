@@ -43,8 +43,10 @@ namespace diesel
 
     string_t sFileNameNoExtension;
     STATE state;
-    opengl::cTexture* pTexturePhoto;
-    opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectPhoto;
+    opengl::cTexture* pTexturePhotoThumbnail;
+    opengl::cTexture* pTexturePhotoFull;
+    opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectPhotoThumbnail;
+    opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectPhotoFull;
     bool bIsSelected;
   };
 
@@ -137,7 +139,7 @@ namespace diesel
     virtual void OnFolderFound(const string_t& sFolderName) override;
     virtual void OnFileFound(const string_t& sFileNameNoExtension) override;
     virtual void OnImageLoaded(const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize, voodoo::cImage* pImage) override;
-    virtual void OnImageError(const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize) override;
+    virtual void OnImageError(const string_t& sFileNameNoExtension) override;
 
     void OnNotify();
 

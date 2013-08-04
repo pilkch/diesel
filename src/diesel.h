@@ -14,8 +14,7 @@ namespace diesel
   using spitfire::string_t;
 
   enum class IMAGE_SIZE {
-    SMALL,
-    MEDIUM,
+    THUMBNAIL,
     FULL
   };
 }

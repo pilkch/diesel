@@ -8,34 +8,18 @@
 
 namespace diesel
 {
-  // ** cPhoto
+  // ** cFolderLoadThumbnailsRequest
 
-  class cPhoto
-  {
-  public:
-    cPhoto();
-
-    string_t sFilePath;
-
-    // NOTE: The camera may have created a raw, dng, image, or a combination of these.  The user may also have converted to dng or exported an image
-    bool bHasRaw; // Nef, crw, etc.
-    bool bHasDNG;
-    bool bHasImage; // Jpg, png, etc.
-  };
-
-  inline cPhoto::cPhoto() :
-    bHasRaw(false),
-    bHasDNG(false),
-    bHasImage(false)
+  cFolderLoadThumbnailsRequest::cFolderLoadThumbnailsRequest(const string_t& _sFolderPath) :
+    sFolderPath(_sFolderPath)
   {
   }
 
 
-  // ** cFolderLoadRequest
+  // ** cFileLoadFullHighPriorityRequest
 
-  cFolderLoadRequest::cFolderLoadRequest(const string_t& _sFolderPath, IMAGE_SIZE _imageSize) :
-    sFolderPath(_sFolderPath),
-    imageSize(_imageSize)
+  cFileLoadFullHighPriorityRequest::cFileLoadFullHighPriorityRequest(const string_t& _sFileNameNoExtension) :
+    sFileNameNoExtension(_sFileNameNoExtension)
   {
   }
 
@@ -46,7 +30,8 @@ namespace diesel
     spitfire::util::cThread(soAction, "cImageLoadThread::cThread"),
     handler(_handler),
     soAction("cImageLoadThread::soAction"),
-    requestQueue(soAction)
+    requestQueue(soAction),
+    highPriorityRequestQueue(soAction)
   {
   }
 
@@ -66,13 +51,19 @@ namespace diesel
     StopThreadNow();
   }
 
-  void cImageLoadThread::LoadFolder(const string_t& sFolderPath, IMAGE_SIZE imageSize)
+  void cImageLoadThread::LoadFolderThumbnails(const string_t& sFolderPath)
   {
     // If we are adding a folder request then we can reset our loading process interface
     loadingProcessInterface.Reset();
 
     // Add an event to the queue
-    requestQueue.AddItemToBack(new cFolderLoadRequest(sFolderPath, imageSize));
+    requestQueue.AddItemToBack(new cFolderLoadThumbnailsRequest(sFolderPath));
+  }
+
+  void cImageLoadThread::LoadFileFullHighPriority(const string_t& sFilePath)
+  {
+    // Add an event to the queue
+    highPriorityRequestQueue.AddItemToBack(new cFileLoadFullHighPriorityRequest(sFilePath));
   }
 
   void cImageLoadThread::StopLoading()
@@ -85,9 +76,17 @@ namespace diesel
 
   void cImageLoadThread::ClearEventQueue()
   {
-    // Remove and delete all events on the queue
+    // Remove and delete all folder load events on the queue
     while (true) {
-      cFolderLoadRequest* pEvent = requestQueue.RemoveItemFromFront();
+      cFolderLoadThumbnailsRequest* pEvent = requestQueue.RemoveItemFromFront();
+      if (pEvent == nullptr) break;
+
+      spitfire::SAFE_DELETE(pEvent);
+    }
+
+    // Remove and delete all file load events on the queue
+    while (true) {
+      cFileLoadFullHighPriorityRequest* pEvent = highPriorityRequestQueue.RemoveItemFromFront();
       if (pEvent == nullptr) break;
 
       spitfire::SAFE_DELETE(pEvent);
@@ -157,6 +156,53 @@ namespace diesel
     }
   }
 
+  void cImageLoadThread::HandleHighPriorityRequestQueue(const string_t& sFolderPath, std::map<string_t, cPhoto*>& files)
+  {
+    while (true) {
+      // Loading the image can take a while so we need to check again if we should stop
+      if (IsToStop() || loadingProcessInterface.IsToStop()) break;
+
+      //LOG<<"cImageLoadThread::ThreadFunction Loop getting event"<<std::endl;
+      cFileLoadFullHighPriorityRequest* pRequest = highPriorityRequestQueue.RemoveItemFromFront();
+      if (pRequest == nullptr) break;
+
+      const string_t sFileNameNoExtension = pRequest->sFileNameNoExtension;
+      LOG<<"cImageLoadThread::HandleHighPriorityRequestQueue Request found \""<<sFileNameNoExtension<<"\""<<std::endl;
+
+      // Convert from raw to dng
+      std::map<string_t, cPhoto*>::iterator iter = files.find(sFileNameNoExtension);
+      ASSERT(iter != files.end());
+      if (iter != files.end()) {
+        LOG<<"cImageLoadThread::HandleHighPriorityRequestQueue Photo found"<<std::endl;
+        cPhoto* pPhoto = iter->second;
+
+        bool bStop = false;
+
+        if (pPhoto->bHasRaw && !pPhoto->bHasDNG) {
+          LOG<<"cImageLoadThread::HandleHighPriorityRequestQueue Creating DNG"<<std::endl;
+          if (!GetOrCreateDNGForRawFile(sFolderPath, sFileNameNoExtension, *pPhoto)) {
+            // If the conversion failed then we need to get out of here
+            bStop = true;
+          }
+        }
+
+        // Creating a dng file can take a while so we need to check again if we should stop
+        if (IsToStop() || loadingProcessInterface.IsToStop()) bStop = true;
+
+        if (!bStop) {
+          LOG<<"cImageLoadThread::HandleHighPriorityRequestQueue Creating thumbnail"<<std::endl;
+          const string_t sThumbnailFilePath = GetOrCreateThumbnail(sFolderPath, sFileNameNoExtension, IMAGE_SIZE::FULL, *pPhoto);
+          ASSERT(!sThumbnailFilePath.empty());
+
+          LOG<<"cImageLoadThread::HandleHighPriorityRequestQueue Loading thumbnail"<<std::endl;
+          LoadThumbnailImage(sThumbnailFilePath, sFileNameNoExtension, IMAGE_SIZE::FULL);
+        }
+      }
+
+      spitfire::SAFE_DELETE(pRequest);
+    }
+  }
+
   void cImageLoadThread::ThreadFunction()
   {
     LOG<<"cImageLoadThread::ThreadFunction"<<std::endl;
@@ -172,8 +218,11 @@ namespace diesel
 
       if (IsToStop()) break;
 
+      // Check if we need to handle a high priority request
+      HandleHighPriorityRequestQueue(sFolderPath, files);
+
       //LOG<<"cImageLoadThread::ThreadFunction Loop getting event"<<std::endl;
-      cFolderLoadRequest* pRequest = requestQueue.RemoveItemFromFront();
+      cFolderLoadThumbnailsRequest* pRequest = requestQueue.RemoveItemFromFront();
       if (pRequest != nullptr) {
         // Remove the known folders
         folders.clear();
@@ -256,6 +305,10 @@ namespace diesel
         while (iter != iterEnd) {
           if (IsToStop() || loadingProcessInterface.IsToStop()) break;
 
+          HandleHighPriorityRequestQueue(sFolderPath, files);
+
+          if (IsToStop() || loadingProcessInterface.IsToStop()) break;
+
           const string_t sFileNameNoExtension = iter->first;
 
           // Convert from raw to dng
@@ -272,14 +325,18 @@ namespace diesel
           // Creating a dng file can take a while so we need to check again if we should stop
           if (IsToStop() || loadingProcessInterface.IsToStop()) break;
 
+          HandleHighPriorityRequestQueue(sFolderPath, files);
 
+          if (IsToStop() || loadingProcessInterface.IsToStop()) break;
 
           const string_t sThumbnailFilePath = GetOrCreateThumbnail(sFolderPath, sFileNameNoExtension, IMAGE_SIZE::THUMBNAIL, *pPhoto);
 
           // Loading the image can take a while so we need to check again if we should stop
           if (IsToStop() || loadingProcessInterface.IsToStop()) break;
 
+          HandleHighPriorityRequestQueue(sFolderPath, files);
 
+          if (IsToStop() || loadingProcessInterface.IsToStop()) break;
 
           LoadThumbnailImage(sThumbnailFilePath, sFileNameNoExtension, IMAGE_SIZE::THUMBNAIL);
 
