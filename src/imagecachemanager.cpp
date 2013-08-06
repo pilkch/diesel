@@ -12,10 +12,18 @@
 
 namespace diesel
 {
+  void cImageCacheManager::EnforceMaximumCacheSize(size_t nMaximumCacheSizeGB)
+  {
+    //const string_t sCacheFolderPath = GetCacheFolderPath();
+    //if (spitfire::filesystem::DirectoryExists(sCacheFolderPath)) spitfire::filesystem::DeleteDirectory(sCacheFolderPath);
+
+    // TODO: Get a list of all files in the folder with sizes sorted by date modified, remove the last ones until we remove x MB down to nMaximumSizeGB * 1024;
+  }
+
   void cImageCacheManager::ClearCache()
   {
-    const string_t sFolderPath = GetCacheFolderPath();
-    if (spitfire::filesystem::DirectoryExists(sFolderPath)) spitfire::filesystem::DeleteDirectory(sFolderPath);
+    const string_t sCacheFolderPath = GetCacheFolderPath();
+    if (spitfire::filesystem::DirectoryExists(sCacheFolderPath)) spitfire::filesystem::DeleteDirectory(sCacheFolderPath);
   }
 
   string_t cImageCacheManager::GetCacheFolderPath()
