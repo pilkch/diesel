@@ -330,6 +330,9 @@ namespace diesel
 
     // Set the combobox text (This will also callback and change the folder on the photo browser)
     comboBoxFolder.set_active_text(sFolder);
+
+    // Tell the photo browser the new settings
+    photoBrowser.SetCacheMaximumSizeGB(settings.GetMaximumCacheSizeGB());
   }
 
   void cGtkmmMainWindow::OnThemeChanged()

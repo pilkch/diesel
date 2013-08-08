@@ -84,6 +84,8 @@ namespace diesel
     float GetScale() const;
     void SetScale(float fScale);
 
+    void SetCacheMaximumSizeGB(size_t nCacheMaximumSizeGB);
+
     size_t GetPhotoCount() const;
     size_t GetLoadedPhotoCount() const;
     size_t GetSelectedPhotoCount() const;

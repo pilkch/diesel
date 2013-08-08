@@ -13,7 +13,8 @@ namespace diesel
     groupHistory("History"),
     historyClearFolders("Clear previous folders"),
     historyClearCache("Clear cache"),
-    pOkButton(nullptr)
+    pOkButton(nullptr),
+    nCacheMaximumSizeGB(settings.GetMaximumCacheSizeGB())
   {
     set_border_width(5);
 
@@ -29,10 +30,23 @@ namespace diesel
     groupHistory.add(boxHistory);
     boxHistory.pack_start(historyClearFolders, Gtk::PACK_SHRINK);
     historyClearFolders.set_border_width(10);
+
+    Gtk::Label* pCacheSize = Gtk::manage(new Gtk::Label("Cache Size:"));
+    boxCacheMaximumSize.pack_start(*pCacheSize, Gtk::PACK_SHRINK);
+    historyCacheMaximumSizeGB.set_range(1.0, 20.0);
+    historyCacheMaximumSizeGB.set_increments(1.0, 5.0);
+    historyCacheMaximumSizeGB.set_value(nCacheMaximumSizeGB);
+    boxCacheMaximumSize.pack_start(historyCacheMaximumSizeGB, Gtk::PACK_SHRINK);
+    Gtk::Label* pGB = Gtk::manage(new Gtk::Label("GB"));
+    boxCacheMaximumSize.pack_start(*pGB, Gtk::PACK_SHRINK);
+    boxCacheMaximumSize.set_border_width(10);
+    boxHistory.pack_start(boxCacheMaximumSize, Gtk::PACK_SHRINK);
+
     boxHistory.pack_start(historyClearCache, Gtk::PACK_SHRINK);
     historyClearCache.set_border_width(10);
 
     historyClearFolders.signal_clicked().connect(sigc::mem_fun(*this, &cGtkmmPreferencesDialog::OnActionHistoryClearFolders));
+    historyCacheMaximumSizeGB.signal_changed().connect(sigc::mem_fun(*this, &cGtkmmPreferencesDialog::OnActionHistoryCacheMaximumSizeGBChanged));
     historyClearCache.signal_clicked().connect(sigc::mem_fun(*this, &cGtkmmPreferencesDialog::OnActionHistoryClearCache));
 
     // Add separator
@@ -56,6 +70,8 @@ namespace diesel
       settings.SetNotifyOnSongChange(playbackNotifyOnSongChange.get_active());
       settings.SetNextSongOnMoveToTrash(playbackNextSongOnMoveToTrash.get_active());*/
 
+      if (settings.GetMaximumCacheSizeGB() != nCacheMaximumSizeGB) settings.SetMaximumCacheSizeGB(nCacheMaximumSizeGB);
+
       settings.Save();
     }
   }
@@ -65,6 +81,11 @@ namespace diesel
     std::list<string_t> folders;
     settings.SetPreviousPhotoBrowserFolders(folders);
     settings.SetLastPhotoBrowserFolder("");
+  }
+
+  void cGtkmmPreferencesDialog::OnActionHistoryCacheMaximumSizeGBChanged()
+  {
+    nCacheMaximumSizeGB = historyCacheMaximumSizeGB.get_value();
   }
 
   void cGtkmmPreferencesDialog::OnActionHistoryClearCache()

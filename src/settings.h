@@ -23,6 +23,9 @@ namespace diesel
     string_t GetIgnoreUpdateVersion() const;
     void SetIgnoreUpdateVersion(const string_t& sVersion);
 
+    size_t GetMaximumCacheSizeGB() const;
+    void SetMaximumCacheSizeGB(size_t nSizeGB);
+
     void GetPreviousPhotoBrowserFolders(std::list<string_t>& folders) const;
     void SetPreviousPhotoBrowserFolders(const std::list<string_t>& folders);
 

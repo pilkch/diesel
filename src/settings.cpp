@@ -40,6 +40,16 @@ namespace diesel
     document.SetValue(TEXT("settings"), TEXT("update"), TEXT("ignoredVersion"), sVersion);
   }
 
+  size_t cSettings::GetMaximumCacheSizeGB() const
+  {
+    return document.GetValue<size_t>(TEXT("settings"), TEXT("cache"), TEXT("maximumSizeGB"), 2);
+  }
+
+  void cSettings::SetMaximumCacheSizeGB(size_t nSizeGB)
+  {
+    document.SetValue(TEXT("settings"), TEXT("cache"), TEXT("maximumSizeGB"), nSizeGB);
+  }
+
   void cSettings::GetPreviousPhotoBrowserFolders(std::list<string_t>& folders) const
   {
     std::vector<string_t> vFolders;

@@ -91,6 +91,8 @@ namespace diesel
     void StopSoon();
     void StopNow();
 
+    void SetMaximumCacheSizeGB(size_t nSizeGB);
+
     void LoadFolderThumbnails(const string_t& sFolderPath);
     void LoadFileFullHighPriority(const string_t& sFilePath);
     void StopLoading();
@@ -127,6 +129,9 @@ namespace diesel
     private:
       spitfire::util::cSignalObject soStopLoading;
     };
+
+    spitfire::util::cMutex mutexMaximumCacheSize;
+    size_t nMaximumCacheSizeGB;
 
     cLoadingProcessInterface loadingProcessInterface; // Signalled by the controller when the the model thread should stop loading files
   };

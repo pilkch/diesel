@@ -12,6 +12,7 @@ namespace diesel
   class cImageCacheManager
   {
   public:
+    static void EnforceMaximumCacheSize(size_t nMaximumCacheSizeGB);
     static void ClearCache();
 
     static bool IsWineInstalled();

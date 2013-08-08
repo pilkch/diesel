@@ -31,7 +31,8 @@ namespace diesel
     handler(_handler),
     soAction("cImageLoadThread::soAction"),
     requestQueue(soAction),
-    highPriorityRequestQueue(soAction)
+    highPriorityRequestQueue(soAction),
+    mutexMaximumCacheSize("cImageLoadThread::mutexMaximumCacheSize")
   {
   }
 
@@ -49,6 +50,12 @@ namespace diesel
   void cImageLoadThread::StopNow()
   {
     StopThreadNow();
+  }
+
+  void cImageLoadThread::SetMaximumCacheSizeGB(size_t nSizeGB)
+  {
+    spitfire::util::cLockObject lock(mutexMaximumCacheSize);
+    nMaximumCacheSizeGB = nSizeGB;
   }
 
   void cImageLoadThread::LoadFolderThumbnails(const string_t& sFolderPath)
@@ -345,6 +352,16 @@ namespace diesel
 
         //LOG<<"cImageLoadThread::ThreadFunction Loop deleting event"<<std::endl;
         spitfire::SAFE_DELETE(pRequest);
+
+        // Enforce the maximum cache size
+        size_t nTempMaximumCacheSizeGB = 0;
+
+        {
+          spitfire::util::cLockObject lock(mutexMaximumCacheSize);
+          nTempMaximumCacheSizeGB = nMaximumCacheSizeGB;
+        }
+
+        cImageCacheManager::EnforceMaximumCacheSize(nTempMaximumCacheSizeGB);
       } else {
         // If the queue is empty then we know that there are no more actions and it is safe to reset our stop loading signal object
         loadingProcessInterface.Reset();

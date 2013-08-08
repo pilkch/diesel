@@ -251,6 +251,11 @@ namespace diesel
     }
   }
 
+  void cGtkmmOpenGLView::SetCacheMaximumSizeGB(size_t nCacheMaximumSizeGB)
+  {
+    imageLoadThread.SetMaximumCacheSizeGB(nCacheMaximumSizeGB);
+  }
+
   void cGtkmmOpenGLView::StopLoading()
   {
     imageLoadThread.StopLoading();

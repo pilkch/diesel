@@ -76,6 +76,11 @@ namespace diesel
     openglView.SetFolder(sFolderPath);
   }
 
+  void cGtkmmPhotoBrowser::SetCacheMaximumSizeGB(size_t nCacheMaximumSizeGB)
+  {
+    openglView.SetCacheMaximumSizeGB(nCacheMaximumSizeGB);
+  }
+
   size_t cGtkmmPhotoBrowser::GetPhotoCount() const
   {
     return openglView.GetPhotoCount();

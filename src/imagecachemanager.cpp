@@ -5,6 +5,7 @@
 // Spitfire headers
 #include <spitfire/algorithm/md5.h>
 #include <spitfire/storage/filesystem.h>
+#include <spitfire/util/datetime.h>
 #include <spitfire/util/log.h>
 
 // Diesel headers
@@ -12,12 +13,68 @@
 
 namespace diesel
 {
+  class cFileAgeAndSize
+  {
+  public:
+    cFileAgeAndSize(const string_t& sFilePath, size_t nFileSizeBytes);
+
+    string_t sFilePath;
+    size_t nFileSizeBytes;
+  };
+
+  cFileAgeAndSize::cFileAgeAndSize(const string_t& _sFilePath, size_t _nFileSizeBytes) :
+    sFilePath(_sFilePath),
+    nFileSizeBytes(_nFileSizeBytes)
+  {
+  }
+
   void cImageCacheManager::EnforceMaximumCacheSize(size_t nMaximumCacheSizeGB)
   {
-    //const string_t sCacheFolderPath = GetCacheFolderPath();
-    //if (spitfire::filesystem::DirectoryExists(sCacheFolderPath)) spitfire::filesystem::DeleteDirectory(sCacheFolderPath);
+    const string_t sCacheFolderPath = GetCacheFolderPath();
 
-    // TODO: Get a list of all files in the folder with sizes sorted by date modified, remove the last ones until we remove x MB down to nMaximumSizeGB * 1024;
+    size_t nFolderSizeBytes = 0;
+
+    // Get a list of all the files in the cache folder sorted by
+    std::multimap<spitfire::util::cDateTime, cFileAgeAndSize*> files;
+    for (spitfire::filesystem::cFolderIterator iter(sCacheFolderPath); iter.IsValid(); iter.Next()) {
+      ASSERT(!iter.IsFolder());
+      const string_t sFilePath = iter.GetFullPath();
+      const spitfire::util::cDateTime dateTimeModified = spitfire::filesystem::GetLastModifiedDate(sFilePath);
+      const size_t nFileSizeBytes = spitfire::filesystem::GetFileSizeBytes(sFilePath);
+
+      files.insert(std::make_pair(dateTimeModified, new cFileAgeAndSize(sFilePath, nFileSizeBytes)));
+
+      nFolderSizeBytes += nFileSizeBytes;
+    }
+
+    const size_t nMaximumCacheSizeBytes = nMaximumCacheSizeGB * 1024 * 1024 * 1024;
+    if (nFolderSizeBytes > nMaximumCacheSizeBytes) {
+      // Remove the last files until we have removed enough files to get below nMaximumCacheSizeGB * 1024
+      const size_t nDifferenceBytes = nFolderSizeBytes - nMaximumCacheSizeBytes;
+      size_t nDeletedBytes = 0;
+      std::multimap<spitfire::util::cDateTime, cFileAgeAndSize*>::const_iterator iter = files.begin();
+      const std::multimap<spitfire::util::cDateTime, cFileAgeAndSize*>::const_iterator iterEnd = files.end();
+      while (iter != iterEnd) {
+        cFileAgeAndSize* pEntry = iter->second;
+        spitfire::filesystem::DeleteFile(pEntry->sFilePath);
+
+        // Break if we have now deleted enough bytes
+        nDeletedBytes += pEntry->nFileSizeBytes;
+        if (nDeletedBytes >= nDifferenceBytes) break;
+
+        iter++;
+      }
+    }
+
+    // Delete the items
+    std::multimap<spitfire::util::cDateTime, cFileAgeAndSize*>::const_iterator iter = files.begin();
+    const std::multimap<spitfire::util::cDateTime, cFileAgeAndSize*>::const_iterator iterEnd = files.end();
+    while (iter != iterEnd) {
+      cFileAgeAndSize* pEntry = iter->second;
+      spitfire::SAFE_DELETE(pEntry);
+
+      iter++;
+    }
   }
 
   void cImageCacheManager::ClearCache()

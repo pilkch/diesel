@@ -33,6 +33,8 @@ namespace diesel
     string_t GetFolder() const;
     void SetFolder(const string_t& sFolderPath);
 
+    void SetCacheMaximumSizeGB(size_t nCacheMaximumSizeGB);
+
     size_t GetPhotoCount() const;
     size_t GetLoadedPhotoCount() const;
     size_t GetSelectedPhotoCount() const;

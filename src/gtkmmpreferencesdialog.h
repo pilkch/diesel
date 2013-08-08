@@ -25,6 +25,7 @@ namespace diesel
     void OnEnableControls();
 
     void OnActionHistoryClearFolders();
+    void OnActionHistoryCacheMaximumSizeGBChanged();
     void OnActionHistoryClearCache();
 
     cSettings& settings;
@@ -36,11 +37,15 @@ namespace diesel
     Gtk::Frame groupHistory;
     Gtk::VBox boxHistory;
     Gtk::Button historyClearFolders;
+    Gtk::HBox boxCacheMaximumSize;
+    Gtk::SpinButton historyCacheMaximumSizeGB;
     Gtk::Button historyClearCache;
 
     Gtk::Separator separator;
 
     Gtk::Button* pOkButton;
+
+    size_t nCacheMaximumSizeGB;
   };
 }
 
