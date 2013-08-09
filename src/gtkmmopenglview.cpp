@@ -136,6 +136,7 @@ namespace diesel
 
   cPhotoEntry::cPhotoEntry() :
     state(STATE::LOADING),
+    bLoadingFull(false),
     pTexturePhotoThumbnail(nullptr),
     pTexturePhotoFull(nullptr),
     pStaticVertexBufferObjectPhotoThumbnail(nullptr),
@@ -1152,6 +1153,31 @@ namespace diesel
     }
   }
 
+  void cGtkmmOpenGLView::PreloadSinglePhoto(size_t index)
+  {
+    ASSERT(index < photos.size());
+
+    cPhotoEntry* pPhoto = photos[index];
+
+    if (pPhoto->state != cPhotoEntry::STATE::FOLDER) {
+      // Tell our image loading thread to start loading the full sized version of this image
+      if ((pPhoto->pTexturePhotoFull == nullptr) && !pPhoto->bLoadingFull) {
+        pPhoto->bLoadingFull = true;
+        imageLoadThread.LoadFileFullHighPriority(pPhoto->sFileNameNoExtension);
+      }
+    }
+  }
+
+  void cGtkmmOpenGLView::SetCurrentSinglePhoto(size_t index)
+  {
+    ASSERT(index < photos.size());
+
+    currentSinglePhoto = index;
+
+    // Load this photo
+    PreloadSinglePhoto(currentSinglePhoto);
+  }
+
   bool cGtkmmOpenGLView::OnKeyPressEvent(GdkEventKey* pEvent)
   {
     LOG<<"cGtkmmOpenGLView::OnKeyPressEvent"<<std::endl;
@@ -1162,22 +1188,22 @@ namespace diesel
         case GDK_Left:
         case GDK_Up:
         case GDK_Page_Up: {
-          if (currentSinglePhoto != 0) currentSinglePhoto--;
+          if (currentSinglePhoto != 0) SetCurrentSinglePhoto(currentSinglePhoto - 1);
           return true;
         }
         case GDK_Right:
         case GDK_Down:
         case GDK_Page_Down:
         case GDK_space: {
-          if (currentSinglePhoto + 1 < photos.size()) currentSinglePhoto++;
+          if (currentSinglePhoto + 1 < photos.size()) SetCurrentSinglePhoto(currentSinglePhoto + 1);
           return true;
         }
         case GDK_Home: {
-          currentSinglePhoto = 0;
+          SetCurrentSinglePhoto(0);
           return true;
         }
         case GDK_End: {
-          if (!photos.empty()) currentSinglePhoto = photos.size() - 1;
+          if (!photos.empty()) SetCurrentSinglePhoto(photos.size() - 1);
           return true;
         }
         case GDK_Escape: {
@@ -1284,10 +1310,7 @@ namespace diesel
           if (!bKeyControl && !bKeyShift) {
             // Enter single photo mode
             bIsModeSinglePhoto = true;
-            currentSinglePhoto = index;
-
-            // Tell our image loading thread to start loading the full sized version of this image
-            if (photos[index]->pTexturePhotoFull == nullptr) imageLoadThread.LoadFileFullHighPriority(photos[index]->sFileNameNoExtension);
+            SetCurrentSinglePhoto(index);
           }
         }
       } else {

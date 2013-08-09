@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     spitfire::string::Init();
 
     Gtk::Main kit(argc, argv);
-  
+
     diesel::cGtkmmMainWindow window(argc, argv);
     window.Run();
   }

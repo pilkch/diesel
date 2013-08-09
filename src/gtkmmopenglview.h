@@ -43,6 +43,7 @@ namespace diesel
 
     string_t sFileNameNoExtension;
     STATE state;
+    bool bLoadingFull;
     opengl::cTexture* pTexturePhotoThumbnail;
     opengl::cTexture* pTexturePhotoFull;
     opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectPhotoThumbnail;
@@ -111,6 +112,9 @@ namespace diesel
     void UpdateColumnsPageHeightAndRequiredHeight();
 
     bool GetPhotoAtPoint(size_t& index, const spitfire::math::cVec2& point) const;
+
+    void PreloadSinglePhoto(size_t index);
+    void SetCurrentSinglePhoto(size_t index);
 
     void CreateVertexBufferObjectSelectionRectangle(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight);
     void CreateVertexBufferObjectSquare(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight);
