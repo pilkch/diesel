@@ -1261,6 +1261,9 @@ namespace diesel
   {
     LOG<<"cGtkmmOpenGLView::OnMouseDown"<<std::endl;
 
+    // Set the focus to this widget so that arrow keys work
+    grab_focus();
+
     // Change the selection on left and right click
     if ((button == 1) || (button == 3)) {
       const size_t n = photos.size();
