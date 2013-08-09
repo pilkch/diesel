@@ -1176,6 +1176,10 @@ namespace diesel
 
     // Load this photo
     PreloadSinglePhoto(currentSinglePhoto);
+
+    // Load the previous and next photos
+    if (currentSinglePhoto != 0) PreloadSinglePhoto(currentSinglePhoto - 1);
+    if ((currentSinglePhoto + 1) < photos.size()) PreloadSinglePhoto(currentSinglePhoto + 1);
   }
 
   bool cGtkmmOpenGLView::OnKeyPressEvent(GdkEventKey* pEvent)
