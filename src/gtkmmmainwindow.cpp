@@ -256,7 +256,9 @@ namespace diesel
     // Controls
     comboBoxFolder.get_entry()->signal_changed().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionChangeFolder));
     buttonFolderUp.signal_clicked().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionFolderUp));
+    buttonFolderUp.set_tooltip_text("Move up");
     buttonFolderShowInFileManager.signal_clicked().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionFolderShowInFileManager));
+    buttonFolderShowInFileManager.set_tooltip_text("Show folder in file manager");
 
     buttonStopLoading.signal_clicked().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionStopLoading));
 
