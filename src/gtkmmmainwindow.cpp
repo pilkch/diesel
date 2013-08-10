@@ -242,10 +242,11 @@ namespace diesel
     //  boxToolbar.pack_start(*pToolbar);
     //}
 
-
     buttonAddFiles.signal_clicked().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionBrowseFiles));
     buttonAddFolder.signal_clicked().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionBrowseFolder));
 
+    boxToolbar.pack_start(buttonFolderUp, Gtk::PACK_SHRINK);
+    boxToolbar.pack_start(buttonFolderShowInFileManager, Gtk::PACK_SHRINK);
     boxToolbar.pack_start(buttonAddFiles, Gtk::PACK_SHRINK);
     boxToolbar.pack_start(buttonAddFolder, Gtk::PACK_SHRINK);
 
@@ -254,6 +255,9 @@ namespace diesel
 
     // Controls
     comboBoxFolder.get_entry()->signal_changed().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionChangeFolder));
+    buttonFolderUp.signal_clicked().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionFolderUp));
+    buttonFolderShowInFileManager.signal_clicked().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionFolderShowInFileManager));
+
     buttonStopLoading.signal_clicked().connect(sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionStopLoading));
 
     photoBrowser.Init(argc, argv);
@@ -342,6 +346,12 @@ namespace diesel
 
   void cGtkmmMainWindow::UpdateIcons()
   {
+    Gtk::Image* pImageFolderUp = new Gtk::Image;
+    iconTheme.LoadStockIcon(sICON_GO_UP, *pImageFolderUp);
+    buttonFolderUp.set_image(*pImageFolderUp);
+    Gtk::Image* pImageFileManager = new Gtk::Image("data/icons/show_in_file_browser.png");
+    buttonFolderShowInFileManager.set_image(*pImageFileManager);
+
     /*Gtk::Image* pImageFile = new Gtk::Image;
     iconTheme.LoadStockIcon(sICON_ADD, *pImageFile);
     buttonAddFiles.set_image(*pImageFile);
@@ -476,6 +486,25 @@ namespace diesel
     Glib::ustring sText = comboBoxFolder.get_entry_text();
     if (sText == "Browse...") OnActionBrowseFolder();
     else if (!sText.empty()) ChangeFolder(sText);
+  }
+
+  void cGtkmmMainWindow::OnActionFolderUp()
+  {
+    const string_t sFolderPath = photoBrowser.GetFolder();
+    const string_t sParentFolderPath = spitfire::filesystem::GetFolder(sFolderPath);
+    if (spitfire::filesystem::DirectoryExists(sParentFolderPath)) {
+      // Change the folder
+      ChangeFolder(sParentFolderPath);
+
+      // Update the combobox text
+      comboBoxFolder.set_active_text(sParentFolderPath);
+    }
+  }
+
+  void cGtkmmMainWindow::OnActionFolderShowInFileManager()
+  {
+    const string_t sFolderPath = photoBrowser.GetFolder();
+    spitfire::filesystem::ShowFolder(sFolderPath);
   }
 
   void cGtkmmMainWindow::UpdateStatusBar()

@@ -51,6 +51,8 @@ namespace diesel
     void OnMenuHelpAbout();
 
     void OnActionChangeFolder();
+    void OnActionFolderUp();
+    void OnActionFolderShowInFileManager();
     void OnActionBrowseFiles();
     void OnActionBrowseFolder();
     void OnActionAddFilesFromPicturesFolder();
@@ -80,7 +82,7 @@ namespace diesel
 
     // Layouts
     Gtk::VBox boxMainWindow;
-    Gtk::Box boxToolbar;
+    Gtk::VBox boxToolbar;
     Gtk::HBox boxPositionSlider;
     Gtk::HBox boxControlsAndToolbar;
     Gtk::VBox boxControls;
@@ -88,6 +90,8 @@ namespace diesel
 
     // Controls
     Gtk::ComboBoxText comboBoxFolder;
+    Gtk::Button buttonFolderUp;
+    Gtk::Button buttonFolderShowInFileManager;
     Gtk::Button buttonAddFiles;
     Gtk::Button buttonAddFolder;
 
