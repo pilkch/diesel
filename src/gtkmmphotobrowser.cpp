@@ -202,6 +202,11 @@ namespace diesel
     scrollBar.PageDown();
   }
 
+  void cGtkmmPhotoBrowser::OnOpenGLViewChangedFolder(const string_t& sFolderPath)
+  {
+    parent.OnPhotoBrowserChangedFolder(sFolderPath);
+  }
+
   void cGtkmmPhotoBrowser::OnOpenGLViewLoadedFileOrFolder()
   {
     parent.OnPhotoBrowserLoadedFileOrFolder();

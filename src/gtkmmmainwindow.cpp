@@ -503,6 +503,15 @@ namespace diesel
     else buttonStopLoading.hide();
   }
 
+  void cGtkmmMainWindow::OnPhotoBrowserChangedFolder(const string_t& sFolderPath)
+  {
+    // Change the folder
+    ChangeFolder(sFolderPath);
+
+    // Update the combobox text
+    comboBoxFolder.set_active_text(sFolderPath);
+  }
+
   void cGtkmmMainWindow::OnPhotoBrowserLoadedFileOrFolder()
   {
     UpdateStatusBar();

@@ -1308,16 +1308,20 @@ namespace diesel
   {
     LOG<<"cGtkmmOpenGLView::OnMouseDoubleClick"<<std::endl;
 
-    // Enter single photo mode
     if (button == 1) {
       if (!bIsModeSinglePhoto) {
         size_t index = 0;
         if (GetPhotoAtPoint(index, spitfire::math::cVec2(x, y))) {
           ASSERT(index < photos.size());
           if (!bKeyControl && !bKeyShift) {
-            // Enter single photo mode
-            bIsModeSinglePhoto = true;
-            SetCurrentSinglePhoto(index);
+            if (photos[index]->state == cPhotoEntry::STATE::FOLDER) {
+              // Change to this folder
+              parent.OnOpenGLViewChangedFolder(spitfire::filesystem::MakeFilePath(sFolderPath, photos[index]->sFileNameNoExtension));
+            } else {
+              // Enter single photo mode
+              bIsModeSinglePhoto = true;
+              SetCurrentSinglePhoto(index);
+            }
           }
         }
       } else {

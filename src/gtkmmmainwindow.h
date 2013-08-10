@@ -36,6 +36,7 @@ namespace diesel
 
     void OnPhotoBrowserRightClick();
 
+    void OnPhotoBrowserChangedFolder(const string_t& sFolderPath);
     void OnPhotoBrowserLoadedFileOrFolder();
     void OnPhotoBrowserFileFound();
     void OnPhotoBrowserLoadedFilesClear();
