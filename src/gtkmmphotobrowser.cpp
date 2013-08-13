@@ -164,7 +164,7 @@ namespace diesel
 
   void cGtkmmPhotoBrowser::OnScrollBarScrolled(const cGtkmmScrollBar& widget)
   {
-    float fValue = static_cast<float>(scrollBar.get_value());
+    const float fValue = static_cast<float>(scrollBar.get_value());
     openglView.OnScrollBarScrolled(fValue);
   }
 
