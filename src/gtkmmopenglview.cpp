@@ -709,8 +709,7 @@ namespace diesel
 
     UpdateColumnsPageHeightAndRequiredHeight();
 
-    // Notify the parent that our view has changed
-    parent.OnOpenGLViewContentChanged();
+    parent.OnOpenGLViewResized();
   }
 
   void cGtkmmOpenGLView::RenderPhoto(size_t index, const spitfire::math::cMat4& matScale)

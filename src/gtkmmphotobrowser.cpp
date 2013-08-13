@@ -168,6 +168,16 @@ namespace diesel
     openglView.OnScrollBarScrolled(fValue);
   }
 
+  void cGtkmmPhotoBrowser::OnOpenGLViewResized()
+  {
+    // Notify the parent that our view has changed
+    OnOpenGLViewContentChanged();
+
+    // Update the OpenGL view scrollbar position
+    const float fValue = static_cast<float>(scrollBar.get_value());
+    openglView.OnScrollBarScrolled(fValue);
+  }
+
   void cGtkmmPhotoBrowser::OnOpenGLViewContentChanged()
   {
     scrollBar.SetRange(0, openglView.GetRequiredHeight());

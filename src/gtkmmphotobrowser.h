@@ -51,6 +51,7 @@ namespace diesel
     void OnOpenGLViewFileFound();
     void OnOpenGLViewLoadedFilesClear();
     void OnOpenGLViewSelectionChanged();
+    void OnOpenGLViewResized();
     void OnOpenGLViewContentChanged();
     void OnOpenGLViewRightClick();
     void OnOpenGLViewScrollTop();
