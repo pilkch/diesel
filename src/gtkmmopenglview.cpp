@@ -358,13 +358,13 @@ namespace diesel
         (point.x >= fX) && (point.x <= fX + fThumbNailWidth) &&
         (point.y >= fY) && (point.y <= fY + fThumbNailHeight)
       ) {
-        LOG<<"cGtkmmOpenGLView::GetPhotoAtPoint Clicked in "<<i<<std::endl;
+        LOG<<"cGtkmmOpenGLView::GetPhotoAtPoint In item "<<i<<std::endl;
         index = i;
         return true;
       }
     }
 
-    LOG<<"cGtkmmOpenGLView::GetPhotoAtPoint Clicked in blank space"<<std::endl;
+    LOG<<"cGtkmmOpenGLView::GetPhotoAtPoint In blank space"<<std::endl;
     return false;
   }
 
