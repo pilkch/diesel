@@ -340,6 +340,7 @@ namespace diesel
 
     requiredHeight = fY;
 
+    LOG<<"cGtkmmOpenGLView::UpdateColumnsPageHeightAndRequiredHeight fScale="<<fScale<<", photos="<<photos.size()<<", rows="<<rows<<", columns="<<columns<<", requiredHeight="<<requiredHeight<<", pageHeight="<<pageHeight<<std::endl;
     pageHeight = resolution.height / fScale;
   }
 
@@ -1352,7 +1353,7 @@ namespace diesel
 
   void cGtkmmOpenGLView::OnScrollBarScrolled(float fValue)
   {
-    LOG<<"cGtkmmOpenGLView::OnScrollBarScrolled"<<std::endl;
+    LOG<<"cGtkmmOpenGLView::OnScrollBarScrolled "<<fValue<<std::endl;
     fScrollPosition = fValue;
   }
 }
