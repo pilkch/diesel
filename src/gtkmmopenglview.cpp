@@ -1354,6 +1354,10 @@ namespace diesel
   void cGtkmmOpenGLView::OnScrollBarScrolled(float fValue)
   {
     LOG<<"cGtkmmOpenGLView::OnScrollBarScrolled "<<fValue<<std::endl;
-    fScrollPosition = fValue;
+
+    // Subtract a page because the scrollbar is strange
+    fValue = max(0.0f, fValue - (float(pageHeight) / fScale));
+
+    fScrollPosition = fValue / fScale;
   }
 }
