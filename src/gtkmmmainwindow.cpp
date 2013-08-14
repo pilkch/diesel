@@ -584,6 +584,7 @@ namespace diesel
 
   void cGtkmmMainWindow::OnPhotoBrowserSinglePhotoMode(const string_t& sFileNameNoExtension)
   {
+    // Update the caption
     spitfire::ostringstream_t o;
     o<<BUILD_APPLICATION_NAME;
     o<<" - ";
@@ -594,6 +595,7 @@ namespace diesel
 
   void cGtkmmMainWindow::OnPhotoBrowserPhotoCollageMode()
   {
+    // Update the caption
     set_title(BUILD_APPLICATION_NAME);
   }
 
