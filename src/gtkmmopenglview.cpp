@@ -329,19 +329,26 @@ namespace diesel
     UpdateColumnsPageHeightAndRequiredHeight();
   }
 
+  void cGtkmmOpenGLView::ClampScrollBarPosition()
+  {
+    const float fMax = max(0.0f, float(requiredHeight) / fScale);
+    fScrollPosition = spitfire::math::clamp(fScrollPosition, 0.0f, fMax);
+  }
+
   void cGtkmmOpenGLView::UpdateColumnsPageHeightAndRequiredHeight()
   {
-    const float fWidth = (resolution.width - fThumbNailSpacing) / fScale;
+    const float fWidth = (resolution.width - fThumbNailSpacing);
 
-    columns = max<size_t>(1, fWidth / (fThumbNailWidth + fThumbNailSpacing));
+    columns = max<size_t>(1, (fWidth / (fThumbNailWidth + fThumbNailSpacing)) / fScale);
 
-    const size_t y = max<size_t>(1, photos.size() / columns);
-    const float fY = fThumbNailSpacing + (float(y) * (fThumbNailHeight + fThumbNailSpacing));
+    const size_t rows = max<size_t>(1, spitfire::math::RoundUpToNearestInt(float(photos.size()) / float(columns)));
+    const float fRequiredHeight = fThumbNailSpacing + (float(rows) * (fThumbNailHeight + fThumbNailSpacing));
 
-    requiredHeight = fY;
+    requiredHeight = fRequiredHeight * fScale;
+
+    pageHeight = resolution.height * fScale;
 
     LOG<<"cGtkmmOpenGLView::UpdateColumnsPageHeightAndRequiredHeight fScale="<<fScale<<", photos="<<photos.size()<<", rows="<<rows<<", columns="<<columns<<", requiredHeight="<<requiredHeight<<", pageHeight="<<pageHeight<<std::endl;
-    pageHeight = resolution.height / fScale;
   }
 
   bool cGtkmmOpenGLView::GetPhotoAtPoint(size_t& index, const spitfire::math::cVec2& _point) const
@@ -1368,5 +1375,8 @@ namespace diesel
     fValue = max(0.0f, fValue - (float(pageHeight) / fScale));
 
     fScrollPosition = fValue / fScale;
+
+    // Clamp the value to our range
+    ClampScrollBarPosition();
   }
 }

@@ -109,6 +109,7 @@ namespace diesel
     const GtkWidget* GetWidget() const;
     GtkWidget* GetWidget();
 
+    void ClampScrollBarPosition();
     void UpdateColumnsPageHeightAndRequiredHeight();
 
     bool GetPhotoAtPoint(size_t& index, const spitfire::math::cVec2& point) const;
