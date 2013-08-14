@@ -1168,7 +1168,7 @@ namespace diesel
     }
   }
 
-  void cGtkmmOpenGLView::SetCurrentSinglePhoto(size_t index)
+  void cGtkmmOpenGLView::SetSinglePhotoMode(size_t index)
   {
     ASSERT(index < photos.size());
 
@@ -1180,6 +1180,15 @@ namespace diesel
     // Load the previous and next photos
     if (currentSinglePhoto != 0) PreloadSinglePhoto(currentSinglePhoto - 1);
     if ((currentSinglePhoto + 1) < photos.size()) PreloadSinglePhoto(currentSinglePhoto + 1);
+
+    // Notify the parent
+    parent.OnOpenGLViewSinglePhotoMode(photos[currentSinglePhoto]->sFileNameNoExtension);
+  }
+
+  void cGtkmmOpenGLView::SetPhotoCollageMode()
+  {
+    // Notify the parent
+    parent.OnOpenGLViewPhotoCollageMode();
   }
 
   bool cGtkmmOpenGLView::OnKeyPressEvent(GdkEventKey* pEvent)
@@ -1192,22 +1201,22 @@ namespace diesel
         case GDK_Left:
         case GDK_Up:
         case GDK_Page_Up: {
-          if (currentSinglePhoto != 0) SetCurrentSinglePhoto(currentSinglePhoto - 1);
+          if (currentSinglePhoto != 0) SetSinglePhotoMode(currentSinglePhoto - 1);
           return true;
         }
         case GDK_Right:
         case GDK_Down:
         case GDK_Page_Down:
         case GDK_space: {
-          if (currentSinglePhoto + 1 < photos.size()) SetCurrentSinglePhoto(currentSinglePhoto + 1);
+          if (currentSinglePhoto + 1 < photos.size()) SetSinglePhotoMode(currentSinglePhoto + 1);
           return true;
         }
         case GDK_Home: {
-          SetCurrentSinglePhoto(0);
+          SetSinglePhotoMode(0);
           return true;
         }
         case GDK_End: {
-          if (!photos.empty()) SetCurrentSinglePhoto(photos.size() - 1);
+          if (!photos.empty()) SetSinglePhotoMode(photos.size() - 1);
           return true;
         }
         case GDK_Escape: {
@@ -1320,7 +1329,7 @@ namespace diesel
             } else {
               // Enter single photo mode
               bIsModeSinglePhoto = true;
-              SetCurrentSinglePhoto(index);
+              SetSinglePhotoMode(index);
             }
           }
         }

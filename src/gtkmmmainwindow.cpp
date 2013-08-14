@@ -582,6 +582,21 @@ namespace diesel
     pMenuPopup->popup(button, time);
   }
 
+  void cGtkmmMainWindow::OnPhotoBrowserSinglePhotoMode(const string_t& sFileNameNoExtension)
+  {
+    spitfire::ostringstream_t o;
+    o<<BUILD_APPLICATION_NAME;
+    o<<" - ";
+    o<<sFileNameNoExtension;
+
+    set_title(o.str().c_str());
+  }
+
+  void cGtkmmMainWindow::OnPhotoBrowserPhotoCollageMode()
+  {
+    set_title(BUILD_APPLICATION_NAME);
+  }
+
   void cGtkmmMainWindow::OnNewVersionFound(int iMajorVersion, int iMinorVersion, const string_t& sDownloadPage)
   {
     LOG<<"cGtkmmMainWindow::OnNewVersionFound "<<iMajorVersion<<"."<<iMinorVersion<<", "<<sDownloadPage<<std::endl;

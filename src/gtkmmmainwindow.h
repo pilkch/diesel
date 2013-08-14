@@ -40,6 +40,8 @@ namespace diesel
     void OnPhotoBrowserLoadedFileOrFolder();
     void OnPhotoBrowserFileFound();
     void OnPhotoBrowserLoadedFilesClear();
+    void OnPhotoBrowserSinglePhotoMode(const string_t& sFileNameNoExtension);
+    void OnPhotoBrowserPhotoCollageMode();
     void OnPhotoBrowserSelectionChanged();
 
   private:

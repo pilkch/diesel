@@ -114,7 +114,9 @@ namespace diesel
     bool GetPhotoAtPoint(size_t& index, const spitfire::math::cVec2& point) const;
 
     void PreloadSinglePhoto(size_t index);
-    void SetCurrentSinglePhoto(size_t index);
+
+    void SetSinglePhotoMode(size_t index);
+    void SetPhotoCollageMode();
 
     void CreateVertexBufferObjectSelectionRectangle(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight);
     void CreateVertexBufferObjectSquare(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight);

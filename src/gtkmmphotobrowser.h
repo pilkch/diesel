@@ -50,6 +50,8 @@ namespace diesel
     void OnOpenGLViewLoadedFileOrFolder();
     void OnOpenGLViewFileFound();
     void OnOpenGLViewLoadedFilesClear();
+    void OnOpenGLViewSinglePhotoMode(const string_t& sFileNameNoExtension);
+    void OnOpenGLViewPhotoCollageMode();
     void OnOpenGLViewSelectionChanged();
     void OnOpenGLViewResized();
     void OnOpenGLViewContentChanged();

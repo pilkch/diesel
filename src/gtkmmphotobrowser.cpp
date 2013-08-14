@@ -232,6 +232,16 @@ namespace diesel
     parent.OnPhotoBrowserLoadedFilesClear();
   }
 
+  void cGtkmmPhotoBrowser::OnOpenGLViewSinglePhotoMode(const string_t& sFileNameNoExtension)
+  {
+    parent.OnPhotoBrowserSinglePhotoMode(sFileNameNoExtension);
+  }
+
+  void cGtkmmPhotoBrowser::OnOpenGLViewPhotoCollageMode()
+  {
+    parent.OnPhotoBrowserPhotoCollageMode();
+  }
+
   void cGtkmmPhotoBrowser::OnOpenGLViewSelectionChanged()
   {
     parent.OnPhotoBrowserSelectionChanged();
