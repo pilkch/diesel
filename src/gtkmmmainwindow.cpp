@@ -366,7 +366,14 @@ namespace diesel
     buttonStopLoading.set_image(*pImageStop);
   }
 
-  void cGtkmmMainWindow::OnMenuFileQuit()
+  bool cGtkmmMainWindow::on_delete_event(GdkEventAny* pEvent)
+  {
+    DestroyCommon();
+
+    return false;
+  }
+
+  void cGtkmmMainWindow::DestroyCommon()
   {
     // Tell the update checker thread to stop soon
     if (updateChecker.IsRunning()) updateChecker.StopThreadSoon();
@@ -377,10 +384,16 @@ namespace diesel
     // Get the previous paths
     settings.SetPreviousPhotoBrowserFolders(previousFolders);
 
-    //hide(); //Closes the main window to stop the Gtk::Main::run().
-    Gtk::Main::quit();
 
     settings.Save();
+  }
+
+  void cGtkmmMainWindow::OnMenuFileQuit()
+  {
+    DestroyCommon();
+
+    //hide(); //Closes the main window to stop the Gtk::Main::run().
+    Gtk::Main::quit();
   }
 
   void cGtkmmMainWindow::OnMenuFileBrowseFiles()

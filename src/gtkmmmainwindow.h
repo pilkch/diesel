@@ -47,6 +47,10 @@ namespace diesel
   private:
     virtual void OnNewVersionFound(int iMajorVersion, int iMinorVersion, const string_t& sDownloadPage) override;
 
+    virtual bool on_delete_event(GdkEventAny* pEvent);
+
+    void DestroyCommon();
+
     void OnMenuFileBrowseFiles();
     void OnMenuFileBrowseFolder();
     void OnMenuEditPreferences();
