@@ -32,7 +32,14 @@ namespace diesel
     set_title(BUILD_APPLICATION_NAME);
     set_size_request(400, 400);
     set_default_size(800, 800);
-    resize(400, 400);
+
+    // Restore the window size
+    size_t width = 800;
+    size_t height = 800;
+    settings.GetMainWindowSize(width, height);
+    resize(width, height);
+
+    if (settings.IsMainWindowMaximised()) maximize();
 
     // Menu and toolbar
 
@@ -384,6 +391,16 @@ namespace diesel
     // Get the previous paths
     settings.SetPreviousPhotoBrowserFolders(previousFolders);
 
+    // Save the window size if we are not currently maximized
+    const bool bMaximised = ((get_state() & GDK_WINDOW_STATE_MAXIMIZED) != 0);
+    if (!bMaximised) {
+      int width = 800;
+      int height = 800;
+      get_size(width, height);
+      settings.SetMainWindowSize(width, height);
+    }
+
+    settings.SetMainWindowMaximised(bMaximised);
 
     settings.Save();
   }

@@ -20,6 +20,12 @@ namespace diesel
     void Load();
     void Save();
 
+    void GetMainWindowSize(size_t& width, size_t& height) const;
+    void SetMainWindowSize(size_t width, size_t height);
+
+    bool IsMainWindowMaximised() const;
+    void SetMainWindowMaximised(bool bMaximised);
+
     string_t GetIgnoreUpdateVersion() const;
     void SetIgnoreUpdateVersion(const string_t& sVersion);
 

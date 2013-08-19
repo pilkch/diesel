@@ -13,6 +13,7 @@
 #include <list>
 
 // Spitfire headers
+#include <spitfire/math/math.h>
 #include <spitfire/storage/filesystem.h>
 
 // Diesel headers
@@ -28,6 +29,30 @@ namespace diesel
   void cSettings::Save()
   {
     document.Save();
+  }
+
+  void cSettings::GetMainWindowSize(size_t& width, size_t& height) const
+  {
+    width = document.GetValue<size_t>(TEXT("settings"), TEXT("mainWindow"), TEXT("width"), 1000);
+    width = spitfire::math::clamp<size_t>(width, 400, 2000);
+    height = document.GetValue<size_t>(TEXT("settings"), TEXT("mainWindow"), TEXT("height"), 1000);
+    height = spitfire::math::clamp<size_t>(height, 400, 2000);
+  }
+
+  void cSettings::SetMainWindowSize(size_t width, size_t height)
+  {
+    document.SetValue<size_t>(TEXT("settings"), TEXT("mainWindow"), TEXT("width"), width);
+    document.SetValue<size_t>(TEXT("settings"), TEXT("mainWindow"), TEXT("height"), height);
+  }
+
+  bool cSettings::IsMainWindowMaximised() const
+  {
+    return document.GetValue<bool>(TEXT("settings"), TEXT("mainWindow"), TEXT("maximised"), false);
+  }
+
+  void cSettings::SetMainWindowMaximised(bool bMaximised)
+  {
+    document.SetValue(TEXT("settings"), TEXT("mainWindow"), TEXT("maximised"), bMaximised);
   }
 
   string_t cSettings::GetIgnoreUpdateVersion() const
