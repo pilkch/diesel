@@ -99,18 +99,21 @@ namespace diesel
   bool cImageCacheManager::IsWineInstalled()
   {
     const int iResult = system("which wine");
+    LOG<<"cImageCacheManager::IsWineInstalled returned "<<iResult<<std::endl;
     return (iResult == 0);
   }
 
   bool cImageCacheManager::IsUFRawBatchInstalled()
   {
     const int iResult = system("which ufraw-batch");
+    LOG<<"cImageCacheManager::IsUFRawBatchInstalled returned "<<iResult<<std::endl;
     return (iResult == 0);
   }
 
   bool cImageCacheManager::IsConvertInstalled()
   {
     const int iResult = system("which convert");
+    LOG<<"cImageCacheManager::IsConvertInstalled returned "<<iResult<<std::endl;
     return (iResult == 0);
   }
 
@@ -118,7 +121,10 @@ namespace diesel
   {
     LOG<<"cImageCacheManager::GetOrCreateDNGForRawFile \""<<sRawFilePath<<"\""<<std::endl;
 
-    ASSERT(IsWineInstalled());
+    if (!IsWineInstalled()) {
+      LOG<<"cImageCacheManager::GetOrCreateDNGForRawFile wine is not installed, returning \"\""<<std::endl;
+      return "";
+    }
 
     // TODO: Use the actual dng sdk like this instead?
     // https://projects.kde.org/projects/extragear/graphics/kipi-plugins/repository/revisions/master/show/dngconverter
@@ -144,7 +150,10 @@ namespace diesel
   {
     LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile \""<<sDNGFilePath<<"\""<<std::endl;
 
-    ASSERT(IsUFRawBatchInstalled());
+    if (!IsUFRawBatchInstalled()) {
+      LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile ufraw-batch is not installed, returning \"\""<<std::endl;
+      return "";
+    }
 
     spitfire::algorithm::cMD5 md5;
     md5.CalculateForFile(sDNGFilePath);
@@ -215,7 +224,10 @@ namespace diesel
   {
     LOG<<"cImageCacheManager::GetOrCreateThumbnailForImageFile \""<<sImageFilePath<<"\""<<std::endl;
 
-    ASSERT(IsConvertInstalled());
+    if (!IsConvertInstalled()) {
+      LOG<<"cImageCacheManager::GetOrCreateThumbnailForImageFile convert is not installed, returning \"\""<<std::endl;
+      return "";
+    }
 
     spitfire::algorithm::cMD5 md5;
     md5.CalculateForFile(sImageFilePath);
