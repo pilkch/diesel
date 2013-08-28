@@ -385,9 +385,6 @@ namespace diesel
     // Tell the update checker thread to stop soon
     if (updateChecker.IsRunning()) updateChecker.StopThreadSoon();
 
-    // Tell the update checker thread to stop now
-    if (updateChecker.IsRunning()) updateChecker.StopThreadNow();
-
     // Get the previous paths
     settings.SetPreviousPhotoBrowserFolders(previousFolders);
 
@@ -401,6 +398,9 @@ namespace diesel
     }
 
     settings.SetMainWindowMaximised(bMaximised);
+
+    // Tell the update checker thread to stop now
+    if (updateChecker.IsRunning()) updateChecker.StopThreadNow();
 
     settings.Save();
   }
