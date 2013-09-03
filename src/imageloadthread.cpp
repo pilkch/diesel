@@ -116,6 +116,13 @@ namespace diesel
       return false;
     }
 
+    // Creating the dng worked so we should move the raw file into the raw/ folder in that directory
+    const string_t sRawFolderPath = spitfire::filesystem::MakeFilePath(sFolderPath, "raw");
+    if (!spitfire::filesystem::DirectoryExists(sRawFolderPath)) spitfire::filesystem::CreateDirectory(sRawFolderPath);
+
+    const string_t sFilePathRAWInRawFolder = spitfire::filesystem::MakeFilePath(sRawFolderPath, sFileNameNoExtension + sExtension);
+    spitfire::filesystem::MoveFile(sFilePathRAW, sFilePathRAWInRawFolder);
+
     photo.bHasDNG = true;
 
     return true;
