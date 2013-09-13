@@ -117,4 +117,75 @@ namespace diesel
   {
     document.SetValue(TEXT("settings"), TEXT("path"), TEXT("lastAddLocation"), sLastAddLocation);
   }
+
+
+  string_t cSettings::GetLastImportFromFolder() const
+  {
+    return document.GetValue<string_t>(TEXT("settings"), TEXT("import"), TEXT("lastImportFromFolder"), TEXT("/media/"));
+  }
+
+  void cSettings::SetLastImportFromFolder(const string_t& sFolder)
+  {
+    document.SetValue(TEXT("settings"), TEXT("import"), TEXT("lastImportFromFolder"), sFolder);
+  }
+
+  string_t cSettings::GetLastImportToFolder() const
+  {
+    return document.GetValue<string_t>(TEXT("settings"), TEXT("import"), TEXT("lastImportToFolder"), spitfire::filesystem::GetHomePicturesDirectory());
+  }
+
+  void cSettings::SetLastImportToFolder(const string_t& sFolder)
+  {
+    document.SetValue(TEXT("settings"), TEXT("import"), TEXT("lastImportToFolder"), sFolder);
+  }
+
+  bool cSettings::IsImportSeparateFolderForEachYear() const
+  {
+    return document.GetValue<bool>(TEXT("settings"), TEXT("import"), TEXT("isSeparateFolderForEachYear"), true);
+  }
+
+  void cSettings::SetImportSeparateFolderForEachYear(bool bSeparateFolderForEachYear)
+  {
+    document.SetValue(TEXT("settings"), TEXT("import"), TEXT("isSeparateFolderForEachYear"), bSeparateFolderForEachYear);
+  }
+
+  bool cSettings::IsImportSeparateFolderForEachDate() const
+  {
+    return document.GetValue<bool>(TEXT("settings"), TEXT("import"), TEXT("isSeparateFolderForEachDate"), true);
+  }
+
+  void cSettings::SetImportSeparateFolderForEachDate(bool bSeparateFolderForEachDate)
+  {
+    document.SetValue(TEXT("settings"), TEXT("import"), TEXT("isSeparateFolderForEachDate"), bSeparateFolderForEachDate);
+  }
+
+  bool cSettings::IsImportDescription() const
+  {
+    return document.GetValue<bool>(TEXT("settings"), TEXT("import"), TEXT("isImportDescription"), false);
+  }
+
+  void cSettings::SetImportDescription(bool bDescription)
+  {
+    document.SetValue(TEXT("settings"), TEXT("import"), TEXT("isImportDescription"), bDescription);
+  }
+
+  string_t cSettings::GetImportDescriptionText() const
+  {
+    return document.GetValue<string_t>(TEXT("settings"), TEXT("import"), TEXT("descriptionText"), TEXT(""));
+  }
+
+  void cSettings::SetImportDescriptionText(const string_t& sDescription)
+  {
+    document.SetValue(TEXT("settings"), TEXT("import"), TEXT("descriptionText"), sDescription);
+  }
+
+  bool cSettings::IsAfterImportDeleteFromSourceFolderOnSuccessfulImport() const
+  {
+    return document.GetValue<bool>(TEXT("settings"), TEXT("import"), TEXT("isDeleteFromSourceFolderOnSuccessfulImport"), false);
+  }
+
+  void cSettings::SetAfterImportDeleteFromSourceFolderOnSuccessfulImport(bool bDelete)
+  {
+    document.SetValue(TEXT("settings"), TEXT("import"), TEXT("isDeleteFromSourceFolderOnSuccessfulImport"), bDelete);
+  }
 }

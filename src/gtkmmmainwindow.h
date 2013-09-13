@@ -53,6 +53,7 @@ namespace diesel
 
     void OnMenuFileBrowseFiles();
     void OnMenuFileBrowseFolder();
+    void OnMenuFileImportFolder();
     void OnMenuEditPreferences();
     void OnMenuHelpAbout();
 

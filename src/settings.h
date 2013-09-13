@@ -41,6 +41,21 @@ namespace diesel
     string_t GetLastAddLocation() const;
     void SetLastAddLocation(const string_t& sLastAddLocation);
 
+    string_t GetLastImportFromFolder() const;
+    void SetLastImportFromFolder(const string_t& sFolder);
+    string_t GetLastImportToFolder() const;
+    void SetLastImportToFolder(const string_t& sFolder);
+    bool IsImportSeparateFolderForEachYear() const;
+    void SetImportSeparateFolderForEachYear(bool bSeparateFolderForEachYear);
+    bool IsImportSeparateFolderForEachDate() const;
+    void SetImportSeparateFolderForEachDate(bool bSeparateFolderForEachDate);
+    bool IsImportDescription() const;
+    void SetImportDescription(bool bDescription);
+    string_t GetImportDescriptionText() const;
+    void SetImportDescriptionText(const string_t& sDescription);
+    bool IsAfterImportDeleteFromSourceFolderOnSuccessfulImport() const;
+    void SetAfterImportDeleteFromSourceFolderOnSuccessfulImport(bool bDelete);
+
   private:
     spitfire::storage::cSettingsDocument document;
   };

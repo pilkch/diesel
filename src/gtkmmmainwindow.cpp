@@ -10,13 +10,16 @@
 // libgtkmm headers
 #include <libgtkmm/about.h>
 #include <libgtkmm/filebrowse.h>
+#include <libgtkmm/progressdialog.h>
 
 // Spitfire headers
 #include <spitfire/spitfire.h>
 
 // Diesel headers
 #include "gtkmmmainwindow.h"
+#include "gtkmmimportdialog.h"
 #include "gtkmmpreferencesdialog.h"
+#include "importthread.h"
 
 namespace diesel
 {
@@ -75,6 +78,8 @@ namespace diesel
             sigc::mem_fun(*this, &cGtkmmMainWindow::OnMenuFileBrowseFolder));
     m_refActionGroup->add(Gtk::Action::create("FileAddFilesFromPicturesFolder", "Add Files From Pictures Folder"),
             sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionAddFilesFromPicturesFolder));
+    m_refActionGroup->add(Gtk::Action::create("FileImportFolder", "Import Folder From Removable Media"),
+            sigc::mem_fun(*this, &cGtkmmMainWindow::OnMenuFileImportFolder));
     //m_refActionGroup->add(Gtk::Action::create("FileRemove", "Remove"),
     //        sigc::mem_fun(*this, &cGtkmmMainWindow::OnActionRemoveTrack));
     //m_refActionGroup->add(Gtk::Action::create("FileMoveToFolderMenu", "Move to Folder"));
@@ -129,6 +134,7 @@ namespace diesel
         "      <menuitem action='FileAddFiles'/>"
         "      <menuitem action='FileAddFolder'/>"
         "      <menuitem action='FileAddFilesFromPicturesFolder'/>"
+        "      <menuitem action='FileImportFolder'/>"
         //"      <menuitem action='FileRemove'/>"
         //"      <menu action='FileMoveToFolderMenu'>"
         //"        <menuitem action='FileMoveToFolderBrowse'/>"
@@ -431,6 +437,27 @@ namespace diesel
 
   void cGtkmmMainWindow::OnMenuFileBrowseFolder()
   {
+  }
+
+  void cGtkmmMainWindow::OnMenuFileImportFolder()
+  {
+    LOG<<"cGtkmmMainWindow::OnMenuEditPreferences"<<std::endl;
+    cGtkmmImportDialog dialog(settings, *this);
+    if (dialog.Run()) {
+      // Run the import process
+      gtkmm::cProgressDialog dialog(*this);
+
+      cImportProcess process(dialog);
+      process.SetFromFolder(settings.GetLastImportFromFolder());
+      process.SetToFolder(settings.GetLastImportToFolder());
+      process.SetSeparateFolderForEachYear(settings.IsImportSeparateFolderForEachYear());
+      process.SetSeparateFolderForEachDate(settings.IsImportSeparateFolderForEachDate());
+      process.SetDescription(settings.IsImportDescription());
+      process.SetDescriptionText(settings.GetImportDescriptionText());
+      process.SetDeleteFromSourceFolderOnSuccessfulImport(settings.IsAfterImportDeleteFromSourceFolderOnSuccessfulImport());
+
+      /*spitfire::util::PROCESS_RESULT result =*/ dialog.Run(process);
+    }
   }
 
   void cGtkmmMainWindow::OnMenuEditPreferences()
