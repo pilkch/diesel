@@ -110,7 +110,7 @@ namespace diesel
 
   string_t cSettings::GetLastAddLocation() const
   {
-    return document.GetValue<string_t>(TEXT("settings"), TEXT("path"), TEXT("lastAddLocation"), spitfire::filesystem::GetHomeMusicDirectory());
+    return document.GetValue<string_t>(TEXT("settings"), TEXT("path"), TEXT("lastAddLocation"), spitfire::filesystem::GetHomePicturesDirectory());
   }
 
   void cSettings::SetLastAddLocation(const string_t& sLastAddLocation)
