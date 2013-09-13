@@ -357,7 +357,8 @@ namespace diesel
 
           if (IsToStop() || loadingProcessInterface.IsToStop()) break;
 
-          LoadThumbnailImage(sThumbnailFilePath, sFileNameNoExtension, IMAGE_SIZE::THUMBNAIL);
+          if (sThumbnailFilePath.empty()) LOG<<"cImageLoadThread::ThreadFunction Error creating thumbnail \""<<sFolderPath<<"\""<<std::endl;
+          else LoadThumbnailImage(sThumbnailFilePath, sFileNameNoExtension, IMAGE_SIZE::THUMBNAIL);
 
           iter++;
         }
