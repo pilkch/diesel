@@ -255,9 +255,9 @@ namespace diesel
     const string_t sFolderJPG = spitfire::filesystem::GetFolder(sFilePathJPG);
 
     std::ostringstream o;
-    o<<"convert "<<sImageFilePath;
+    o<<"convert \""<<sImageFilePath<<"\"";
     if ((width != 0) && (height != 0)) o<<" -resize "<<width<<"x"<<height;
-    o<<" -auto-orient "<<sFilePathJPG;
+    o<<" -auto-orient \""<<sFilePathJPG<<"\"";
     const string_t sCommandLine = o.str();
     const int iResult = system(sCommandLine.c_str());
     if (iResult != 0) {
