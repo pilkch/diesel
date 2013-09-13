@@ -102,6 +102,11 @@ namespace diesel
 
   bool cImageLoadThread::GetOrCreateDNGForRawFile(const string_t& sFolderPath, const string_t& sFileNameNoExtension, cPhoto& photo)
   {
+    if (spitfire::filesystem::GetLastDirectory(sFolderPath) == "raw") {
+      LOG<<"cImageLoadThread::GetOrCreateDNGForRawFile Skipping files in raw/ folder"<<std::endl;
+      return false;
+    } else LOG<<"folder="<<spitfire::filesystem::GetLastDirectory(sFolderPath)<<std::endl;
+
     const string_t sExtension = util::FindFileExtensionForRawFile(sFolderPath, sFileNameNoExtension);
     ASSERT(!sExtension.empty());
 
