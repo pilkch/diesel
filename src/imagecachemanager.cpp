@@ -134,9 +134,10 @@ namespace diesel
     #ifndef BUILD_DEBUG
     o<<" &> /dev/null";
     #endif
-    const int iResult = system(o.str().c_str());
+    const string_t sCommandLine = o.str();
+    const int iResult = system(sCommandLine.c_str());
     if (iResult != 0) {
-      LOG<<"cImageCacheManager::GetOrCreateDNGForRawFile wine returned "<<iResult<<", returning \"\""<<std::endl;
+      LOG<<"cImageCacheManager::GetOrCreateDNGForRawFile wine returned "<<iResult<<" for \""<<sCommandLine<<"\", returning \"\""<<std::endl;
       return "";
     }
 
@@ -183,9 +184,10 @@ namespace diesel
     #ifndef BUILD_DEBUG
     o<<" --silent";
     #endif
-    const int iResult = system(o.str().c_str());
+    const string_t sCommandLine = o.str();
+    const int iResult = system(sCommandLine.c_str());
     if (iResult != 0) {
-      LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile ufraw-batch returned "<<iResult<<", returning \"\""<<std::endl;
+      LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile ufraw-batch returned "<<iResult<<" for \""<<sCommandLine<<"\", returning \"\""<<std::endl;
       return "";
     }
 
@@ -256,9 +258,10 @@ namespace diesel
     o<<"convert "<<sImageFilePath;
     if ((width != 0) && (height != 0)) o<<" -resize "<<width<<"x"<<height;
     o<<" -auto-orient "<<sFilePathJPG;
-    const int iResult = system(o.str().c_str());
+    const string_t sCommandLine = o.str();
+    const int iResult = system(sCommandLine.c_str());
     if (iResult != 0) {
-      LOG<<"cImageCacheManager::GetOrCreateThumbnailForImageFile convert returned "<<iResult<<", returning \"\""<<std::endl;
+      LOG<<"cImageCacheManager::GetOrCreateThumbnailForImageFile convert returned "<<iResult<<" for \""<<sCommandLine<<"\", returning \"\""<<std::endl;
       return "";
     }
 
