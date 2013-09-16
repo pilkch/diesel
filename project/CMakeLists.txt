@@ -87,7 +87,7 @@ algorithm/md5.cpp
 communication/http.cpp communication/network.cpp
 math/cColour.cpp math/cVec2.cpp math/cVec3.cpp math/cVec4.cpp math/cMat3.cpp math/cMat4.cpp math/cQuaternion.cpp
 storage/csv.cpp storage/document.cpp storage/file.cpp storage/filesystem.cpp storage/settings.cpp storage/xml.cpp
-util/datetime.cpp util/dispatcher.cpp util/lang.cpp util/process.cpp util/string.cpp util/thread.cpp util/updatechecker.cpp)
+util/datetime.cpp util/lang.cpp util/process.cpp util/string.cpp util/thread.cpp util/updatechecker.cpp)
 
 PREFIX_PATHS(${LIBRARY_SPITFIRE_SOURCE_DIRECTORY} ${LIBRARY_SPITFIRE_SOURCE_FILES})
 SET(OUTPUT_LIBRARY_SPITFIRE_SOURCE_FILES ${OUTPUT_FILES})
