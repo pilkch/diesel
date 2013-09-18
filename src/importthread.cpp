@@ -90,7 +90,7 @@ namespace diesel
       spitfire::filesystem::cFolderIterator iter(sFromFolder);
       size_t i = 0;
       const size_t n = iter.GetFileAndFolderCount();
-      while (iter.IsValid()) {
+      while (iter.IsValid() && !interface.IsToStop()) {
         interface.SetPercentageCompleteSecondary0To100((float(i) / float(n)) * 100.0f);
 
         const string_t sFromFilePath = iter.GetFullPath();
@@ -106,6 +106,8 @@ namespace diesel
         iter.Next();
         i++;
       }
+
+      if (interface.IsToStop()) return spitfire::util::PROCESS_RESULT::STOPPED_BY_INTERFACE;
     }
 
     interface.SetPercentageCompletePrimary0To100(50.0f);
@@ -120,7 +122,7 @@ namespace diesel
       spitfire::filesystem::cFolderIterator iter(sFromFolder);
       size_t i = 0;
       const size_t n = iter.GetFileAndFolderCount();
-      while (iter.IsValid()) {
+      while (iter.IsValid() && !interface.IsToStop()) {
         interface.SetPercentageCompleteSecondary0To100((float(i) / float(n)) * 100.0f);
 
         const string_t sFromFilePath = iter.GetFullPath();
@@ -144,6 +146,8 @@ namespace diesel
         iter.Next();
         i++;
       }
+
+      if (interface.IsToStop()) return spitfire::util::PROCESS_RESULT::STOPPED_BY_INTERFACE;
     }
 
     interface.SetPercentageCompletePrimary0To100(100.0f);
