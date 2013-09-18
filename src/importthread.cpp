@@ -85,6 +85,8 @@ namespace diesel
 
     // Import the files
     {
+      interface.SetTextSecondary("Copying files...");
+
       spitfire::filesystem::cFolderIterator iter(sFromFolder);
       size_t i = 0;
       const size_t n = iter.GetFileAndFolderCount();
@@ -111,6 +113,8 @@ namespace diesel
 
     // Check if the MD5 hashes match and we can delete the original files
     if (bDeleteFromSourceFolderOnSuccessfulImport) {
+      interface.SetTextSecondary("Deleting source files...");
+
       spitfire::algorithm::cMD5 md5;
 
       spitfire::filesystem::cFolderIterator iter(sFromFolder);
