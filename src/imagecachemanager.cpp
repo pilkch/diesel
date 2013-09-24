@@ -121,6 +121,8 @@ namespace diesel
   {
     LOG<<"cImageCacheManager::GetOrCreateDNGForRawFile \""<<sRawFilePath<<"\""<<std::endl;
 
+    ASSERT(spitfire::filesystem::FileExists(sRawFilePath));
+
     if (!IsWineInstalled()) {
       LOG<<"cImageCacheManager::GetOrCreateDNGForRawFile wine is not installed, returning \"\""<<std::endl;
       return "";
@@ -150,6 +152,8 @@ namespace diesel
   string_t cImageCacheManager::GetOrCreateThumbnailForDNGFile(const string_t& sDNGFilePath, IMAGE_SIZE imageSize)
   {
     LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile \""<<sDNGFilePath<<"\""<<std::endl;
+
+    ASSERT(spitfire::filesystem::FileExists(sDNGFilePath));
 
     if (!IsUFRawBatchInstalled()) {
       LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile ufraw-batch is not installed, returning \"\""<<std::endl;
