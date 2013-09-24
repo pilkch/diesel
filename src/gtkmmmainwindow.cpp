@@ -14,7 +14,7 @@
 #include <libgtkmm/progressdialog.h>
 
 // Spitfire headers
-#include <spitfire/spitfire.h>
+#include <spitfire/platform/operatingsystem.h>
 
 // Diesel headers
 #include "gtkmmmainwindow.h"
@@ -599,7 +599,7 @@ namespace diesel
   void cGtkmmMainWindow::OnActionFolderShowInFileManager()
   {
     const string_t sFolderPath = photoBrowser.GetFolder();
-    spitfire::filesystem::ShowFolder(sFolderPath);
+    spitfire::operatingsystem::ShowFolder(sFolderPath);
   }
 
   void cGtkmmMainWindow::UpdateStatusBar()

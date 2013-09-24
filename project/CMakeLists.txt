@@ -86,6 +86,7 @@ spitfire.cpp
 algorithm/md5.cpp
 communication/http.cpp communication/network.cpp
 math/cColour.cpp math/cVec2.cpp math/cVec3.cpp math/cVec4.cpp math/cMat3.cpp math/cMat4.cpp math/cQuaternion.cpp
+platform/operatingsystem.cpp
 storage/csv.cpp storage/document.cpp storage/file.cpp storage/filesystem.cpp storage/settings.cpp storage/xml.cpp
 util/cConsoleApplication.cpp util/datetime.cpp util/lang.cpp util/process.cpp util/string.cpp util/thread.cpp util/updatechecker.cpp)
 
