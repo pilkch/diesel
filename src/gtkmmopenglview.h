@@ -150,8 +150,6 @@ namespace diesel
     virtual void OnImageLoaded(const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize, voodoo::cImage* pImage) override;
     virtual void OnImageError(const string_t& sFileNameNoExtension) override;
 
-    void OnNotify();
-
     cGtkmmPhotoBrowser& parent;
 
     cImageLoadThread imageLoadThread;
@@ -199,9 +197,7 @@ namespace diesel
     bool bIsModeSinglePhoto;
     size_t currentSinglePhoto;
 
-    gtkmm::cGtkmmNotifyMainThread notifyMainThread;
-    spitfire::util::cSignalObject soAction;
-    spitfire::util::cThreadSafeQueue<cGtkmmOpenGLViewEvent> eventQueue;
+    gtkmm::cGtkmmRunOnMainThread<cGtkmmOpenGLView, cGtkmmOpenGLViewEvent> notifyMainThread;
   };
 }
 

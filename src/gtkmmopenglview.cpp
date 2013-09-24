@@ -171,8 +171,7 @@ namespace diesel
     colourSelected(1.0f, 1.0f, 1.0f),
     bIsModeSinglePhoto(false),
     currentSinglePhoto(0),
-    soAction("cGtkmmOpenGLView::soAction"),
-    eventQueue(soAction)
+    notifyMainThread(*this)
   {
     // Set our resolution
     resolution.width = 500;
@@ -192,7 +191,7 @@ namespace diesel
 
     imageLoadThread.Start();
 
-    notifyMainThread.Create(*this, &cGtkmmOpenGLView::OnNotify);
+    notifyMainThread.Create();
   }
 
   cGtkmmOpenGLView::~cGtkmmOpenGLView()
@@ -205,11 +204,7 @@ namespace diesel
     imageLoadThread.StopNow();
 
     // Destroy any further events
-    while (true) {
-      cGtkmmOpenGLViewEvent* pEvent = eventQueue.RemoveItemFromFront();
-      if (pEvent == nullptr) break;
-      else spitfire::SAFE_DELETE(pEvent);
-    }
+    notifyMainThread.ClearEventQueue();
 
     DestroyResources();
 
@@ -1039,24 +1034,13 @@ namespace diesel
     return TRUE;
   }
 
-  void cGtkmmOpenGLView::OnNotify()
-  {
-    LOG<<"cGtkmmOpenGLView::OnNotify"<<std::endl;
-    ASSERT(spitfire::util::IsMainThread());
-    cGtkmmOpenGLViewEvent* pEvent = eventQueue.RemoveItemFromFront();
-    if (pEvent != nullptr) {
-      pEvent->EventFunction(*this);
-      spitfire::SAFE_DELETE(pEvent);
-    }
-  }
   void cGtkmmOpenGLView::OnFolderFound(const string_t& sFolderName)
   {
     LOG<<"cGtkmmOpenGLView::OnFolderFound \""<<sFolderName<<"\""<<std::endl;
 
     if (!spitfire::util::IsMainThread()) {
       cGtkmmOpenGLViewFolderFoundEvent* pEvent = new cGtkmmOpenGLViewFolderFoundEvent(sFolderName);
-      eventQueue.AddItemToBack(pEvent);
-      notifyMainThread.Notify();
+      notifyMainThread.PushEventToMainThread(pEvent);
     } else {
       LOG<<"cGtkmmOpenGLView::OnFolderFound On main thread \""<<sFolderName<<"\""<<std::endl;
       cPhotoEntry* pEntry = new cPhotoEntry;
@@ -1074,8 +1058,7 @@ namespace diesel
 
     if (!spitfire::util::IsMainThread()) {
       cGtkmmOpenGLViewFileFoundEvent* pEvent = new cGtkmmOpenGLViewFileFoundEvent(sFileNameNoExtension);
-      eventQueue.AddItemToBack(pEvent);
-      notifyMainThread.Notify();
+      notifyMainThread.PushEventToMainThread(pEvent);
     } else {
       LOG<<"cGtkmmOpenGLView::OnFileFound On main thread \""<<sFileNameNoExtension<<"\""<<std::endl;
       cPhotoEntry* pEntry = new cPhotoEntry;
@@ -1093,8 +1076,7 @@ namespace diesel
 
     if (!spitfire::util::IsMainThread()) {
       cGtkmmOpenGLViewImageErrorEvent* pEvent = new cGtkmmOpenGLViewImageErrorEvent(sFileNameNoExtension);
-      eventQueue.AddItemToBack(pEvent);
-      notifyMainThread.Notify();
+      notifyMainThread.PushEventToMainThread(pEvent);
     } else {
       LOG<<"cGtkmmOpenGLView::OnImageError On main thread \""<<sFileNameNoExtension<<"\""<<std::endl;
       const size_t n = photos.size();
@@ -1116,8 +1098,7 @@ namespace diesel
 
     if (!spitfire::util::IsMainThread()) {
       cGtkmmOpenGLViewImageLoadedEvent* pEvent = new cGtkmmOpenGLViewImageLoadedEvent(sFileNameNoExtension, imageSize, pImage);
-      eventQueue.AddItemToBack(pEvent);
-      notifyMainThread.Notify();
+      notifyMainThread.PushEventToMainThread(pEvent);
     } else {
       LOG<<"cGtkmmOpenGLView::OnImageLoaded On main thread \""<<sFileNameNoExtension<<"\""<<std::endl;
       const size_t n = photos.size();
