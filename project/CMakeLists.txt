@@ -95,7 +95,7 @@ SET(OUTPUT_LIBRARY_SPITFIRE_SOURCE_FILES ${OUTPUT_FILES})
 
 SET(LIBRARY_LIBGTKMM_SOURCE_DIRECTORY libgtkmm/)
 SET(LIBRARY_LIBGTKMM_SOURCE_FILES
-dispatcher.cpp filebrowse.cpp icontheme.cpp progressdialog.cpp)
+alertdialog.cpp dispatcher.cpp filebrowse.cpp icontheme.cpp progressdialog.cpp)
 
 PREFIX_PATHS(${LIBRARY_LIBGTKMM_SOURCE_DIRECTORY} ${LIBRARY_LIBGTKMM_SOURCE_FILES})
 SET(OUTPUT_LIBRARY_LIBGTKMM_SOURCE_FILES ${OUTPUT_FILES})

@@ -5,6 +5,7 @@
 #include <gtkmm.h>
 
 // libgtkmm headers
+#include <libgtkmm/dispatcher.h>
 #include <libgtkmm/icontheme.h>
 
 // Spitfire headers
@@ -17,6 +18,19 @@
 
 namespace diesel
 {
+  class cGtkmmMainWindowEventNewVersionFound
+  {
+  public:
+    cGtkmmMainWindowEventNewVersionFound(int iMajorVersion, int iMinorVersion, const string_t& sDownloadPage);
+
+    void EventFunction(cGtkmmMainWindow& mainWindow);
+
+  private:
+    int iMajorVersion;
+    int iMinorVersion;
+    string_t sDownloadPage;
+  };
+
   class cGtkmmMainWindow : public Gtk::Window, public spitfire::util::cUpdateCheckerHandler
   {
   public:
@@ -24,6 +38,7 @@ namespace diesel
     friend class cGtkmmOpenGLView;
     friend class cGtkmmScrollBar;
     friend class cGtkmmPhotoBrowser;
+    friend class cGtkmmMainWindowEventNewVersionFound;
 
     cGtkmmMainWindow(int argc, char** argv);
 
@@ -76,6 +91,8 @@ namespace diesel
     cSettings settings;
 
     spitfire::util::cUpdateChecker updateChecker;
+
+    gtkmm::cGtkmmRunOnMainThread<cGtkmmMainWindow, cGtkmmMainWindowEventNewVersionFound> notifyMainThread;
 
     std::list<string_t> previousFolders;
 

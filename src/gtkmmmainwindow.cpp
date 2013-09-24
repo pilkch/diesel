@@ -9,6 +9,7 @@
 
 // libgtkmm headers
 #include <libgtkmm/about.h>
+#include <libgtkmm/alertdialog.h>
 #include <libgtkmm/filebrowse.h>
 #include <libgtkmm/progressdialog.h>
 
@@ -23,8 +24,26 @@
 
 namespace diesel
 {
+  // ** cGtkmmMainWindowEventNewVersionFound
+
+  cGtkmmMainWindowEventNewVersionFound::cGtkmmMainWindowEventNewVersionFound(int _iMajorVersion, int _iMinorVersion, const string_t& _sDownloadPage) :
+    iMajorVersion(_iMajorVersion),
+    iMinorVersion(_iMinorVersion),
+    sDownloadPage(_sDownloadPage)
+  {
+  }
+
+  void cGtkmmMainWindowEventNewVersionFound::EventFunction(cGtkmmMainWindow& mainWindow)
+  {
+    mainWindow.OnNewVersionFound(iMajorVersion, iMinorVersion, sDownloadPage);
+  }
+
+
+  // ** cGtkmmMainWindow
+
   cGtkmmMainWindow::cGtkmmMainWindow(int argc, char** argv) :
     updateChecker(*this),
+    notifyMainThread(*this),
     pMenuPopup(nullptr),
     comboBoxFolder(true),
     statusBar("0 photos"),
@@ -332,6 +351,8 @@ namespace diesel
 
     // Start the update checker now that we have finished doing the serious work
     updateChecker.Run();
+
+    notifyMainThread.Create();
   }
 
   void cGtkmmMainWindow::Run()
@@ -419,6 +440,9 @@ namespace diesel
 
     // Tell the update checker thread to stop now
     if (updateChecker.IsRunning()) updateChecker.StopThreadNow();
+
+    // Destroy any further events
+    notifyMainThread.ClearEventQueue();
 
     settings.Save();
   }
@@ -668,8 +692,37 @@ namespace diesel
     set_title(BUILD_APPLICATION_NAME);
   }
 
-  void cGtkmmMainWindow::OnNewVersionFound(int iMajorVersion, int iMinorVersion, const string_t& sDownloadPage)
+  void cGtkmmMainWindow::OnNewVersionFound(int iNewMajorVersion, int iNewMinorVersion, const string_t& sDownloadPage)
   {
-    LOG<<"cGtkmmMainWindow::OnNewVersionFound "<<iMajorVersion<<"."<<iMinorVersion<<", "<<sDownloadPage<<std::endl;
+    LOG<<"cGtkmmMainWindow::OnNewVersionFound"<<std::endl;
+
+    if (!spitfire::util::IsMainThread()) {
+      notifyMainThread.PushEventToMainThread(new cGtkmmMainWindowEventNewVersionFound(iNewMajorVersion, iNewMinorVersion, sDownloadPage));
+      return;
+    }
+
+    // Get our current version
+    if (updateChecker.IsNewerThanCurrentVersion(iNewMajorVersion, iNewMinorVersion)) {
+      const string_t sNewVersion = spitfire::string::ToString(iNewMajorVersion) + TEXT(".") + spitfire::string::ToString(iNewMinorVersion);
+
+      // Check if we should ignore this version
+      const string_t sIgnoreVersion = settings.GetIgnoreUpdateVersion();
+      const bool bIgnoreThisVersion = (sIgnoreVersion == sNewVersion);
+
+      if (!bIgnoreThisVersion) {
+        gtkmm::cGtkmmAlertDialog dialog(*this);
+        dialog.SetTitle(TEXT("There is a newer version available, ") + sNewVersion + TEXT("."));
+        dialog.SetDescription(TEXT("Would you like to visit the ") TEXT(BUILD_APPLICATION_NAME) TEXT(" website?"));
+        dialog.SetOk(TEXT("Open Web Page"));
+        dialog.SetOther(TEXT("Skip This Version"));
+        dialog.SetCancel();
+        gtkmm::ALERT_RESULT result = dialog.Run();
+        if (result == gtkmm::ALERT_RESULT::OK) {
+          spitfire::operatingsystem::OpenURL(sDownloadPage);
+        } else if (result == gtkmm::ALERT_RESULT::NO) {
+          settings.SetIgnoreUpdateVersion(sNewVersion);
+        }
+      }
+    }
   }
 }
