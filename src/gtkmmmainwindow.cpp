@@ -65,14 +65,14 @@ namespace diesel
 
     // Set icon list
     std::vector<Glib::RefPtr<Gdk::Pixbuf> > icons;
-    icons.push_back(Gdk::Pixbuf::create_from_file("data/application_16x16.png"));
-    icons.push_back(Gdk::Pixbuf::create_from_file("data/application_32x32.png"));
-    icons.push_back(Gdk::Pixbuf::create_from_file("data/application_48x48.png"));
-    icons.push_back(Gdk::Pixbuf::create_from_file("data/application_64x64.png"));
-    icons.push_back(Gdk::Pixbuf::create_from_file("data/application_128x128.png"));
-    icons.push_back(Gdk::Pixbuf::create_from_file("data/application_256x256.png"));
+    icons.push_back(Gdk::Pixbuf::create_from_file("data/icons/application_16x16.png"));
+    icons.push_back(Gdk::Pixbuf::create_from_file("data/icons/application_32x32.png"));
+    icons.push_back(Gdk::Pixbuf::create_from_file("data/icons/application_48x48.png"));
+    icons.push_back(Gdk::Pixbuf::create_from_file("data/icons/application_64x64.png"));
+    icons.push_back(Gdk::Pixbuf::create_from_file("data/icons/application_128x128.png"));
+    icons.push_back(Gdk::Pixbuf::create_from_file("data/icons/application_256x256.png"));
     // GTK complains if we pass icons larger than 256x256
-    //icons.push_back(Gdk::Pixbuf::create_from_file("data/application_512x512.png"));
+    //icons.push_back(Gdk::Pixbuf::create_from_file("data/icons/application_512x512.png"));
     set_icon_list(icons);
 
     // Menu and toolbar
