@@ -57,7 +57,7 @@ namespace diesel
 
   string_t cSettings::GetIgnoreUpdateVersion() const
   {
-    return document.GetValue<string_t>(TEXT("settings"), TEXT("update"), TEXT("ignoredVersion"), "");
+    return document.GetValue<string_t>(TEXT("settings"), TEXT("update"), TEXT("ignoredVersion"), TEXT(""));
   }
 
   void cSettings::SetIgnoreUpdateVersion(const string_t& sVersion)
