@@ -2,14 +2,15 @@
 #define DIESEL_APPLICATION_H
 
 // Spitfire headers
-#include <spitfire/util/cConsoleApplication.h>
+// Breathe headers
+#include <breathe/util/cApplication.h>
 
 // Diesel headers
 #include "diesel.h"
 
 namespace diesel
 {
-  class cApplication : public spitfire::cConsoleApplication
+  class cApplication : public breathe::util::cApplication
   {
   public:
     cApplication(int argc, const char* const* argv);

@@ -9,12 +9,13 @@ int main(int argc, char* argv[])
 {
   std::cout<<"main"<<std::endl;
 
-  bool bIsSuccess = false;
+  int iResult = EXIT_SUCCESS;
 
   {
     diesel::cApplication application(argc, argv);
-    bIsSuccess = application.Run();
+
+    iResult = application.Run();
   }
 
-  return bIsSuccess ? EXIT_SUCCESS : EXIT_FAILURE;
+  return iResult;
 }
