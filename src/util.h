@@ -21,8 +21,6 @@ namespace diesel
     string_t FindFileExtensionForRawFile(const string_t& sFolderPath, const string_t& sFileNameNoExtension);
     string_t FindFileExtensionForImageFile(const string_t& sFolderPath, const string_t& sFileNameNoExtension);
 
-    bool GenerateThumbnail(voodoo::cImage& thumbnail, const voodoo::cImage& image, size_t width, size_t height);
-
 
     // Inlines
 
