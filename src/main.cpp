@@ -3,7 +3,11 @@
 #include <string>
 
 // Diesel headers
-#include "application.h"
+#ifdef __WIN__
+#include "win32mmapplication.h"
+#else
+#include "gtkmmapplication.h"
+#endif
 
 int main(int argc, char** argv)
 {
