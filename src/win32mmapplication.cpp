@@ -214,7 +214,7 @@ namespace diesel
     _LoadResources();
 
     // Push our first state
-    PushState(new cStateMenu(*this));
+    PushState(new cStateGridPhotoMode(*this));
 
     return true;
   }

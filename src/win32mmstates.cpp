@@ -44,7 +44,7 @@
 
 #include <spitfire/util/log.h>
 
-// Tetris headers
+// Diesel headers
 #include "win32mmapplication.h"
 #include "win32mmstates.h"
 
@@ -380,13 +380,13 @@ namespace diesel
   }
 
 
-  // ** cStateMenu
+  // ** cStateGridPhotoMode
 
-  cStateMenu::cStateMenu(cApplication& application) :
+  cStateGridPhotoMode::cStateGridPhotoMode(cApplication& application) :
     cState(application),
     bIsKeyReturn(false)
   {
-    std::cout<<"cStateMenu::cStateMenu"<<std::endl;
+    std::cout<<"cStateGridPhotoMode::cStateGridPhotoMode"<<std::endl;
 
     const breathe::gui::id_t ids[] = {
       OPTION::NEW_GAME,
@@ -458,14 +458,14 @@ namespace diesel
     pWindow->AddChild(pSlider);
   }
 
-  void cStateMenu::_Update(const spitfire::math::cTimeStep& timeStep)
+  void cStateGridPhotoMode::_Update(const spitfire::math::cTimeStep& timeStep)
   {
     pGuiRenderer->Update();
   }
 
-  void cStateMenu::_OnStateCommandEvent(int iCommandID)
+  void cStateGridPhotoMode::_OnStateCommandEvent(int iCommandID)
   {
-    LOG<<"cStateMenu::_OnStateCommandEvent id="<<iCommandID<<std::endl;
+    LOG<<"cStateGridPhotoMode::_OnStateCommandEvent id="<<iCommandID<<std::endl;
     if (iCommandID == ID_MENU_FILE_OPEN_FOLDER) {
       ASSERT(pWindow != nullptr);
 
@@ -486,7 +486,7 @@ namespace diesel
     }
   }
   
-  void cStateMenu::_OnStateMouseEvent(const breathe::gui::cMouseEvent& event)
+  void cStateGridPhotoMode::_OnStateMouseEvent(const breathe::gui::cMouseEvent& event)
   {
     if (event.IsButtonUp() && (event.GetButton() == 3)) {
       // Get the windows handle
@@ -504,43 +504,34 @@ namespace diesel
     }
   }
 
-  void cStateMenu::_OnStateKeyboardEvent(const breathe::gui::cKeyboardEvent& event)
+  void cStateGridPhotoMode::_OnStateKeyboardEvent(const breathe::gui::cKeyboardEvent& event)
   {
     if (event.IsKeyUp()) {
       switch (event.GetKeyCode()) {
         case breathe::gui::KEY::NUMBER_1: {
-          std::cout<<"cStateMenu::_OnStateKeyboardEvent 1 up"<<std::endl;
+          std::cout<<"cStateGridPhotoMode::_OnStateKeyboardEvent 1 up"<<std::endl;
           bIsWireframe = !bIsWireframe;
           break;
         }
         case breathe::gui::KEY::NUMBER_2: {
-          std::cout<<"cStateMenu::_OnStateKeyboardEvent 2 up"<<std::endl;
+          std::cout<<"cStateGridPhotoMode::_OnStateKeyboardEvent 2 up"<<std::endl;
           break;
         }
       }
     }
   }
 
-  breathe::gui::EVENT_RESULT cStateMenu::_OnWidgetEvent(const breathe::gui::cWidgetEvent& event)
+  breathe::gui::EVENT_RESULT cStateGridPhotoMode::_OnWidgetEvent(const breathe::gui::cWidgetEvent& event)
   {
-    std::cout<<"cStateMenu::_OnWidgetEvent"<<std::endl;
+    std::cout<<"cStateGridPhotoMode::_OnWidgetEvent"<<std::endl;
 
     if (event.IsPressed()) {
       switch (event.GetWidget()->GetId()) {
         case OPTION::NEW_GAME: {
           // Push our game state
-          application.PushStateSoon(new cStateNewGame(application));
+          application.PushStateSoon(new cStateSinglePhotoMode(application));
           break;
         }
-        case OPTION::HIGH_SCORES: {
-          // Push our high scores state
-          application.PushStateSoon(new cStateHighScores(application));
-          break;
-        }
-        //case OPTION::PREFERENCES: {
-          //  // TODO: Add preferences for example tile set clasic or new
-          //  break;
-          //}
         case OPTION::QUIT: {
           // Pop our menu state
           application.PopStateSoon();
@@ -552,7 +543,7 @@ namespace diesel
     return breathe::gui::EVENT_RESULT::NOT_HANDLED_PERCOLATE;
   }
 
-  void cStateMenu::_RenderToTexture(const spitfire::math::cTimeStep& timeStep)
+  void cStateGridPhotoMode::_RenderToTexture(const spitfire::math::cTimeStep& timeStep)
   {
     // Render the scene
     const spitfire::math::cColour clearColour(0.392156863f, 0.584313725f, 0.929411765f);
@@ -567,404 +558,9 @@ namespace diesel
   }
 
 
-  // ** cStateNewGame
+  // ** cStateSinglePhotoMode
 
-  cStateNewGame::cStateNewGame(cApplication& application) :
-    cState(application),
-    pNumberOfPlayers(nullptr),
-    pPlayerName1(nullptr),
-    pPlayerName2(nullptr),
-    bIsKeyUp(false),
-    bIsKeyDown(false),
-    bIsKeyReturn(false),
-    previousColour1(0),
-    previousColour2(1)
-  {
-    /*const float fSpacerVertical = 0.007f;
-    const float fSpacerHorizontal = 0.007f;
-
-    const float x = 0.04f;
-    float y = 0.2f;
-    const float width = 0.4f;
-
-    AddStaticText(0, TEXT("Number of Players:"), x, y, width);
-    pNumberOfPlayers = AddRetroInputUpDown(OPTION::NUMBER_OF_PLAYERS, 1, 2, settings.GetNumberOfPlayers(), x + width + fSpacerHorizontal, y, width);
-    y += pGuiManager->GetStaticTextHeight() + fSpacerVertical;
-
-    AddStaticText(0, TEXT("Player 1"), x, y, width);
-    y += pGuiManager->GetStaticTextHeight() + fSpacerVertical;
-    AddStaticText(0, TEXT("Name:"), x, y, width);
-    pPlayerName1 = AddRetroInput(OPTION::NAME_PLAYER1, settings.GetPlayerName(0), x + width + fSpacerHorizontal, y, width);
-    y += pGuiManager->GetStaticTextHeight() + fSpacerVertical;
-    AddStaticText(0, TEXT("Colour:"), x, y, width);
-    pPlayerColour1 = AddRetroColourPicker(OPTION::COLOUR_PLAYER1, x + width + fSpacerHorizontal, y, width);
-    AddColours(pPlayerColour1);
-    const spitfire::string_t sPlayerColour1 = settings.GetPlayerColour(0);
-    previousColour1 = 0;
-    if (sPlayerColour1 == TEXT("Red")) previousColour1 = 0;
-    else if (sPlayerColour1 == TEXT("Blue")) previousColour1 = 1;
-    else if (sPlayerColour1 == TEXT("Green")) previousColour1 = 2;
-    else if (sPlayerColour1 == TEXT("Yellow")) previousColour1 = 3;
-    pPlayerColour1->SetSelectedColour(previousColour1, false);
-    y += pGuiManager->GetStaticTextHeight() + fSpacerVertical;
-
-    AddStaticText(0, TEXT("Player 2"), x, y, width);
-    y += pGuiManager->GetStaticTextHeight() + fSpacerVertical;
-    AddStaticText(0, TEXT("Name:"), x, y, width);
-    pPlayerName2 = AddRetroInput(OPTION::NAME_PLAYER2, settings.GetPlayerName(1), x + width + fSpacerHorizontal, y, width);
-    y += pGuiManager->GetStaticTextHeight() + fSpacerVertical;
-    AddStaticText(0, TEXT("Colour:"), x, y, width);
-    pPlayerColour2 = AddRetroColourPicker(OPTION::COLOUR_PLAYER2, x + width + fSpacerHorizontal, y, width);
-    AddColours(pPlayerColour2);
-    const spitfire::string_t sPlayerColour2 = settings.GetPlayerColour(1);
-    previousColour2 = 1;
-    if (sPlayerColour2 == TEXT("Red")) previousColour2 = 0;
-    else if (sPlayerColour2 == TEXT("Blue")) previousColour2 = 1;
-    else if (sPlayerColour2 == TEXT("Green")) previousColour2 = 2;
-    else if (sPlayerColour2 == TEXT("Yellow")) previousColour2 = 3;
-    pPlayerColour2->SetSelectedColour(previousColour2, false);
-    y += pGuiManager->GetStaticTextHeight() + fSpacerVertical;
-
-    AddRetroButton(OPTION::START, TEXT("Start Game"), x, y, width);
-    y += pGuiManager->GetStaticTextHeight() + fSpacerVertical;
-    AddRetroButton(OPTION::BACK, TEXT("Back"), x, y, width);
-    y += pGuiManager->GetStaticTextHeight() + fSpacerVertical;*/
-  }
-
-  void cStateNewGame::AddColours(breathe::gui::cRetroColourPicker* pColourPicker)
-  {
-    pColourPicker->AddColour(TEXT("Red"), spitfire::math::cColour(1.0f, 0.0f, 0.0f));
-    pColourPicker->AddColour(TEXT("Blue"), spitfire::math::cColour(0.0f, 0.0f, 1.0f));
-    pColourPicker->AddColour(TEXT("Green"), spitfire::math::cColour(0.0f, 1.0f, 0.0f));
-    pColourPicker->AddColour(TEXT("Yellow"), spitfire::math::cColour(1.0f, 1.0f, 0.0f));
-  }
-
-  void cStateNewGame::_OnStateKeyboardEvent(const breathe::gui::cKeyboardEvent& event)
-  {
-    if (event.IsKeyUp()) {
-      switch (event.GetKeyCode()) {
-        case breathe::gui::KEY::UP: {
-          std::cout<<"cStateNewGame::_OnStateKeyboardEvent Up"<<std::endl;
-          bIsKeyUp = true;
-          break;
-        }
-        case breathe::gui::KEY::DOWN: {
-          std::cout<<"cStateNewGame::_OnStateKeyboardEvent Down"<<std::endl;
-          bIsKeyDown = true;
-          break;
-        }
-        case breathe::gui::KEY::RETURN: {
-          std::cout<<"cStateNewGame::_OnStateKeyboardEvent Return"<<std::endl;
-          bIsKeyReturn = true;
-          break;
-        }
-      }
-    }
-  }
-
-  breathe::gui::EVENT_RESULT cStateNewGame::_OnWidgetEvent(const breathe::gui::cWidgetEvent& event)
-  {
-    std::cout<<"cStateNewGame::_OnWidgetEvent"<<std::endl;
-
-    switch (event.GetWidget()->GetId()) {
-      case OPTION::COLOUR_PLAYER1:
-      case OPTION::COLOUR_PLAYER2: {
-        if (event.IsChanged()) {
-          // If the same colour has been selected for both players then veto the event
-          if ((pPlayerColour1 != nullptr) && (pPlayerColour2 != nullptr)) {
-            if (pPlayerColour1->GetSelectedColour() == pPlayerColour2->GetSelectedColour()) {
-              if (event.GetWidget()->GetId() == OPTION::COLOUR_PLAYER1) {
-                if (previousColour1 < pPlayerColour1->GetSelectedColour()) {
-                  // Going up
-                  size_t newColour = pPlayerColour1->GetSelectedColour() + 1;
-                  if (newColour < pPlayerColour1->GetNumberOfColours()) {
-                    // Skip a colour
-                    pPlayerColour1->SetSelectedColour(newColour, false);
-                  } else {
-                    // Revert to the previous colour
-                    pPlayerColour1->SetSelectedColour(previousColour1, false);
-                  }
-                } else {
-                  // Going down
-                  if (pPlayerColour1->GetSelectedColour() == 0) {
-                    // Revert to the previous colour
-                    pPlayerColour1->SetSelectedColour(previousColour1, false);
-                  } else {
-                    // Skip a colour
-                    pPlayerColour1->SetSelectedColour(pPlayerColour1->GetSelectedColour() - 1, false);
-                  }
-                }
-              } else {
-                if (previousColour2 < pPlayerColour2->GetSelectedColour()) {
-                  // Going up
-                  size_t newColour = pPlayerColour2->GetSelectedColour() + 1;
-                  if (newColour < pPlayerColour2->GetNumberOfColours()) {
-                    // Skip a colour
-                    pPlayerColour2->SetSelectedColour(newColour, false);
-                  } else {
-                    // Revert to the previous colour
-                    pPlayerColour2->SetSelectedColour(previousColour2, false);
-                  }
-                } else {
-                  // Going down
-                  if (pPlayerColour2->GetSelectedColour() == 0) {
-                    // Revert to the previous colour
-                    pPlayerColour2->SetSelectedColour(previousColour2, false);
-                  } else {
-                    // Skip a colour
-                    pPlayerColour2->SetSelectedColour(pPlayerColour2->GetSelectedColour() - 1, false);
-                  }
-                }
-              }
-            }
-
-            // Update our previous colours
-            previousColour1 = pPlayerColour1->GetSelectedColour();
-            previousColour2 = pPlayerColour2->GetSelectedColour();
-          }
-        }
-
-        break;
-      }
-      case OPTION::START: {
-        if (event.IsPressed()) {
-          /*// Update our settings
-          settings.SetNumberOfPlayers(pNumberOfPlayers->GetValue());
-          settings.SetPlayerName(0, pPlayerName1->GetCaption());
-          settings.SetPlayerColour(0, pPlayerColour1->GetColourName(pPlayerColour1->GetSelectedColour()));
-          settings.SetPlayerName(1, pPlayerName2->GetCaption());
-          settings.SetPlayerColour(1, pPlayerColour2->GetColourName(pPlayerColour2->GetSelectedColour()));
-          settings.Save();*/
-
-          // Pop our current state
-          application.PopStateSoon();
-          // Push our game state
-          application.PushStateSoon(new cStateGame(application));
-        }
-        break;
-      }
-      case OPTION::BACK: {
-        if (event.IsPressed()) {
-          // Pop our menu state
-          application.PopStateSoon();
-        }
-        break;
-      }
-    }
-
-    return breathe::gui::EVENT_RESULT::NOT_HANDLED_PERCOLATE;
-  }
-
-  void cStateNewGame::_Update(const spitfire::math::cTimeStep& timeStep)
-  {
-    pGuiRenderer->Update();
-  }
-
-  void cStateNewGame::_RenderToTexture(const spitfire::math::cTimeStep& timeStep)
-  {
-    // Render the scene
-    const spitfire::math::cColour clearColour(0.392156863f, 0.584313725f, 0.929411765f);
-    pContext->SetClearColour(clearColour);
-
-    {
-      if (pGuiRenderer != nullptr) {
-        pGuiRenderer->SetWireFrame(bIsWireframe);
-        pGuiRenderer->Render();
-      }
-    }
-  }
-
-
-  // ** cStateHighScores
-
-  cStateHighScores::cStateHighScores(cApplication& application) :
-    cState(application),
-    bIsDone(false)
-  {
-    const float fSpacerVertical = 0.007f;
-
-    const float x = 0.04f;
-    float y = 0.2f;
-    const float width = 0.4f;
-
-    const spitfire::math::cColour white(1.0f, 1.0f, 1.0f);
-    const spitfire::math::cColour red(1.0f, 0.0f, 0.0f);
-
-    breathe::gui::cStaticText* pStaticText = nullptr;
-
-
-    // Header
-    pStaticText = AddStaticText(0, TEXT("High Scores"), x, y, width);
-    pStaticText->SetTextColour(red);
-    y += pGuiManager->GetStaticTextHeight() + fSpacerVertical;
-    y += 0.05f;
-
-    pStaticText = AddStaticText(0, TEXT("Name"), x, y, width);
-    pStaticText->SetTextColour(red);
-    pStaticText = AddStaticText(0, TEXT("Score"), x + 0.2f, y, width);
-    pStaticText->SetTextColour(red);
-    y += pGuiManager->GetStaticTextHeight() + fSpacerVertical;
-
-    AddRetroButton(OPTION::BACK, TEXT("Back"), x, y, width);
-    y += pGuiManager->GetStaticTextHeight() + fSpacerVertical;
-  }
-
-  void cStateHighScores::_OnStateKeyboardEvent(const breathe::gui::cKeyboardEvent& event)
-  {
-    if (event.IsKeyDown()) {
-      switch (event.GetKeyCode()) {
-        case breathe::gui::KEY::ESCAPE:
-        case breathe::gui::KEY::RETURN: {
-          bIsDone = true;
-          break;
-        }
-      }
-    }
-  }
-
-  breathe::gui::EVENT_RESULT cStateHighScores::_OnWidgetEvent(const breathe::gui::cWidgetEvent& event)
-  {
-    std::cout<<"cStateHighScores::_OnWidgetEvent"<<std::endl;
-
-    if (event.IsPressed()) {
-      switch (event.GetWidget()->GetId()) {
-        case OPTION::BACK: {
-          // Pop our menu state
-          application.PopStateSoon();
-          break;
-        }
-      }
-    }
-
-    return breathe::gui::EVENT_RESULT::NOT_HANDLED_PERCOLATE;
-  }
-
-  void cStateHighScores::_Update(const spitfire::math::cTimeStep& timeStep)
-  {
-    pGuiRenderer->Update();
-  }
-
-  void cStateHighScores::_UpdateInput(const spitfire::math::cTimeStep& timeStep)
-  {
-    if (bIsDone) {
-      bIsDone = false;
-
-      // Pop our high scores state
-      application.PopStateSoon();
-    }
-  }
-
-  void cStateHighScores::_RenderToTexture(const spitfire::math::cTimeStep& timeStep)
-  {
-    // Render the scene
-    const spitfire::math::cColour clearColour(0.392156863f, 0.584313725f, 0.929411765f);
-    pContext->SetClearColour(clearColour);
-
-    {
-      if (pGuiRenderer != nullptr) {
-        pGuiRenderer->SetWireFrame(bIsWireframe);
-        pGuiRenderer->Render();
-      }
-    }
-  }
-
-
-  // ** cStatePauseMenu
-
-  cStatePauseMenu::cStatePauseMenu(cApplication& application, cStateGame& _parentState) :
-    cState(application),
-    parentState(_parentState),
-    bIsKeyReturn(false)
-  {
-    std::cout<<"cStatePauseMenu::cStatePauseMenu"<<std::endl;
-  
-    const float fSpacerVertical = 0.007f;
-
-    const float x = 0.04f;
-    float y = 0.2f;
-    const float width = 0.4f;
-
-    const spitfire::math::cColour red(1.0f, 0.0f, 0.0f);
-
-    breathe::gui::cStaticText* pStaticText = nullptr;
-
-    // Header
-    pStaticText = AddStaticText(0, TEXT("Paused"), x, y, width);
-    pStaticText->SetTextColour(red);
-    y += pGuiManager->GetStaticTextHeight() + fSpacerVertical;
-    y += 0.05f;
-
-
-    const breathe::gui::id_t ids[] = {
-      OPTION::RESUME_GAME,
-      OPTION::END_GAME,
-    };
-    const spitfire::string_t options[] = {
-      TEXT("Resum Game"),
-      TEXT("End Game")
-    };
-
-    const size_t n = countof(options);
-    for (size_t i = 0; i < n; i++) {
-      // Create the text for this option
-      AddRetroButton(ids[i], options[i], x, y, 0.15f);
-
-      y += pGuiManager->GetStaticTextHeight() + 0.007f;
-    }
-
-    pLayer->SetFocusToNextChild();
-  }
-
-  void cStatePauseMenu::_Update(const spitfire::math::cTimeStep& timeStep)
-  {
-    pGuiRenderer->Update();
-  }
-
-  void cStatePauseMenu::_OnStateKeyboardEvent(const breathe::gui::cKeyboardEvent& event)
-  {
-  }
-
-  breathe::gui::EVENT_RESULT cStatePauseMenu::_OnWidgetEvent(const breathe::gui::cWidgetEvent& event)
-  {
-    std::cout<<"cStatePauseMenu::_OnWidgetEvent"<<std::endl;
-
-    if (event.IsPressed()) {
-      switch (event.GetWidget()->GetId()) {
-        case OPTION::RESUME_GAME: {
-          // Pop our menu state
-          application.PopStateSoon();
-          break;
-        }
-        case OPTION::END_GAME: {
-          // Pop our menu state
-          application.PopStateSoon();
-          parentState.SetQuitSoon();
-          break;
-        }
-      }
-    }
-
-    return breathe::gui::EVENT_RESULT::NOT_HANDLED_PERCOLATE;
-  }
-
-  void cStatePauseMenu::_RenderToTexture(const spitfire::math::cTimeStep& timeStep)
-  {
-    // Render the scene
-    const spitfire::math::cColour clearColour(0.392156863f, 0.584313725f, 0.929411765f);
-    pContext->SetClearColour(clearColour);
-
-    {
-      if (pGuiRenderer != nullptr) {
-        pGuiRenderer->SetWireFrame(bIsWireframe);
-        pGuiRenderer->Render();
-      }
-    }
-  }
-
-
-  // ** cStateGame
-
-  cStateGame::cStateGame(cApplication& application) :
+  cStateSinglePhotoMode::cStateSinglePhotoMode(cApplication& application) :
     cState(application),
 
     pTextureBlock(nullptr),
@@ -989,9 +585,9 @@ namespace diesel
     const spitfire::math::cColour yellow(1.0f, 1.0f, 0.0f);
   }
 
-  cStateGame::~cStateGame()
+  cStateSinglePhotoMode::~cStateSinglePhotoMode()
   {
-    std::cout<<"cStateGame::~cStateGame"<<std::endl;
+    std::cout<<"cStateSinglePhotoMode::~cStateSinglePhotoMode"<<std::endl;
 
     if (pShaderBlock != nullptr) {
       pContext->DestroyShader(pShaderBlock);
@@ -1004,15 +600,15 @@ namespace diesel
     }
 
 
-    std::cout<<"cStateGame::~cStateGame returning"<<std::endl;
+    std::cout<<"cStateSinglePhotoMode::~cStateSinglePhotoMode returning"<<std::endl;
   }
 
-  void cStateGame::SetQuitSoon()
+  void cStateSinglePhotoMode::SetQuitSoon()
   {
     bQuitSoon = true;
   }
 
-  void cStateGame::UpdateText()
+  void cStateSinglePhotoMode::UpdateText()
   {
     /*for (size_t i = 0; i < game.boards.size(); i++) {
       tetris::cBoard& board = *(game.boards[i]);
@@ -1033,15 +629,15 @@ namespace diesel
     }*/
   }
 
-  void cStateGame::_OnStateKeyboardEvent(const breathe::gui::cKeyboardEvent& event)
+  void cStateSinglePhotoMode::_OnStateKeyboardEvent(const breathe::gui::cKeyboardEvent& event)
   {
-    std::cout<<"cStateGame::_OnStateKeyboardEvent"<<std::endl;
+    std::cout<<"cStateSinglePhotoMode::_OnStateKeyboardEvent"<<std::endl;
 
     if (event.IsKeyDown()) {
-      std::cout<<"cStateGame::_OnStateKeyboardEvent Key down"<<std::endl;
+      std::cout<<"cStateSinglePhotoMode::_OnStateKeyboardEvent Key down"<<std::endl;
       switch (event.GetKeyCode()) {
         case breathe::gui::KEY::ESCAPE: {
-          std::cout<<"cStateGame::_OnStateKeyboardEvent Escape down"<<std::endl;
+          std::cout<<"cStateSinglePhotoMode::_OnStateKeyboardEvent Escape down"<<std::endl;
           bPauseSoon = true;
           break;
         }
@@ -1049,7 +645,7 @@ namespace diesel
     } else if (event.IsKeyUp()) {
       switch (event.GetKeyCode()) {
         case breathe::gui::KEY::NUMBER_1: {
-          std::cout<<"cStateGame::_OnStateKeyboardEvent 1 up"<<std::endl;
+          std::cout<<"cStateSinglePhotoMode::_OnStateKeyboardEvent 1 up"<<std::endl;
           bIsWireframe = !bIsWireframe;
           break;
         }
@@ -1057,13 +653,8 @@ namespace diesel
     }
   }
 
-  void cStateGame::_Update(const spitfire::math::cTimeStep& timeStep)
+  void cStateSinglePhotoMode::_Update(const spitfire::math::cTimeStep& timeStep)
   {
-    if (bPauseSoon) {
-      // Push our game state
-      application.PushStateSoon(new cStatePauseMenu(application, *this));
-      bPauseSoon = false;
-    }
     if (bQuitSoon) {
       // Pop our menu state
       application.PopStateSoon();
@@ -1072,14 +663,14 @@ namespace diesel
     pGuiRenderer->Update();
   }
 
-  void cStateGame::_UpdateInput(const spitfire::math::cTimeStep& timeStep)
+  void cStateSinglePhotoMode::_UpdateInput(const spitfire::math::cTimeStep& timeStep)
   {
     assert(pWindow != nullptr);
 
 
   }
 
-  void cStateGame::_RenderToTexture(const spitfire::math::cTimeStep& timeStep)
+  void cStateSinglePhotoMode::_RenderToTexture(const spitfire::math::cTimeStep& timeStep)
   {
     // Render the scene
     const spitfire::math::cColour clearColour(0.392156863f, 0.584313725f, 0.929411765f);

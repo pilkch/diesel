@@ -91,10 +91,10 @@ namespace diesel
 
   // ** States
 
-  class cStateMenu : public cState
+  class cStateGridPhotoMode : public cState
   {
   public:
-    explicit cStateMenu(cApplication& application);
+    explicit cStateGridPhotoMode(cApplication& application);
 
   private:
     void _Update(const spitfire::math::cTimeStep& timeStep);
@@ -116,96 +116,11 @@ namespace diesel
     bool bIsKeyReturn;
   };
 
-  class cStateNewGame : public cState
+  class cStateSinglePhotoMode : public cState
   {
   public:
-    explicit cStateNewGame(cApplication& application);
-
-  private:
-    void AddColours(breathe::gui::cRetroColourPicker* pColourPicker);
-
-    virtual void _OnStateKeyboardEvent(const breathe::gui::cKeyboardEvent& event) override;
-
-    breathe::gui::EVENT_RESULT _OnWidgetEvent(const breathe::gui::cWidgetEvent& event);
-
-    void _Update(const spitfire::math::cTimeStep& timeStep);
-    void _RenderToTexture(const spitfire::math::cTimeStep& timeStep);
-
-    struct OPTION {
-      static const size_t NUMBER_OF_PLAYERS = 1;
-      static const size_t NAME_PLAYER1 = 2;
-      static const size_t COLOUR_PLAYER1 = 3;
-      static const size_t NAME_PLAYER2 = 4;
-      static const size_t COLOUR_PLAYER2 = 5;
-      static const size_t START = 6;
-      static const size_t BACK = 7;
-    };
-
-    breathe::gui::cRetroInputUpDown* pNumberOfPlayers;
-    breathe::gui::cRetroInput* pPlayerName1;
-    breathe::gui::cRetroInput* pPlayerName2;
-    breathe::gui::cRetroColourPicker* pPlayerColour1;
-    breathe::gui::cRetroColourPicker* pPlayerColour2;
-
-    bool bIsKeyUp;
-    bool bIsKeyDown;
-    bool bIsKeyReturn;
-
-    size_t previousColour1;
-    size_t previousColour2;
-  };
-
-  class cStateHighScores : public cState
-  {
-  public:
-    explicit cStateHighScores(cApplication& application);
-
-  private:
-    virtual void _OnStateKeyboardEvent(const breathe::gui::cKeyboardEvent& event) override;
-
-    breathe::gui::EVENT_RESULT _OnWidgetEvent(const breathe::gui::cWidgetEvent& event);
-
-    void _Update(const spitfire::math::cTimeStep& timeStep);
-    void _UpdateInput(const spitfire::math::cTimeStep& timeStep);
-    void _RenderToTexture(const spitfire::math::cTimeStep& timeStep);
-
-    struct OPTION {
-      static const int BACK = 1;
-    };
-
-    bool bIsDone;
-  };
-
-  class cStateGame;
-
-  class cStatePauseMenu : public cState
-  {
-  public:
-    cStatePauseMenu(cApplication& application, cStateGame& parentState);
-
-  private:
-    void _Update(const spitfire::math::cTimeStep& timeStep);
-    void _RenderToTexture(const spitfire::math::cTimeStep& timeStep);
-
-    virtual void _OnStateKeyboardEvent(const breathe::gui::cKeyboardEvent& event) override;
-
-    breathe::gui::EVENT_RESULT _OnWidgetEvent(const breathe::gui::cWidgetEvent& event);
-
-    cStateGame& parentState;
-
-    struct OPTION {
-      static const int RESUME_GAME = 1;
-      static const int END_GAME = 3;
-    };
-
-    bool bIsKeyReturn;
-  };
-
-  class cStateGame : public cState
-  {
-  public:
-    explicit cStateGame(cApplication& application);
-    ~cStateGame();
+    explicit cStateSinglePhotoMode(cApplication& application);
+    ~cStateSinglePhotoMode();
 
     void SetQuitSoon(); // Called by the pause menu when the game should quit
 
