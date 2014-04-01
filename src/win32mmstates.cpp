@@ -442,13 +442,13 @@ namespace diesel
     pButton->SetHeight(pGuiManager->GetButtonHeight());
     pWindow->AddChild(pButton);
 
-    breathe::gui::cInput* pInput = new breathe::gui::cInput;
-    pInput->SetId(104);
-    pInput->SetCaption(TEXT("Input"));
-    pInput->SetRelativePosition(spitfire::math::cVec2(pStaticText->GetX(), pStaticText->GetY() + pStaticText->GetHeight() + 0.05f));
-    pInput->SetWidth(0.15f);
-    pInput->SetHeight(pGuiManager->GetInputHeight());
-    pWindow->AddChild(pInput);
+    breathe::gui::cComboBox* pComboBox = new breathe::gui::cComboBox;
+    pComboBox->SetId(104);
+    pComboBox->SetCaption(TEXT("ComboBox"));
+    pComboBox->SetRelativePosition(spitfire::math::cVec2(pStaticText->GetX(), pStaticText->GetY() + pStaticText->GetHeight() + 0.05f));
+    pComboBox->SetWidth(0.15f);
+    pComboBox->SetHeight(pGuiManager->GetComboBoxHeight());
+    pWindow->AddChild(pComboBox);
 
     breathe::gui::cSlider* pSlider = new breathe::gui::cSlider;
     pSlider->SetId(105);
@@ -465,6 +465,14 @@ namespace diesel
     pToolbar->SetWidth(0.4f);
     pToolbar->SetHeight(0.1f);
     pWindow->AddChild(pToolbar);
+
+    breathe::gui::cScrollbar* pScrollbar = new breathe::gui::cScrollbar;
+    pScrollbar->SetId(105);
+    pScrollbar->SetCaption(TEXT("Scrollbar"));
+    pScrollbar->SetRelativePosition(spitfire::math::cVec2(pToolbar->GetX(), pToolbar->GetY() + pToolbar->GetHeight() + 0.05f));
+    pScrollbar->SetWidth(0.4f);
+    pScrollbar->SetHeight(0.1f);
+    pWindow->AddChild(pScrollbar);
   }
 
   void cStatePhotoBrowser::_Update(const spitfire::math::cTimeStep& timeStep)
