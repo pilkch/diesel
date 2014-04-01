@@ -69,6 +69,7 @@ namespace diesel
     virtual void _RenderToTexture(const spitfire::math::cTimeStep& timeStep) {}
 
     virtual void _OnStateCommandEvent(int iCommandID) {}
+    virtual void _OnStateQuitEvent() {}
     virtual void _OnStateMouseEvent(const breathe::gui::cMouseEvent& event) {}
     virtual void _OnStateKeyboardEvent(const breathe::gui::cKeyboardEvent& event) {}
 
@@ -101,6 +102,7 @@ namespace diesel
     void _RenderToTexture(const spitfire::math::cTimeStep& timeStep);
     
     virtual void _OnStateCommandEvent(int iCommandID) override;
+    virtual void _OnStateQuitEvent() override;
     virtual void _OnStateMouseEvent(const breathe::gui::cMouseEvent& event);
     virtual void _OnStateKeyboardEvent(const breathe::gui::cKeyboardEvent& event) override;
 

@@ -105,7 +105,7 @@ namespace diesel
     if (event.IsCommand()) {
       LOG<<"cState::_OnWindowEvent Sending to state command event"<<std::endl;
       _OnStateCommandEvent(event.GetCommandID());
-    }
+    } else if (event.IsQuit()) _OnStateQuitEvent();
   }
 
   void cState::_OnKeyboardEvent(const breathe::gui::cKeyboardEvent& event)
@@ -501,6 +501,13 @@ namespace diesel
     } else if (iCommandID == ID_MENU_EDIT_CUT) {
 
     }
+  }
+
+  void cStatePhotoBrowser::_OnStateQuitEvent()
+  {
+    LOG<<"cStatePhotoBrowser::_OnStateQuitEvent"<<std::endl;
+    // Pop our menu state
+    application.PopStateSoon();
   }
   
   void cStatePhotoBrowser::_OnStateMouseEvent(const breathe::gui::cMouseEvent& event)
