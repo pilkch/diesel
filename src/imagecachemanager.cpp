@@ -11,6 +11,13 @@
 // Diesel headers
 #include "imagecachemanager.h"
 
+#ifdef UNICODE
+int system(const wchar_t* szCommand)
+{
+  return _wsystem(szCommand);
+}
+#endif
+
 namespace diesel
 {
   class cFileAgeAndSize
@@ -125,13 +132,13 @@ namespace diesel
 
     if (!IsWineInstalled()) {
       LOG<<"cImageCacheManager::GetOrCreateDNGForRawFile wine is not installed, returning \"\""<<std::endl;
-      return "";
+      return TEXT("");
     }
 
     // TODO: Use the actual dng sdk like this instead?
     // https://projects.kde.org/projects/extragear/graphics/kipi-plugins/repository/revisions/master/show/dngconverter
 
-    std::ostringstream o;
+    ostringstream_t o;
     o<<"wine \"C:\\Program Files (x86)\\Adobe\\Adobe DNG Converter.exe\" -c \""<<sRawFilePath<<"\"";
     #ifndef BUILD_DEBUG
     o<<" &> /dev/null";
@@ -140,12 +147,12 @@ namespace diesel
     const int iResult = system(sCommandLine.c_str());
     if (iResult != 0) {
       LOG<<"cImageCacheManager::GetOrCreateDNGForRawFile wine returned "<<iResult<<" for \""<<sCommandLine<<"\", returning \"\""<<std::endl;
-      return "";
+      return TEXT("");
     }
 
     const string_t sFolder = spitfire::filesystem::GetFolder(sRawFilePath);
     const string_t sFile = spitfire::filesystem::GetFileNoExtension(sRawFilePath);
-    const string_t sDNGFilePath = spitfire::filesystem::MakeFilePath(sFolder, sFile + ".dng");
+    const string_t sDNGFilePath = spitfire::filesystem::MakeFilePath(sFolder, sFile + TEXT(".dng"));
     return sDNGFilePath;
   }
 
@@ -157,7 +164,7 @@ namespace diesel
 
     if (!IsUFRawBatchInstalled()) {
       LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile ufraw-batch is not installed, returning \"\""<<std::endl;
-      return "";
+      return TEXT("");
     }
 
     spitfire::algorithm::cMD5 md5;
@@ -165,23 +172,23 @@ namespace diesel
 
     const string_t sCacheFolder = GetCacheFolderPath();
 
-    string_t sFileJPG = "full.jpg";
+    string_t sFileJPG = TEXT("full.jpg");
     size_t size = 0;
 
     switch (imageSize) {
       case IMAGE_SIZE::THUMBNAIL: {
-        sFileJPG = "thumbnail.jpg";
+        sFileJPG = TEXT("thumbnail.jpg");
         size = 200;
         break;
       }
     }
 
-    const string_t sFilePathJPG = spitfire::filesystem::MakeFilePath(sCacheFolder, md5.GetResultFormatted() + "_" + sFileJPG);
+    const string_t sFilePathJPG = spitfire::filesystem::MakeFilePath(sCacheFolder, md5.GetResultFormatted() + TEXT("_") + sFileJPG);
     if (spitfire::filesystem::FileExists(sFilePathJPG)) return sFilePathJPG;
 
     const string_t sFolderJPG = spitfire::filesystem::GetFolder(sFilePathJPG);
 
-    std::ostringstream o;
+    ostringstream_t o;
     o<<"ufraw-batch --out-type=jpg";
     if (size != 0) o<<" --embedded-image --size="<<size;
     o<<" \""<<sDNGFilePath<<"\" --overwrite --out-path=\""<<sFolderJPG<<"\"";
@@ -192,35 +199,35 @@ namespace diesel
     const int iResult = system(sCommandLine.c_str());
     if (iResult != 0) {
       LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile ufraw-batch returned "<<iResult<<" for \""<<sCommandLine<<"\", returning \"\""<<std::endl;
-      return "";
+      return TEXT("");
     }
 
     // ufraw-batch doesn't respect the output folder if we provide our own output filename, so we have to rename the file after it is converted
     const string_t sNameJPG = spitfire::filesystem::GetFileNoExtension(sFilePathJPG);
 
     // Try to rename from file.embedded.jpg to abcdefghi_file.jpg
-    const string_t sFileUFRawEmbeddedJPG = spitfire::filesystem::GetFileNoExtension(sDNGFilePath) + ".embedded.jpg";
+    const string_t sFileUFRawEmbeddedJPG = spitfire::filesystem::GetFileNoExtension(sDNGFilePath) + TEXT(".embedded.jpg");
     string_t sFilePathUFRawJPG = spitfire::filesystem::MakeFilePath(sFolderJPG, sFileUFRawEmbeddedJPG);
     LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile Looking for \""<<sFilePathUFRawJPG<<"\""<<std::endl;
     if (spitfire::filesystem::FileExists(sFilePathUFRawJPG)) {
       if (!spitfire::filesystem::MoveFile(sFilePathUFRawJPG, sFilePathJPG)) {
         LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile Failed to move the file from \""<<sFolderJPG<<"\" to \""<<sFilePathJPG<<"\", returning \"\""<<std::endl;
-        return "";
+        return TEXT("");
       }
     } else {
       // Try to rename from file.jpg to abcdefghi_file.jpg
-      const string_t sFileUFRawJPG = spitfire::filesystem::GetFileNoExtension(sDNGFilePath) + ".jpg";
+      const string_t sFileUFRawJPG = spitfire::filesystem::GetFileNoExtension(sDNGFilePath) + TEXT(".jpg");
       string_t sFilePathUFRawJPG = spitfire::filesystem::MakeFilePath(sFolderJPG, sFileUFRawJPG);
       LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile Looking for \""<<sFilePathUFRawJPG<<"\""<<std::endl;
       if (spitfire::filesystem::FileExists(sFilePathUFRawJPG) && !spitfire::filesystem::MoveFile(sFilePathUFRawJPG, sFilePathJPG)) {
         LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile Failed to move the file from \""<<sFolderJPG<<"\" to \""<<sFilePathJPG<<"\", returning \"\""<<std::endl;
-        return "";
+        return TEXT("");
       }
     }
 
     if (!spitfire::filesystem::FileExists(sFilePathJPG)) {
       LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile Failed to create the thumbnail image \""<<sFilePathJPG<<"\", returning \"\""<<std::endl;
-      return "";
+      return TEXT("");
     }
 
     return sFilePathJPG;
@@ -232,7 +239,7 @@ namespace diesel
 
     if (!IsConvertInstalled()) {
       LOG<<"cImageCacheManager::GetOrCreateThumbnailForImageFile convert is not installed, returning \"\""<<std::endl;
-      return "";
+      return TEXT("");
     }
 
     spitfire::algorithm::cMD5 md5;
@@ -240,25 +247,25 @@ namespace diesel
 
     const string_t sCacheFolder = GetCacheFolderPath();
 
-    string_t sFileJPG = "full.jpg";
+    string_t sFileJPG = TEXT("full.jpg");
     size_t width = 0;
     size_t height = 0;
 
     switch (imageSize) {
       case IMAGE_SIZE::THUMBNAIL: {
-        sFileJPG = "thumbnail.jpg";
+        sFileJPG = TEXT("thumbnail.jpg");
         width = 200;
         height = 200;
         break;
       }
     }
 
-    const string_t sFilePathJPG = spitfire::filesystem::MakeFilePath(sCacheFolder, md5.GetResultFormatted() + "_" + sFileJPG);
+    const string_t sFilePathJPG = spitfire::filesystem::MakeFilePath(sCacheFolder, md5.GetResultFormatted() + TEXT("_") + sFileJPG);
     if (spitfire::filesystem::FileExists(sFilePathJPG)) return sFilePathJPG;
 
     const string_t sFolderJPG = spitfire::filesystem::GetFolder(sFilePathJPG);
 
-    std::ostringstream o;
+    ostringstream_t o;
     o<<"convert \""<<sImageFilePath<<"\"";
     if ((width != 0) && (height != 0)) o<<" -resize "<<width<<"x"<<height;
     o<<" -auto-orient \""<<sFilePathJPG<<"\"";
@@ -266,12 +273,12 @@ namespace diesel
     const int iResult = system(sCommandLine.c_str());
     if (iResult != 0) {
       LOG<<"cImageCacheManager::GetOrCreateThumbnailForImageFile convert returned "<<iResult<<" for \""<<sCommandLine<<"\", returning \"\""<<std::endl;
-      return "";
+      return TEXT("");
     }
 
     if (!spitfire::filesystem::FileExists(sFilePathJPG)) {
       LOG<<"cImageCacheManager::GetOrCreateThumbnailForImageFile Failed to create the thumbnail image \""<<sFilePathJPG<<"\", returning \"\""<<std::endl;
-      return "";
+      return TEXT("");
     }
 
     return sFilePathJPG;

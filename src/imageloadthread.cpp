@@ -1,5 +1,6 @@
 // Spitfire headers
 #include <spitfire/storage/filesystem.h>
+#include <spitfire/util/log.h>
 
 // Diesel headers
 #include "imagecachemanager.h"
@@ -102,7 +103,7 @@ namespace diesel
 
   bool cImageLoadThread::GetOrCreateDNGForRawFile(const string_t& sFolderPath, const string_t& sFileNameNoExtension, cPhoto& photo)
   {
-    if (spitfire::filesystem::GetLastDirectory(sFolderPath) == "raw") {
+    if (spitfire::filesystem::GetLastDirectory(sFolderPath) == TEXT("raw")) {
       LOG<<"cImageLoadThread::GetOrCreateDNGForRawFile Skipping files in raw/ folder"<<std::endl;
       return false;
     } else LOG<<"folder="<<spitfire::filesystem::GetLastDirectory(sFolderPath)<<std::endl;
@@ -122,7 +123,7 @@ namespace diesel
     }
 
     // Creating the dng worked so we should move the raw file into the raw/ folder in that directory
-    const string_t sRawFolderPath = spitfire::filesystem::MakeFilePath(sFolderPath, "raw");
+    const string_t sRawFolderPath = spitfire::filesystem::MakeFilePath(sFolderPath, TEXT("raw"));
     if (!spitfire::filesystem::DirectoryExists(sRawFolderPath)) spitfire::filesystem::CreateDirectory(sRawFolderPath);
 
     const string_t sFilePathRAWInRawFolder = spitfire::filesystem::MakeFilePath(sRawFolderPath, sFileNameNoExtension + sExtension);

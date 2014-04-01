@@ -121,7 +121,7 @@ namespace diesel
     public:
       cLoadingProcessInterface();
 
-      override virtual bool IsToStop() const { return soStopLoading.IsSignalled(); }
+      virtual bool _IsToStop() const override { return soStopLoading.IsSignalled(); }
 
       void SetStop() { soStopLoading.Signal(); }
       void Reset() { soStopLoading.Reset(); }

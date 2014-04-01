@@ -1,6 +1,7 @@
 // Spitfire headers
 #include <spitfire/algorithm/md5.h>
 #include <spitfire/storage/filesystem.h>
+#include <spitfire/util/log.h>
 
 // Diesel headers
 #include "importthread.h"
@@ -32,7 +33,7 @@ namespace diesel
     bSeparateFolderForEachYear = _bSeparateFolderForEachYear;
   }
 
-  void cImportProcess::cImportProcess::SetSeparateFolderForEachDate(bool _bSeparateFolderForEachDate)
+  void cImportProcess::SetSeparateFolderForEachDate(bool _bSeparateFolderForEachDate)
   {
     bSeparateFolderForEachDate = _bSeparateFolderForEachDate;
   }
@@ -54,7 +55,7 @@ namespace diesel
 
   string_t cImportProcess::GetFolderForFile(const string_t& sFromFilePath, const string_t& sToFolder) const
   {
-    std::ostringstream o;
+    ostringstream_t o;
 
     o<<sToFolder;
     if (sToFolder.back() != spitfire::filesystem::cFilePathSeparator) o<<spitfire::filesystem::sFilePathSeparator;
@@ -75,7 +76,7 @@ namespace diesel
     LOG<<"cImportProcess::ProcessFunction \""<<sFromFolder<<"\""<<std::endl;
 
     interface.SetCancellable(true);
-    interface.SetTextPrimary("Importing...");
+    interface.SetTextPrimary(TEXT("Importing..."));
 
     interface.SetPercentageCompletePrimary0To100(0.0f);
     interface.SetPercentageCompleteSecondary0To100(0.0f);
@@ -85,7 +86,7 @@ namespace diesel
 
     // Import the files
     {
-      interface.SetTextSecondary("Copying files...");
+      interface.SetTextSecondary(TEXT("Copying files..."));
 
       spitfire::filesystem::cFolderIterator iter(sFromFolder);
       size_t i = 0;
@@ -115,7 +116,7 @@ namespace diesel
 
     // Check if the MD5 hashes match and we can delete the original files
     if (bDeleteFromSourceFolderOnSuccessfulImport) {
-      interface.SetTextSecondary("Deleting source files...");
+      interface.SetTextSecondary(TEXT("Deleting source files..."));
 
       spitfire::algorithm::cMD5 md5;
 
