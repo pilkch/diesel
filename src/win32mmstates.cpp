@@ -380,13 +380,14 @@ namespace diesel
   }
 
 
-  // ** cStateGridPhotoMode
+  // ** cStatePhotoBrowser
 
-  cStateGridPhotoMode::cStateGridPhotoMode(cApplication& application) :
+  cStatePhotoBrowser::cStatePhotoBrowser(cApplication& application) :
     cState(application),
-    bIsKeyReturn(false)
+    bIsKeyReturn(false),
+    bIsSinglePhotoMode(false)
   {
-    std::cout<<"cStateGridPhotoMode::cStateGridPhotoMode"<<std::endl;
+    std::cout<<"cStatePhotoBrowser::cStatePhotoBrowser"<<std::endl;
 
     const breathe::gui::id_t ids[] = {
       OPTION::NEW_GAME,
@@ -458,14 +459,14 @@ namespace diesel
     pWindow->AddChild(pSlider);
   }
 
-  void cStateGridPhotoMode::_Update(const spitfire::math::cTimeStep& timeStep)
+  void cStatePhotoBrowser::_Update(const spitfire::math::cTimeStep& timeStep)
   {
     pGuiRenderer->Update();
   }
 
-  void cStateGridPhotoMode::_OnStateCommandEvent(int iCommandID)
+  void cStatePhotoBrowser::_OnStateCommandEvent(int iCommandID)
   {
-    LOG<<"cStateGridPhotoMode::_OnStateCommandEvent id="<<iCommandID<<std::endl;
+    LOG<<"cStatePhotoBrowser::_OnStateCommandEvent id="<<iCommandID<<std::endl;
     if (iCommandID == ID_MENU_FILE_OPEN_FOLDER) {
       ASSERT(pWindow != nullptr);
 
@@ -486,7 +487,7 @@ namespace diesel
     }
   }
   
-  void cStateGridPhotoMode::_OnStateMouseEvent(const breathe::gui::cMouseEvent& event)
+  void cStatePhotoBrowser::_OnStateMouseEvent(const breathe::gui::cMouseEvent& event)
   {
     if (event.IsButtonUp() && (event.GetButton() == 3)) {
       // Get the windows handle
@@ -504,32 +505,32 @@ namespace diesel
     }
   }
 
-  void cStateGridPhotoMode::_OnStateKeyboardEvent(const breathe::gui::cKeyboardEvent& event)
+  void cStatePhotoBrowser::_OnStateKeyboardEvent(const breathe::gui::cKeyboardEvent& event)
   {
     if (event.IsKeyUp()) {
       switch (event.GetKeyCode()) {
         case breathe::gui::KEY::NUMBER_1: {
-          std::cout<<"cStateGridPhotoMode::_OnStateKeyboardEvent 1 up"<<std::endl;
+          std::cout<<"cStatePhotoBrowser::_OnStateKeyboardEvent 1 up"<<std::endl;
           bIsWireframe = !bIsWireframe;
           break;
         }
         case breathe::gui::KEY::NUMBER_2: {
-          std::cout<<"cStateGridPhotoMode::_OnStateKeyboardEvent 2 up"<<std::endl;
+          std::cout<<"cStatePhotoBrowser::_OnStateKeyboardEvent 2 up"<<std::endl;
           break;
         }
       }
     }
   }
 
-  breathe::gui::EVENT_RESULT cStateGridPhotoMode::_OnWidgetEvent(const breathe::gui::cWidgetEvent& event)
+  breathe::gui::EVENT_RESULT cStatePhotoBrowser::_OnWidgetEvent(const breathe::gui::cWidgetEvent& event)
   {
-    std::cout<<"cStateGridPhotoMode::_OnWidgetEvent"<<std::endl;
+    std::cout<<"cStatePhotoBrowser::_OnWidgetEvent"<<std::endl;
 
     if (event.IsPressed()) {
       switch (event.GetWidget()->GetId()) {
         case OPTION::NEW_GAME: {
           // Push our game state
-          application.PushStateSoon(new cStateSinglePhotoMode(application));
+          application.PushStateSoon(new cStateAboutBox(application));
           break;
         }
         case OPTION::QUIT: {
@@ -543,7 +544,7 @@ namespace diesel
     return breathe::gui::EVENT_RESULT::NOT_HANDLED_PERCOLATE;
   }
 
-  void cStateGridPhotoMode::_RenderToTexture(const spitfire::math::cTimeStep& timeStep)
+  void cStatePhotoBrowser::_RenderToTexture(const spitfire::math::cTimeStep& timeStep)
   {
     // Render the scene
     const spitfire::math::cColour clearColour(0.392156863f, 0.584313725f, 0.929411765f);
@@ -558,9 +559,9 @@ namespace diesel
   }
 
 
-  // ** cStateSinglePhotoMode
+  // ** cStateAboutBox
 
-  cStateSinglePhotoMode::cStateSinglePhotoMode(cApplication& application) :
+  cStateAboutBox::cStateAboutBox(cApplication& application) :
     cState(application),
 
     pTextureBlock(nullptr),
@@ -585,9 +586,9 @@ namespace diesel
     const spitfire::math::cColour yellow(1.0f, 1.0f, 0.0f);
   }
 
-  cStateSinglePhotoMode::~cStateSinglePhotoMode()
+  cStateAboutBox::~cStateAboutBox()
   {
-    std::cout<<"cStateSinglePhotoMode::~cStateSinglePhotoMode"<<std::endl;
+    std::cout<<"cStateAboutBox::~cStateAboutBox"<<std::endl;
 
     if (pShaderBlock != nullptr) {
       pContext->DestroyShader(pShaderBlock);
@@ -600,15 +601,15 @@ namespace diesel
     }
 
 
-    std::cout<<"cStateSinglePhotoMode::~cStateSinglePhotoMode returning"<<std::endl;
+    std::cout<<"cStateAboutBox::~cStateAboutBox returning"<<std::endl;
   }
 
-  void cStateSinglePhotoMode::SetQuitSoon()
+  void cStateAboutBox::SetQuitSoon()
   {
     bQuitSoon = true;
   }
 
-  void cStateSinglePhotoMode::UpdateText()
+  void cStateAboutBox::UpdateText()
   {
     /*for (size_t i = 0; i < game.boards.size(); i++) {
       tetris::cBoard& board = *(game.boards[i]);
@@ -629,15 +630,15 @@ namespace diesel
     }*/
   }
 
-  void cStateSinglePhotoMode::_OnStateKeyboardEvent(const breathe::gui::cKeyboardEvent& event)
+  void cStateAboutBox::_OnStateKeyboardEvent(const breathe::gui::cKeyboardEvent& event)
   {
-    std::cout<<"cStateSinglePhotoMode::_OnStateKeyboardEvent"<<std::endl;
+    std::cout<<"cStateAboutBox::_OnStateKeyboardEvent"<<std::endl;
 
     if (event.IsKeyDown()) {
-      std::cout<<"cStateSinglePhotoMode::_OnStateKeyboardEvent Key down"<<std::endl;
+      std::cout<<"cStateAboutBox::_OnStateKeyboardEvent Key down"<<std::endl;
       switch (event.GetKeyCode()) {
         case breathe::gui::KEY::ESCAPE: {
-          std::cout<<"cStateSinglePhotoMode::_OnStateKeyboardEvent Escape down"<<std::endl;
+          std::cout<<"cStateAboutBox::_OnStateKeyboardEvent Escape down"<<std::endl;
           bPauseSoon = true;
           break;
         }
@@ -645,7 +646,7 @@ namespace diesel
     } else if (event.IsKeyUp()) {
       switch (event.GetKeyCode()) {
         case breathe::gui::KEY::NUMBER_1: {
-          std::cout<<"cStateSinglePhotoMode::_OnStateKeyboardEvent 1 up"<<std::endl;
+          std::cout<<"cStateAboutBox::_OnStateKeyboardEvent 1 up"<<std::endl;
           bIsWireframe = !bIsWireframe;
           break;
         }
@@ -653,7 +654,7 @@ namespace diesel
     }
   }
 
-  void cStateSinglePhotoMode::_Update(const spitfire::math::cTimeStep& timeStep)
+  void cStateAboutBox::_Update(const spitfire::math::cTimeStep& timeStep)
   {
     if (bQuitSoon) {
       // Pop our menu state
@@ -663,14 +664,14 @@ namespace diesel
     pGuiRenderer->Update();
   }
 
-  void cStateSinglePhotoMode::_UpdateInput(const spitfire::math::cTimeStep& timeStep)
+  void cStateAboutBox::_UpdateInput(const spitfire::math::cTimeStep& timeStep)
   {
     assert(pWindow != nullptr);
 
 
   }
 
-  void cStateSinglePhotoMode::_RenderToTexture(const spitfire::math::cTimeStep& timeStep)
+  void cStateAboutBox::_RenderToTexture(const spitfire::math::cTimeStep& timeStep)
   {
     // Render the scene
     const spitfire::math::cColour clearColour(0.392156863f, 0.584313725f, 0.929411765f);

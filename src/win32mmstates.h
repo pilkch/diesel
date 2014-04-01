@@ -91,10 +91,10 @@ namespace diesel
 
   // ** States
 
-  class cStateGridPhotoMode : public cState
+  class cStatePhotoBrowser : public cState
   {
   public:
-    explicit cStateGridPhotoMode(cApplication& application);
+    explicit cStatePhotoBrowser(cApplication& application);
 
   private:
     void _Update(const spitfire::math::cTimeStep& timeStep);
@@ -114,13 +114,15 @@ namespace diesel
     };
 
     bool bIsKeyReturn;
+
+    bool bIsSinglePhotoMode;
   };
 
-  class cStateSinglePhotoMode : public cState
+  class cStateAboutBox : public cState
   {
   public:
-    explicit cStateSinglePhotoMode(cApplication& application);
-    ~cStateSinglePhotoMode();
+    explicit cStateAboutBox(cApplication& application);
+    ~cStateAboutBox();
 
     void SetQuitSoon(); // Called by the pause menu when the game should quit
 
@@ -143,6 +145,9 @@ namespace diesel
     bool bPauseSoon;
     bool bQuitSoon;
   };
+
+  typedef cStateAboutBox cStateSettings;
+  typedef cStateAboutBox cStateImportFromFolder;
 }
 
 #endif // DIESEL_STATES_H
