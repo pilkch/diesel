@@ -457,6 +457,14 @@ namespace diesel
     pSlider->SetWidth(0.15f);
     pSlider->SetHeight(0.1f);
     pWindow->AddChild(pSlider);
+
+    breathe::gui::cToolbar* pToolbar = new breathe::gui::cToolbar;
+    pToolbar->SetId(105);
+    pToolbar->SetCaption(TEXT("Toolbar"));
+    pToolbar->SetRelativePosition(spitfire::math::cVec2(pSlider->GetX(), pSlider->GetY() + pSlider->GetHeight() + 0.05f));
+    pToolbar->SetWidth(0.4f);
+    pToolbar->SetHeight(0.1f);
+    pWindow->AddChild(pToolbar);
   }
 
   void cStatePhotoBrowser::_Update(const spitfire::math::cTimeStep& timeStep)
