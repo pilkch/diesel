@@ -108,17 +108,22 @@ namespace diesel
     win32mm::cMenu menu;
     menu.CreateMenu();
 
-    // Create our File popup menu
+    // Create our File menu
     win32mm::cPopupMenu popupFile;
     popupFile.AppendMenuItemWithShortcut(ID_MENU_FILE_OPEN_FOLDER, TEXT(LANGTAG_OPEN_FOLDER), KEY_COMBO_CONTROL('O'));
     popupFile.AppendMenuItemWithShortcut(ID_MENU_FILE_QUIT, TEXT(LANGTAG_QUIT), KEY_COMBO_CONTROL('W'));
 
-    // Create our File popup menu
+    // Create our Edit menu
     win32mm::cPopupMenu popupEdit;
     popupEdit.AppendMenuItemWithShortcut(ID_MENU_EDIT_CUT, TEXT(LANGTAG_CUT), KEY_COMBO_CONTROL('C'));
 
+    // Create our View menu
+    win32mm::cPopupMenu popupView;
+    popupView.AppendMenuItem(ID_MENU_VIEW_SINGLE_PHOTO_MODE, TEXT(LANGTAG_SINGLE_PHOTO_MODE));
+
     menu.AppendPopupMenu(popupFile, TEXT(LANGTAG_FILE));
     menu.AppendPopupMenu(popupEdit, TEXT(LANGTAG_EDIT));
+    menu.AppendPopupMenu(popupView, TEXT(LANGTAG_VIEW));
 
     window.SetMenu(menu);
   }

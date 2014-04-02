@@ -39,11 +39,14 @@ namespace diesel
   #define LANGTAG_OPEN_FOLDER "Open Folder"
   #define LANGTAG_EDIT "Edit"
   #define LANGTAG_CUT "Cut"
+  #define LANGTAG_VIEW "View"
+  #define LANGTAG_SINGLE_PHOTO_MODE "Single Photo Mode"
 
   // Menu IDs
   const int ID_MENU_FILE_OPEN_FOLDER = 10000;
   const int ID_MENU_FILE_QUIT = 10001;
   const int ID_MENU_EDIT_CUT = 10004;
+  const int ID_MENU_VIEW_SINGLE_PHOTO_MODE = 10005;
   #endif
 
   // ** A simple class for calculating letter box dimensions
