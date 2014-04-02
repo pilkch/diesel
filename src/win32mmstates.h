@@ -31,6 +31,9 @@ namespace diesel
     void DestroyResources();
 
   protected:
+    void EnterVirtualChildDialog(); // Called when a state is about to show a fake dialog
+    void ExitVirtualChildDialog();  // Called when a state has just closed a fake dialog
+
     breathe::gui::cStaticText* AddStaticText(breathe::gui::id_t id, const spitfire::string_t& sText, float x, float y, float width);
     breathe::gui::cRetroButton* AddRetroButton(breathe::gui::id_t id, const spitfire::string_t& sText, float x, float y, float width);
     breathe::gui::cRetroInput* AddRetroInput(breathe::gui::id_t id, const spitfire::string_t& sText, float x, float y, float width);

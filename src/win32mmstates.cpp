@@ -85,15 +85,25 @@ namespace diesel
     }
   }
 
+  void cState::EnterVirtualChildDialog()
+  {
+    application.window.DisableMenu();
+  }
+
+  void cState::ExitVirtualChildDialog()
+  {
+    application.window.EnableMenu();
+  }
+
   void cState::_OnPause()
   {
-    if (pLayer != nullptr) pLayer->SetVisible(false);
+    //if (pLayer != nullptr) pLayer->SetVisible(false);
   }
 
   void cState::_OnResume()
   {
     if (pLayer != nullptr) {
-      pLayer->SetVisible(true);
+      //pLayer->SetVisible(true);
 
       pLayer->SetFocusToFirstChild();
     }
@@ -389,90 +399,60 @@ namespace diesel
   {
     std::cout<<"cStatePhotoBrowser::cStatePhotoBrowser"<<std::endl;
 
-    const breathe::gui::id_t ids[] = {
-      OPTION::NEW_GAME,
-      OPTION::HIGH_SCORES,
-      //OPTION::PREFERENCES,
-      OPTION::QUIT,
-    };
-    const spitfire::string_t options[] = {
-      TEXT("New Game"),
-      TEXT("High Scores"),
-      //TEXT("Preferences"),
-      TEXT("Quit")
-    };
+    const float fSpacerWidth = pGuiManager->GetSpacerWidth();
+    const float fSpacerHeight = pGuiManager->GetSpacerHeight();
 
-    const float x = 0.04f;
-    float y = 0.2f;
+    const float fLayerWidth = pLayer->GetWidth();
 
-    const size_t n = countof(options);
-    for (size_t i = 0; i < n; i++) {
-      // Create the text for this option
-      AddRetroButton(ids[i], options[i], x, y, 0.15f);
+    breathe::gui::cToolbar* pToolbar = new breathe::gui::cToolbar;
+    pToolbar->SetId(106);
+    pToolbar->SetCaption(TEXT("Toolbar"));
+    pToolbar->SetRelativePosition(spitfire::math::cVec2(fLayerWidth - pGuiManager->GetToolbarWidthOrHeight(), 0.0f));
+    pToolbar->SetWidth(pGuiManager->GetToolbarWidthOrHeight());
+    pToolbar->SetHeight(pLayer->GetHeight());
+    pLayer->AddChild(pToolbar);
 
-      y += pGuiManager->GetStaticTextHeight() + 0.007f;
-    }
-
-    pLayer->SetFocusToNextChild();
-
-
-    breathe::gui::cWindow* pWindow = new breathe::gui::cWindow;
-    pWindow->SetId(101);
-    pWindow->SetCaption(TEXT("Caption"));
-    pWindow->SetRelativePosition(spitfire::math::cVec2(0.1f, 0.15f));
-    pWindow->SetWidth(0.05f + (2.0f * (0.1f + 0.05f)));
-    pWindow->SetHeight(0.05f + (2.0f * (0.1f + 0.05f)));
-    pLayer->AddChild(pWindow);
-
-    //pWindow->SetVisible(false);
+    breathe::gui::cScrollbar* pScrollbar = new breathe::gui::cScrollbar;
+    pScrollbar->SetId(107);
+    pScrollbar->SetCaption(TEXT("Scrollbar"));
+    pToolbar->SetRelativePosition(spitfire::math::cVec2(fLayerWidth- (pGuiManager->GetToolbarWidthOrHeight() + pGuiManager->GetScrollBarWidthOrHeight()), 0.0f));
+    pToolbar->SetWidth(pGuiManager->GetScrollBarWidthOrHeight());
+    pToolbar->SetHeight(pLayer->GetHeight());
+    pLayer->AddChild(pScrollbar);
 
     breathe::gui::cStaticText* pStaticText = new breathe::gui::cStaticText;
     pStaticText->SetId(102);
     pStaticText->SetCaption(TEXT("StaticText"));
-    pStaticText->SetRelativePosition(spitfire::math::cVec2(0.03f, 0.05f));
+    pStaticText->SetRelativePosition(spitfire::math::cVec2(fSpacerWidth, fSpacerHeight));
     pStaticText->SetWidth(0.15f);
     pStaticText->SetHeight(pGuiManager->GetStaticTextHeight());
-    pWindow->AddChild(pStaticText);
+    pLayer->AddChild(pStaticText);
 
     breathe::gui::cButton* pButton = new breathe::gui::cButton;
     pButton->SetId(103);
     pButton->SetCaption(TEXT("Button"));
-    pButton->SetRelativePosition(spitfire::math::cVec2(pStaticText->GetX() + pStaticText->GetWidth() + 0.05f, 0.05f));
+    pButton->SetRelativePosition(spitfire::math::cVec2(pStaticText->GetX() + pStaticText->GetWidth() + fSpacerWidth, fSpacerHeight));
     pButton->SetWidth(0.15f);
     pButton->SetHeight(pGuiManager->GetButtonHeight());
-    pWindow->AddChild(pButton);
+    pLayer->AddChild(pButton);
 
     breathe::gui::cComboBox* pComboBox = new breathe::gui::cComboBox;
     pComboBox->SetId(104);
     pComboBox->SetCaption(TEXT("ComboBox"));
-    pComboBox->SetRelativePosition(spitfire::math::cVec2(pStaticText->GetX(), pStaticText->GetY() + pStaticText->GetHeight() + 0.05f));
+    pComboBox->SetRelativePosition(spitfire::math::cVec2(pStaticText->GetX(), pStaticText->GetY() + pStaticText->GetHeight() + fSpacerHeight));
     pComboBox->SetWidth(0.15f);
     pComboBox->SetHeight(pGuiManager->GetComboBoxHeight());
-    pWindow->AddChild(pComboBox);
+    pLayer->AddChild(pComboBox);
 
     breathe::gui::cSlider* pSlider = new breathe::gui::cSlider;
     pSlider->SetId(105);
     pSlider->SetCaption(TEXT("Slider"));
-    pSlider->SetRelativePosition(spitfire::math::cVec2(pStaticText->GetX() + pStaticText->GetWidth() + 0.05f, pStaticText->GetY() + pStaticText->GetHeight() + 0.05f));
+    pSlider->SetRelativePosition(spitfire::math::cVec2(pStaticText->GetX() + pStaticText->GetWidth() + fSpacerWidth, pStaticText->GetY() + pStaticText->GetHeight() + fSpacerHeight));
     pSlider->SetWidth(0.15f);
     pSlider->SetHeight(0.1f);
-    pWindow->AddChild(pSlider);
+    pLayer->AddChild(pSlider);
 
-    breathe::gui::cToolbar* pToolbar = new breathe::gui::cToolbar;
-    pToolbar->SetId(105);
-    pToolbar->SetCaption(TEXT("Toolbar"));
-    pToolbar->SetRelativePosition(spitfire::math::cVec2(pSlider->GetX(), pSlider->GetY() + pSlider->GetHeight() + 0.05f));
-    pToolbar->SetWidth(0.4f);
-    pToolbar->SetHeight(0.1f);
-    pWindow->AddChild(pToolbar);
-
-    breathe::gui::cScrollbar* pScrollbar = new breathe::gui::cScrollbar;
-    pScrollbar->SetId(105);
-    pScrollbar->SetCaption(TEXT("Scrollbar"));
-    pScrollbar->SetRelativePosition(spitfire::math::cVec2(pToolbar->GetX(), pToolbar->GetY() + pToolbar->GetHeight() + 0.05f));
-    pScrollbar->SetWidth(0.4f);
-    pScrollbar->SetHeight(0.1f);
-    pWindow->AddChild(pScrollbar);
+    pLayer->SetFocusToNextChild();
   }
 
   void cStatePhotoBrowser::_Update(const spitfire::math::cTimeStep& timeStep)
@@ -500,6 +480,10 @@ namespace diesel
       application.PopStateSoon();
     } else if (iCommandID == ID_MENU_EDIT_CUT) {
 
+    } else if (iCommandID == ID_MENU_VIEW_SINGLE_PHOTO_MODE) {
+      bIsSinglePhotoMode = !bIsSinglePhotoMode;
+
+      // TODO: UPDATE THE MENU ITEM CHECKBOX
     }
   }
 
@@ -509,7 +493,7 @@ namespace diesel
     // Pop our menu state
     application.PopStateSoon();
   }
-  
+
   void cStatePhotoBrowser::_OnStateMouseEvent(const breathe::gui::cMouseEvent& event)
   {
     if (event.IsButtonUp() && (event.GetButton() == 3)) {
@@ -539,6 +523,14 @@ namespace diesel
         }
         case breathe::gui::KEY::NUMBER_2: {
           std::cout<<"cStatePhotoBrowser::_OnStateKeyboardEvent 2 up"<<std::endl;
+          break;
+        }
+        case breathe::gui::KEY::NUMBER_3: {
+          EnterVirtualChildDialog();
+          break;
+        }
+        case breathe::gui::KEY::NUMBER_4: {
+          ExitVirtualChildDialog();
           break;
         }
       }
