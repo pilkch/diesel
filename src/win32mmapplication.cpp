@@ -114,6 +114,7 @@ namespace diesel
     // Create our File menu
     win32mm::cPopupMenu popupFile;
     popupFile.AppendMenuItemWithShortcut(ID_MENU_FILE_OPEN_FOLDER, TEXT(LANGTAG_OPEN_FOLDER), KEY_COMBO_CONTROL('O'));
+    popupFile.AppendMenuItem(ID_MENU_FILE_SETTINGS, TEXT(LANGTAG_SETTINGS));
     popupFile.AppendMenuItemWithShortcut(ID_MENU_FILE_QUIT, TEXT(LANGTAG_QUIT), KEY_COMBO_CONTROL('W'));
 
     // Create our Edit menu
