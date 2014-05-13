@@ -28,12 +28,12 @@ namespace diesel
   // ** cImageLoadThread
 
   cImageLoadThread::cImageLoadThread(cImageLoadHandler& _handler) :
-    spitfire::util::cThread(soAction, "cImageLoadThread::cThread"),
+    spitfire::util::cThread(soAction, TEXT("cImageLoadThread::cThread")),
     handler(_handler),
-    soAction("cImageLoadThread::soAction"),
+    soAction(TEXT("cImageLoadThread::soAction")),
     requestQueue(soAction),
     highPriorityRequestQueue(soAction),
-    mutexMaximumCacheSize("cImageLoadThread::mutexMaximumCacheSize")
+    mutexMaximumCacheSize(TEXT("cImageLoadThread::mutexMaximumCacheSize"))
   {
   }
 

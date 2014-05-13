@@ -140,7 +140,7 @@ namespace diesel
   // Inlines
 
   inline cImageLoadThread::cLoadingProcessInterface::cLoadingProcessInterface() :
-    soStopLoading("cImageLoadThread::cLoadingProcessInterface_soStopLoading")
+    soStopLoading(TEXT("cImageLoadThread::cLoadingProcessInterface_soStopLoading"))
   {
   }
 }
