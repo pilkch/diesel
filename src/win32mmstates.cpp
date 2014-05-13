@@ -22,11 +22,11 @@
 // libopenglmm headers
 #include <libopenglmm/cGeometry.h>
 
-#ifdef __WIN__
 // libwin32mm headers
+#include <libwin32mm/controls.h>
+#include <libwin32mm/dialog.h>
 #include <libwin32mm/filebrowse.h>
-#include <libwin32mm/window.h>
-#endif
+#include <libwin32mm/progressdialog.h>
 
 // Spitfire headers
 #include <spitfire/spitfire.h>
@@ -45,6 +45,7 @@
 #include <spitfire/util/log.h>
 
 // Diesel headers
+#include "importthread.h"
 #include "win32mmapplication.h"
 #include "win32mmstates.h"
 
@@ -109,13 +110,16 @@ namespace diesel
     }
   }
 
+  LRESULT cState::_HandleWin32Event(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+  {
+    return _HandleStateWin32Event(hwnd, uMsg, wParam, lParam);
+  }
+
   void cState::_OnWindowEvent(const breathe::gui::cWindowEvent& event)
   {
     LOG<<"cState::_OnWindowEvent"<<std::endl;
-    if (event.IsCommand()) {
-      LOG<<"cState::_OnWindowEvent Sending to state command event"<<std::endl;
-      _OnStateCommandEvent(event.GetCommandID());
-    } else if (event.IsQuit()) _OnStateQuitEvent();
+    if (event.IsResized()) _OnStateResizeEvent();
+    else if (event.IsQuit()) _OnStateQuitEvent();
   }
 
   void cState::_OnKeyboardEvent(const breathe::gui::cKeyboardEvent& event)
@@ -392,12 +396,44 @@ namespace diesel
 
   // ** cStatePhotoBrowser
 
+  const int ID_CONTROL_PATH = 101;
+  const int ID_CONTROL_UP = 102;
+  const int ID_CONTROL_SHOW_FOLDER = 103;
+  const int ID_CONTROL_SCROLLBAR = 104;
+  }
+
+  namespace diesel
+  {
   cStatePhotoBrowser::cStatePhotoBrowser(cApplication& application) :
     cState(application),
     bIsKeyReturn(false),
     bIsSinglePhotoMode(false)
   {
-    std::cout<<"cStatePhotoBrowser::cStatePhotoBrowser"<<std::endl;
+    LOG<<"cStatePhotoBrowser::cStatePhotoBrowser"<<std::endl;
+
+    application.window.InitWindowProc();
+
+    comboBoxPath.CreateComboBox(application.window, ID_CONTROL_PATH);
+    comboBoxPath.AddString(TEXT("a"));
+    comboBoxPath.AddString(TEXT("c"));
+    comboBoxPath.AddString(TEXT("b"));
+
+    comboBoxPath.SetText(TEXT("Hello"));
+
+    win32mm::cIcon iconUp;
+    iconUp.LoadFromFile(TEXT("data/icons/windows/folder_up.ico"), 32);
+
+    buttonPathUp.Create(application.window, ID_CONTROL_UP, iconUp);
+
+    win32mm::cIcon iconShowFolder;
+    iconShowFolder.LoadFromFile(TEXT("data/icons/windows/folder_show.ico"), 32);
+
+    buttonPathShowFolder.Create(application.window, ID_CONTROL_SHOW_FOLDER, iconShowFolder);
+
+    scrollBar.CreateVertical(application.window, 101);
+    scrollBar.SetRange(0, 200);
+    scrollBar.SetPageSize(20);
+    scrollBar.SetPosition(50);
 
     const float fSpacerWidth = pGuiManager->GetSpacerWidth();
     const float fSpacerHeight = pGuiManager->GetSpacerHeight();
@@ -453,37 +489,62 @@ namespace diesel
     pLayer->AddChild(pSlider);
 
     pLayer->SetFocusToNextChild();
+
+    _OnStateResizeEvent();
+  }
+
+  cStatePhotoBrowser::~cStatePhotoBrowser()
+  {
+    comboBoxPath.Destroy();
+    scrollBar.Destroy();
+
+    application.window.DestroyWindowProc();
   }
 
   void cStatePhotoBrowser::_Update(const spitfire::math::cTimeStep& timeStep)
   {
     pGuiRenderer->Update();
   }
-
-  void cStatePhotoBrowser::_OnStateCommandEvent(int iCommandID)
+  
+  LRESULT cStatePhotoBrowser::_HandleStateWin32Event(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   {
-    LOG<<"cStatePhotoBrowser::_OnStateCommandEvent id="<<iCommandID<<std::endl;
+    switch (uMsg) {
+      case WM_COMMAND: {
+        // The user used a control or selected a menu item
+        const int iCommandID = (LOWORD(wParam));
+
+        // Handle the command
+        HandleCommand(iCommandID);
+
+        break;
+      }
+      default: {
+        //
+        break;
+      }
+    }
+
+    return FALSE;
+  }
+
+  void cStatePhotoBrowser::HandleCommand(int iCommandID)
+  {
+    LOG<<"cStatePhotoBrowser::HandleCommand id="<<iCommandID<<std::endl;
     if (iCommandID == ID_MENU_FILE_OPEN_FOLDER) {
-      ASSERT(pWindow != nullptr);
-
-      // Get the windows handle
-      HWND hwndWindow = pWindow->GetWindowHandle();
-
-      win32mm::cWindow window;
-
-      window.SetWindowHandle(hwndWindow);
-
       win32mm::cWin32mmFolderDialog dialog;
-      dialog.Run(window);
+      dialog.Run(application.window);
     } else if (iCommandID == ID_MENU_FILE_QUIT) {
-      // Pop our menu state
-      application.PopStateSoon();
+      _OnStateQuitEvent();
     } else if (iCommandID == ID_MENU_EDIT_CUT) {
 
     } else if (iCommandID == ID_MENU_VIEW_SINGLE_PHOTO_MODE) {
       bIsSinglePhotoMode = !bIsSinglePhotoMode;
 
       // TODO: UPDATE THE MENU ITEM CHECKBOX
+    } else if (iCommandID == ID_CONTROL_PATH) {
+      LOG<<"cStatePhotoBrowser::HandleCommand Path"<<std::endl;
+    } else if (iCommandID == ID_CONTROL_UP) {
+      LOG<<"cStatePhotoBrowser::HandleCommand Up"<<std::endl;
     }
   }
 
@@ -497,18 +558,12 @@ namespace diesel
   void cStatePhotoBrowser::_OnStateMouseEvent(const breathe::gui::cMouseEvent& event)
   {
     if (event.IsButtonUp() && (event.GetButton() == 3)) {
-      // Get the windows handle
-      HWND hwndWindow = pWindow->GetWindowHandle();
-
-      win32mm::cWindow window;
-
-      window.SetWindowHandle(hwndWindow);
-
       win32mm::cPopupMenu popupMenu;
       popupMenu.AppendMenuItem(12345, TEXT("a"));
       popupMenu.AppendMenuItem(12346, TEXT("b"));
+      popupMenu.AppendMenuItem(12347, TEXT("c"));
 
-      window.DisplayPopupMenu(popupMenu);
+      application.window.DisplayPopupMenu(popupMenu);
     }
   }
 
@@ -517,12 +572,12 @@ namespace diesel
     if (event.IsKeyUp()) {
       switch (event.GetKeyCode()) {
         case breathe::gui::KEY::NUMBER_1: {
-          std::cout<<"cStatePhotoBrowser::_OnStateKeyboardEvent 1 up"<<std::endl;
+          LOG<<"cStatePhotoBrowser::_OnStateKeyboardEvent 1 up"<<std::endl;
           bIsWireframe = !bIsWireframe;
           break;
         }
         case breathe::gui::KEY::NUMBER_2: {
-          std::cout<<"cStatePhotoBrowser::_OnStateKeyboardEvent 2 up"<<std::endl;
+          LOG<<"cStatePhotoBrowser::_OnStateKeyboardEvent 2 up"<<std::endl;
           break;
         }
         case breathe::gui::KEY::NUMBER_3: {
@@ -539,7 +594,7 @@ namespace diesel
 
   breathe::gui::EVENT_RESULT cStatePhotoBrowser::_OnWidgetEvent(const breathe::gui::cWidgetEvent& event)
   {
-    std::cout<<"cStatePhotoBrowser::_OnWidgetEvent"<<std::endl;
+    LOG<<"cStatePhotoBrowser::_OnWidgetEvent"<<std::endl;
 
     if (event.IsPressed()) {
       switch (event.GetWidget()->GetId()) {
@@ -573,6 +628,42 @@ namespace diesel
     }
   }
 
+  void cStatePhotoBrowser::_OnStateResizeEvent()
+  {
+    int iWindowWidth = 0;
+    int iWindowHeight = 0;
+    application.window.GetClientSize(iWindowWidth, iWindowHeight);
+
+    int iStatusBarWidth = 0;
+    int iStatusBarHeight = 0;
+    application.window.GetControlSize(application.statusBar.GetHandle(), iStatusBarWidth, iStatusBarHeight);
+
+    const int iHeight = application.window.DialogUnitsToPixelsY(34);
+    // TODO: Why doesn't this work?
+    //const int iComboBoxHeight = application.window.GetComboBoxHeight();
+    const int iComboBoxHeight = application.window.DialogUnitsToPixelsY(22);
+    const int iButtonWidth = iHeight;
+    const int iButtonsTotalWidth = (2 * (iButtonWidth + application.window.GetSpacerWidth()));
+    const int iScrollBarWidth = application.window.GetScrollBarWidth();
+    const int iScrollBarHeight = iWindowHeight - iStatusBarHeight;
+    const int iComboBoxWidth = iWindowWidth - (iButtonsTotalWidth + (2 * application.window.GetSpacerWidth()) + iScrollBarWidth);
+
+    int x = application.window.GetSpacerWidth();
+    const int y = (iHeight / 2) - (iComboBoxHeight / 2);
+    application.window.MoveControl(comboBoxPath.GetHandle(), x, y, iComboBoxWidth, iComboBoxHeight);
+    x += iComboBoxWidth + application.window.GetSpacerWidth();
+
+    application.window.MoveControl(buttonPathUp.GetHandle(), x, 0, iButtonWidth, iHeight);
+    x += iButtonWidth + application.window.GetSpacerWidth();
+    application.window.MoveControl(buttonPathShowFolder.GetHandle(), x, 0, iButtonWidth, iHeight);
+    x += iButtonWidth + application.window.GetSpacerWidth();
+
+    application.window.MoveControl(scrollBar.GetHandle(), x, 0, iScrollBarWidth, iScrollBarHeight);
+
+    scrollBar.SetRange(0, 200);
+    scrollBar.SetPosition(50);
+  }
+
 
   // ** cStateAboutBox
 
@@ -603,7 +694,7 @@ namespace diesel
 
   cStateAboutBox::~cStateAboutBox()
   {
-    std::cout<<"cStateAboutBox::~cStateAboutBox"<<std::endl;
+    LOG<<"cStateAboutBox::~cStateAboutBox"<<std::endl;
 
     if (pShaderBlock != nullptr) {
       pContext->DestroyShader(pShaderBlock);
@@ -616,7 +707,7 @@ namespace diesel
     }
 
 
-    std::cout<<"cStateAboutBox::~cStateAboutBox returning"<<std::endl;
+    LOG<<"cStateAboutBox::~cStateAboutBox returning"<<std::endl;
   }
 
   void cStateAboutBox::SetQuitSoon()
@@ -647,13 +738,13 @@ namespace diesel
 
   void cStateAboutBox::_OnStateKeyboardEvent(const breathe::gui::cKeyboardEvent& event)
   {
-    std::cout<<"cStateAboutBox::_OnStateKeyboardEvent"<<std::endl;
+    LOG<<"cStateAboutBox::_OnStateKeyboardEvent"<<std::endl;
 
     if (event.IsKeyDown()) {
-      std::cout<<"cStateAboutBox::_OnStateKeyboardEvent Key down"<<std::endl;
+      LOG<<"cStateAboutBox::_OnStateKeyboardEvent Key down"<<std::endl;
       switch (event.GetKeyCode()) {
         case breathe::gui::KEY::ESCAPE: {
-          std::cout<<"cStateAboutBox::_OnStateKeyboardEvent Escape down"<<std::endl;
+          LOG<<"cStateAboutBox::_OnStateKeyboardEvent Escape down"<<std::endl;
           bPauseSoon = true;
           break;
         }
@@ -661,7 +752,7 @@ namespace diesel
     } else if (event.IsKeyUp()) {
       switch (event.GetKeyCode()) {
         case breathe::gui::KEY::NUMBER_1: {
-          std::cout<<"cStateAboutBox::_OnStateKeyboardEvent 1 up"<<std::endl;
+          LOG<<"cStateAboutBox::_OnStateKeyboardEvent 1 up"<<std::endl;
           bIsWireframe = !bIsWireframe;
           break;
         }

@@ -61,6 +61,7 @@ namespace diesel
     virtual void _OnPause() override;
     virtual void _OnResume() override;
 
+    virtual LRESULT _HandleWin32Event(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
     virtual void _OnWindowEvent(const breathe::gui::cWindowEvent& event) override;
     virtual void _OnMouseEvent(const breathe::gui::cMouseEvent& event) override;
     virtual void _OnKeyboardEvent(const breathe::gui::cKeyboardEvent& event) override;
@@ -71,7 +72,8 @@ namespace diesel
 
     virtual void _RenderToTexture(const spitfire::math::cTimeStep& timeStep) {}
 
-    virtual void _OnStateCommandEvent(int iCommandID) {}
+    virtual LRESULT _HandleStateWin32Event(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) { return FALSE; }
+    virtual void _OnStateResizeEvent() {}
     virtual void _OnStateQuitEvent() {}
     virtual void _OnStateMouseEvent(const breathe::gui::cMouseEvent& event) {}
     virtual void _OnStateKeyboardEvent(const breathe::gui::cKeyboardEvent& event) {}
@@ -99,17 +101,22 @@ namespace diesel
   {
   public:
     explicit cStatePhotoBrowser(cApplication& application);
+    ~cStatePhotoBrowser();
 
   private:
     void _Update(const spitfire::math::cTimeStep& timeStep);
     void _RenderToTexture(const spitfire::math::cTimeStep& timeStep);
-    
-    virtual void _OnStateCommandEvent(int iCommandID) override;
+
+    virtual LRESULT _HandleStateWin32Event(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
     virtual void _OnStateQuitEvent() override;
     virtual void _OnStateMouseEvent(const breathe::gui::cMouseEvent& event);
     virtual void _OnStateKeyboardEvent(const breathe::gui::cKeyboardEvent& event) override;
 
     breathe::gui::EVENT_RESULT _OnWidgetEvent(const breathe::gui::cWidgetEvent& event);
+
+    virtual void _OnStateResizeEvent() override;
+
+    void HandleCommand(int iCommandID);
 
     struct OPTION {
       static const int NEW_GAME = 1;
@@ -121,6 +128,11 @@ namespace diesel
     bool bIsKeyReturn;
 
     bool bIsSinglePhotoMode;
+
+    win32mm::cComboBox comboBoxPath;
+    win32mm::cButton buttonPathUp;
+    win32mm::cButton buttonPathShowFolder;
+    win32mm::cScrollBar scrollBar;
   };
 
   class cStateAboutBox : public cState
