@@ -114,6 +114,7 @@
     </Link>
     <Manifest>
       <EnableDpiAwareness>true</EnableDpiAwareness>
+      <AdditionalManifestFiles>standard.manifest</AdditionalManifestFiles>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -153,6 +154,9 @@
       <SubSystem>Windows</SubSystem>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>standard.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\library\src\breathe\audio\audio.cpp" />
@@ -174,9 +178,16 @@
     <ClCompile Include="..\..\library\src\libopenglmm\libopenglmm.cpp" />
     <ClCompile Include="..\..\library\src\libvoodoomm\cImage.cpp" />
     <ClCompile Include="..\..\library\src\libvoodoomm\libvoodoomm.cpp" />
+    <ClCompile Include="..\..\library\src\libwin32mm\controls.cpp" />
+    <ClCompile Include="..\..\library\src\libwin32mm\dialog.cpp" />
     <ClCompile Include="..\..\library\src\libwin32mm\filebrowse.cpp" />
     <ClCompile Include="..\..\library\src\libwin32mm\filesystem2.cpp" />
     <ClCompile Include="..\..\library\src\libwin32mm\keys.cpp" />
+    <ClCompile Include="..\..\library\src\libwin32mm\libwin32mm.cpp" />
+    <ClCompile Include="..\..\library\src\libwin32mm\progressdialog.cpp" />
+    <ClCompile Include="..\..\library\src\libwin32mm\taskbar.cpp" />
+    <ClCompile Include="..\..\library\src\libwin32mm\taskdialog.cpp" />
+    <ClCompile Include="..\..\library\src\libwin32mm\window.cpp" />
     <ClCompile Include="..\..\library\src\spitfire\algorithm\md5.cpp" />
     <ClCompile Include="..\..\library\src\spitfire\math\cColour.cpp" />
     <ClCompile Include="..\..\library\src\spitfire\math\cMat3.cpp" />

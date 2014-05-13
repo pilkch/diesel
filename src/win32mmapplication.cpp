@@ -93,6 +93,9 @@ namespace diesel
     pGuiManager(nullptr),
     pGuiRenderer(nullptr)
   {
+    // Initialise libwin32mm
+    win32mm::Init();
+
     settings.Load();
   }
 
@@ -106,7 +109,7 @@ namespace diesel
   {
     // Create our menu
     win32mm::cMenu menu;
-    menu.CreateMenu();
+    menu.Create();
 
     // Create our File menu
     win32mm::cPopupMenu popupFile;
@@ -131,7 +134,7 @@ namespace diesel
   void cApplication::AddStatusBar()
   {
     // Create status bar
-    window.CreateStatusBar(statusBar);
+    statusBar.Create(window);
 
     // Create status bar "compartments" one width 150, other 300, then 400... last -1 means that it fills the rest of the window
     const int widths[] = { 150, 300, 400, 800, 810, -1 };
@@ -141,8 +144,6 @@ namespace diesel
     statusBar.SetText(2, TEXT("Goodbye"));
     statusBar.SetText(4, TEXT("1"));
     statusBar.SetText(5, TEXT("2"));
-
-    statusBar.Resize();
   }
   #endif
 
@@ -166,6 +167,9 @@ namespace diesel
 
     window.SetWindowHandle(hwndWindow);
 
+    // Set our default font
+    window.SetDefaultFont();
+
     // Add our menu
     AddMenu();
 
@@ -174,6 +178,9 @@ namespace diesel
 
     // Add our status bar
     AddStatusBar();
+
+    // Initialise the taskbar
+    taskBar.Init(window);
 
     /*class cEvent
     {

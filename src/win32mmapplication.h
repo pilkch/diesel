@@ -15,11 +15,16 @@
 
 #include <breathe/util/cApplication.h>
 
-#ifdef __WIN__
+#undef interface
+
 // libwin32mm headers
-#include <libwin32mm/window.h>
+#include <libwin32mm/controls.h>
 #include <libwin32mm/keys.h>
-#endif
+#include <libwin32mm/taskbar.h>
+#include <libwin32mm/window.h>
+
+#undef interface
+#define interface Interface
 
 // Diesel headers
 #include "settings.h"
@@ -81,15 +86,17 @@ namespace diesel
 
     void PlaySound(breathe::audio::cBufferRef pBuffer);
 
+    win32mm::cWindow window;
+    win32mm::cStatusBar statusBar;
+    win32mm::cTaskBar taskBar;
+
   protected:
     cSettings settings;
 
   private:
-    #ifdef __WIN__
     void AddMenu();
     void AddStatusBar();
-    #endif
-    
+
     void ResizeStatusBar();
 
     virtual bool _Create() override;
@@ -99,9 +106,6 @@ namespace diesel
     virtual void _DestroyResources() override;
 
     virtual void OnApplicationWindowEvent(const breathe::gui::cWindowEvent& event) override;
-
-    win32mm::cWindow window;
-    win32mm::cStatusBar statusBar;
 
     // Text
     opengl::cFont* pFont;
