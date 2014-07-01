@@ -102,7 +102,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <PreprocessorDefinitions>__WIN__;BUILD_LIBOPENGLMM_OPENGL_VERSION=330;BUILD_LIBOPENGLMM_OPENGL_STRICT;BUILD_LIBOPENGLMM_FONT;BUILD_LIBOPENGLMM_WINDOW_SDL;BUILD_AUDIO_SDLMIXER;BUILD_SPITFIRE_UNITTEST;SPITFIRE_APPLICATION_NAME="Diesel";SPITFIRE_APPLICATION_NAME_LWR="diesel";SPITFIRE_APPLICATION_COMPANY_NAME="Iluo";BUILD_APPLICATION_VERSION_STRING="0.1";WIN32_LEAN_AND_MEAN;NOMINMAX;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__WIN__;BUILD_LIBOPENGLMM_OPENGL_VERSION=330;BUILD_LIBOPENGLMM_OPENGL_STRICT;BUILD_LIBOPENGLMM_FONT;BUILD_LIBOPENGLMM_WINDOW_WIN32;BUILD_AUDIO_SDLMIXER;BUILD_SPITFIRE_UNITTEST;SPITFIRE_APPLICATION_NAME="Diesel";SPITFIRE_APPLICATION_NAME_LWR="diesel";SPITFIRE_APPLICATION_COMPANY_NAME="Iluo";BUILD_APPLICATION_NAME="Diesel";BUILD_APPLICATION_VERSION_STRING="0.1";BUILD_APPLICATION_WEBSITE="http://chris.iluo.net/projects/diesel/";BUILD_APPLICATION_COPYRIGHT_OWNER="Chris Pilkington";WIN32_LEAN_AND_MEAN;NOMINMAX;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4100;4127;4512;4702;4244;4610;4510</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -144,13 +144,14 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4100;4127;4512;4702;4244;4610;4510</DisableSpecificWarnings>
-      <PreprocessorDefinitions>__WIN__;NDEBUG;BUILD_LIBOPENGLMM_OPENGL_VERSION=330;BUILD_LIBOPENGLMM_OPENGL_STRICT;BUILD_LIBOPENGLMM_FONT;BUILD_LIBOPENGLMM_WINDOW_SDL;BUILD_AUDIO_SDLMIXER;BUILD_SPITFIRE_UNITTEST;SPITFIRE_APPLICATION_NAME="Diesel";SPITFIRE_APPLICATION_NAME_LWR="diesel";SPITFIRE_APPLICATION_COMPANY_NAME="Iluo";BUILD_APPLICATION_VERSION_STRING="0.1";WIN32_LEAN_AND_MEAN;NOMINMAX;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__WIN__;NDEBUG;BUILD_LIBOPENGLMM_OPENGL_VERSION=330;BUILD_LIBOPENGLMM_OPENGL_STRICT;BUILD_LIBOPENGLMM_FONT;BUILD_LIBOPENGLMM_WINDOW_WIN32;BUILD_AUDIO_SDLMIXER;BUILD_SPITFIRE_UNITTEST;SPITFIRE_APPLICATION_NAME="Diesel";SPITFIRE_APPLICATION_NAME_LWR="diesel";SPITFIRE_APPLICATION_COMPANY_NAME="Iluo";BUILD_APPLICATION_NAME="Diesel";BUILD_APPLICATION_VERSION_STRING="0.1";BUILD_APPLICATION_WEBSITE="http://chris.iluo.net/projects/diesel/";BUILD_APPLICATION_COPYRIGHT_OWNER="Chris Pilkington";WIN32_LEAN_AND_MEAN;NOMINMAX;_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>freetype.lib;glu32.lib;opengl32.lib;SDL2.lib;SDLmain.lib;SDL2_image.lib;SDL2_mixer.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>freetype.lib;glu32.lib;opengl32.lib;SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_mixer.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
@@ -164,7 +165,6 @@
     <ClCompile Include="..\..\library\src\breathe\gui\cManager.cpp" />
     <ClCompile Include="..\..\library\src\breathe\gui\cRenderer.cpp" />
     <ClCompile Include="..\..\library\src\breathe\render\cTextureAtlas.cpp" />
-    <ClCompile Include="..\..\library\src\breathe\util\cApplication.cpp" />
     <ClCompile Include="..\..\library\src\breathe\util\joystick.cpp" />
     <ClCompile Include="..\..\library\src\GL3\gl3w.c" />
     <ClCompile Include="..\..\library\src\libopenglmm\cContext.cpp" />
@@ -178,12 +178,15 @@
     <ClCompile Include="..\..\library\src\libopenglmm\libopenglmm.cpp" />
     <ClCompile Include="..\..\library\src\libvoodoomm\cImage.cpp" />
     <ClCompile Include="..\..\library\src\libvoodoomm\libvoodoomm.cpp" />
+    <ClCompile Include="..\..\library\src\libwin32mm\aboutdialog.cpp" />
+    <ClCompile Include="..\..\library\src\libwin32mm\bitmap.cpp" />
     <ClCompile Include="..\..\library\src\libwin32mm\controls.cpp" />
     <ClCompile Include="..\..\library\src\libwin32mm\dialog.cpp" />
     <ClCompile Include="..\..\library\src\libwin32mm\filebrowse.cpp" />
     <ClCompile Include="..\..\library\src\libwin32mm\filesystem2.cpp" />
     <ClCompile Include="..\..\library\src\libwin32mm\keys.cpp" />
     <ClCompile Include="..\..\library\src\libwin32mm\libwin32mm.cpp" />
+    <ClCompile Include="..\..\library\src\libwin32mm\maindialog.cpp" />
     <ClCompile Include="..\..\library\src\libwin32mm\progressdialog.cpp" />
     <ClCompile Include="..\..\library\src\libwin32mm\taskbar.cpp" />
     <ClCompile Include="..\..\library\src\libwin32mm\taskdialog.cpp" />
@@ -214,6 +217,7 @@
     <ClCompile Include="..\src\imageloadthread.cpp" />
     <ClCompile Include="..\src\importthread.cpp" />
     <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="..\src\photobrowseropenglrenderer.cpp" />
     <ClCompile Include="..\src\settings.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(InputDir)\$(IntDir)\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(InputDir)\$(IntDir)\</ObjectFileName>
@@ -221,7 +225,6 @@
     <ClCompile Include="..\src\util.cpp" />
     <ClCompile Include="..\src\win32mmapplication.cpp" />
     <ClCompile Include="..\src\win32mmsettingsdialog.cpp" />
-    <ClCompile Include="..\src\win32mmstates.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\data\shaders\font.frag">
@@ -250,6 +253,8 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\photobrowseropenglrenderer.h" />
+    <ClInclude Include="..\src\win32mmapplication.h" />
     <ClInclude Include="..\src\win32mmsettingsdialog.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
