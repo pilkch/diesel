@@ -397,7 +397,7 @@ namespace diesel
     Gtk::Image* pImageFolderUp = new Gtk::Image;
     iconTheme.LoadStockIcon(sICON_GO_UP, *pImageFolderUp);
     buttonFolderUp.set_image(*pImageFolderUp);
-    Gtk::Image* pImageFileManager = new Gtk::Image("data/icons/show_in_file_browser.png");
+    Gtk::Image* pImageFileManager = new Gtk::Image("data/icons/gtk/show_in_file_browser.png");
     buttonFolderShowInFileManager.set_image(*pImageFileManager);
 
     /*Gtk::Image* pImageFile = new Gtk::Image;
