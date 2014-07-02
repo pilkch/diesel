@@ -22,7 +22,7 @@ namespace diesel
 
   private:
     virtual void OnInit() override;
-    virtual void OnCommand(int iCommand) override;
+    virtual bool OnCommand(int iCommand) override;
     virtual bool OnOk() override;
 
     void LayoutAndSetWindowSize();
@@ -124,9 +124,11 @@ namespace diesel
     SetClientSize(iDialogWidth, iDialogHeight);
   }
 
-  void cSettingsDialog::OnCommand(int iCommand)
+  bool cSettingsDialog::OnCommand(int iCommand)
   {
     (void)iCommand;
+
+    return false;
   }
 
   bool cSettingsDialog::OnOk()
