@@ -187,6 +187,7 @@
     <ClCompile Include="..\..\library\src\libwin32mm\keys.cpp" />
     <ClCompile Include="..\..\library\src\libwin32mm\libwin32mm.cpp" />
     <ClCompile Include="..\..\library\src\libwin32mm\maindialog.cpp" />
+    <ClCompile Include="..\..\library\src\libwin32mm\openglcontrol.cpp" />
     <ClCompile Include="..\..\library\src\libwin32mm\progressdialog.cpp" />
     <ClCompile Include="..\..\library\src\libwin32mm\taskbar.cpp" />
     <ClCompile Include="..\..\library\src\libwin32mm\taskdialog.cpp" />
