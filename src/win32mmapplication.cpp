@@ -41,71 +41,205 @@
 #include <libopenglmm/cWindow.h>
 
 // libwin32mm headers
+#include <libwin32mm/aboutdialog.h>
+#include <libwin32mm/filebrowse.h>
 #include <libwin32mm/notify.h>
+#include <libwin32mm/progressdialog.h>
 
 // Diesel headers
 #include "win32mmapplication.h"
-#include "win32mmstates.h"
+#include "win32mmsettingsdialog.h"
 
 namespace diesel
 {
-  // ** cLetterBox
-
-  cLetterBox::cLetterBox(size_t width, size_t height) :
-    desiredWidth(0),
-    desiredHeight(0),
-    fDesiredRatio(0.0f),
-    fRatio(0.0f),
-    letterBoxedWidth(0),
-    letterBoxedHeight(0)
+  void cMyControl::Create(win32mm::cWindow& parent, int idControl)
   {
-    desiredWidth = 1920;
-    desiredHeight = 1080;
-    fDesiredRatio = float(desiredWidth) / float(desiredHeight);
+    win32mm::cOpenGLControl::Create(parent, idControl);
 
-    fRatio = float(width) / float(height);
+    context.Create(GetHandle());
+  }
 
-    // Apply letter boxing
-    letterBoxedWidth = width;
-    letterBoxedHeight = height;
+  void cMyControl::Destroy()
+  {
+    context.Destroy();
+  }
 
-    if (fRatio < fDesiredRatio) {
-      // Taller (4:3, 16:10 for example)
-      letterBoxedHeight = width / fDesiredRatio;
-    } else {
-      // Wider
-      letterBoxedWidth = height * fDesiredRatio;
+  void cMyControl::OnSize()
+  {
+    context.Resize(GetWidth(), GetHeight());
+  }
+
+  void cMyControl::OnPaint()
+  {
+    context.Begin();
+
+    static bool bIsRed = false;
+    if (bIsRed) glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+    else glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+    bIsRed = !bIsRed;
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glTranslatef(3.0f,0.0f,0.0f);
+    glBegin(GL_TRIANGLES);
+    glVertex3f(0.0f,1.0f,0.0f);
+    glVertex3f(-1.0f,-1.0f,0.0f);
+    glVertex3f(1.0f,-1.0f,0.0f);
+    glEnd();
+
+    context.End();
+  }
+
+
+  // Langtags
+  // TODO: Move these to dynamic langtags
+  #ifdef __WIN__
+  #define LANGTAG_QUIT "Exit"
+  #else
+  #define LANGTAG_QUIT "Quit"
+  #endif
+
+  #define LANGTAG_FILE "File"
+  #define LANGTAG_OPEN_FOLDER "Open Folder"
+  #define LANGTAG_SETTINGS "Settings"
+  #define LANGTAG_EDIT "Edit"
+  #define LANGTAG_CUT "Cut"
+  #define LANGTAG_VIEW "View"
+  #define LANGTAG_SINGLE_PHOTO_MODE "Single Photo Mode"
+  #define LANGTAG_HELP "Help"
+  #define LANGTAG_ABOUT "About"
+
+  // Menu IDs
+  const int ID_MENU_FILE_OPEN_FOLDER = 10000;
+  const int ID_MENU_FILE_SETTINGS = 10001;
+  const int ID_MENU_FILE_QUIT = 10002;
+  const int ID_MENU_EDIT_CUT = 10004;
+  const int ID_MENU_VIEW_SINGLE_PHOTO_MODE = 10005;
+  const int ID_MENU_HELP_ABOUT = 10006;
+
+  const int ID_CONTROL_OPENGL = 101;
+  const int ID_CONTROL_PATH = 102;
+  const int ID_CONTROL_UP = 103;
+  const int ID_CONTROL_SHOW_FOLDER = 104;
+  const int ID_CONTROL_SCROLLBAR = 105;
+
+  cMainWindow::cMainWindow(cApplication& _application) :
+    application(_application),
+    settings(_application.settings)
+  {
+  }
+
+  void cMainWindow::OnInit()
+  {
+    // Add our menu
+    AddMenu();
+    // Add our status bar
+    AddStatusBar();
+
+    // Initialise the taskbar
+    taskBar.Init(*this);
+
+    #ifdef BUILD_SUPPORT_COMBOBOX
+    // Create our path combobox
+    comboBoxPath.CreateComboBox(*this, ID_CONTROL_PATH);
+    comboBoxPath.AddString(TEXT("a"));
+    comboBoxPath.AddString(TEXT("c"));
+    comboBoxPath.AddString(TEXT("b"));
+
+    comboBoxPath.SetText(TEXT("Hello"));
+    #else
+    inputPath.Create(*this, ID_CONTROL_PATH);
+    #endif
+
+
+    // Create our OpenGL control
+    openGLControl.Create(*this, ID_CONTROL_OPENGL);
+
+    win32mm::cIcon iconUp;
+    iconUp.LoadFromFile(TEXT("data/icons/windows/folder_up.ico"), 32);
+
+    buttonPathUp.Create(*this, ID_CONTROL_UP, iconUp);
+
+    win32mm::cIcon iconShowFolder;
+    iconShowFolder.LoadFromFile(TEXT("data/icons/windows/folder_show.ico"), 32);
+
+    buttonPathShowFolder.Create(*this, ID_CONTROL_SHOW_FOLDER, iconShowFolder);
+
+    scrollBar.CreateVertical(*this, 101);
+    scrollBar.SetRange(0, 200);
+    scrollBar.SetPageSize(20);
+    scrollBar.SetPosition(50);
+
+    // Load the previous window position
+    LoadWindowPosition();
+  }
+
+  void cMainWindow::LoadWindowPosition()
+  {
+    int iShowCmd = 0;
+    int iX = 0;
+    int iY = 0;
+    int iWidth = 0;
+    int iHeight = 0;
+    iShowCmd = SW_SHOWNORMAL;
+    iWidth = 1080;
+    iHeight = 720;
+    /*if (settings.GetWindowStateAndPosition(TEXT("Window"), TEXT("Show"), iShowCmd, iX, iY, iWidth, iHeight))*/ {
+      // Get a handle to the monitor
+      const POINT position = { iX, iY };
+      HMONITOR hMonitor = ::MonitorFromPoint(position, MONITOR_DEFAULTTONEAREST);
+
+      // Get the monitor info
+      MONITORINFO monInfo;
+      monInfo.cbSize = sizeof(MONITORINFO);
+      if (::GetMonitorInfo(hMonitor, &monInfo) == 0) {
+        LOG<<TEXT("cMainWindow::LoadWindowPosition GetMonitorInfo FAILED, returning")<<std::endl;
+        return;
+      }
+
+      // Adjust for work area
+      iX += monInfo.rcWork.left - monInfo.rcMonitor.left;
+      iY += monInfo.rcWork.top  - monInfo.rcMonitor.top;
+      // Ensure top left point is on screen
+      const POINT point = { iX, iY };
+      if (::PtInRect(&monInfo.rcWork, point) == FALSE ) {
+        iX = monInfo.rcWork.left;
+        iY = monInfo.rcWork.top;
+      }
+
+      ::SetWindowPos(hwndWindow, NULL, iX, iY, iWidth, iHeight, iShowCmd);
     }
 
-    // Round up to the next even number
-    if ((letterBoxedWidth % 2) != 0) letterBoxedWidth++;
-    if ((letterBoxedHeight % 2) != 0) letterBoxedHeight++;
+    OnResize(iWidth, iHeight);
   }
 
-
-  // ** cApplication
-
-  cApplication::cApplication(int argc, const char* const* argv) :
-    breathe::util::cApplication(argc, argv),
-
-    pFont(nullptr),
-
-    pGuiManager(nullptr),
-    pGuiRenderer(nullptr)
+  void cMainWindow::OnDestroy()
   {
-    // Initialise libwin32mm
-    win32mm::Init();
+    SaveWindowPosition();
 
-    settings.Load();
+    openGLControl.Destroy();
+
+    #ifdef BUILD_SUPPORT_COMBOBOX
+    comboBoxPath.Destroy();
+    #endif
+    scrollBar.Destroy();
   }
 
-  cApplication::~cApplication()
+  bool cMainWindow::OnQuit()
   {
-    settings.Save();
+    return true;
   }
 
-  #ifdef __WIN__
-  void cApplication::AddMenu()
+  void cMainWindow::SaveWindowPosition()
+  {
+    /*// Get the current window position
+    WINDOWPLACEMENT placement;
+    placement.length = sizeof(WINDOWPLACEMENT);
+    ::GetWindowPlacement(hwndWindow, &placement);
+
+    // Save the settings 
+    settings.SetWindowStateAndPosition(TEXT("Window"), TEXT("Show"), placement.showCmd, placement.rcNormalPosition.left, placement.rcNormalPosition.right - placement.rcNormalPosition.left, placement.rcNormalPosition.top, placement.rcNormalPosition.bottom - placement.rcNormalPosition.top);*/
+  }
+
+  void cMainWindow::AddMenu()
   {
     // Create our menu
     win32mm::cMenu menu;
@@ -125,17 +259,22 @@ namespace diesel
     win32mm::cPopupMenu popupView;
     popupView.AppendMenuItem(ID_MENU_VIEW_SINGLE_PHOTO_MODE, TEXT(LANGTAG_SINGLE_PHOTO_MODE));
 
+    // Create our Help menu
+    win32mm::cPopupMenu popupHelp;
+    popupHelp.AppendMenuItem(ID_MENU_HELP_ABOUT, TEXT(LANGTAG_ABOUT));
+
     menu.AppendPopupMenu(popupFile, TEXT(LANGTAG_FILE));
     menu.AppendPopupMenu(popupEdit, TEXT(LANGTAG_EDIT));
     menu.AppendPopupMenu(popupView, TEXT(LANGTAG_VIEW));
+    menu.AppendPopupMenu(popupHelp, TEXT(LANGTAG_HELP));
 
-    window.SetMenu(menu);
+    SetMenu(menu);
   }
 
-  void cApplication::AddStatusBar()
+  void cMainWindow::AddStatusBar()
   {
     // Create status bar
-    statusBar.Create(window);
+    statusBar.Create(*this);
 
     // Create status bar "compartments" one width 150, other 300, then 400... last -1 means that it fills the rest of the window
     const int widths[] = { 150, 300, 400, 800, 810, -1 };
@@ -146,42 +285,140 @@ namespace diesel
     statusBar.SetText(4, TEXT("1"));
     statusBar.SetText(5, TEXT("2"));
   }
-  #endif
 
-  void cApplication::PlaySound(breathe::audio::cBufferRef pBuffer)
+  void cMainWindow::OnResizing(size_t width, size_t height)
   {
-    breathe::audio::cSourceRef pSource = pAudioManager->CreateSourceAttachedToScreen(pBuffer);
-    assert(pSource);
-
-    pSource->Play();
+    statusBar.Resize();
   }
 
-  bool cApplication::_Create()
+  void cMainWindow::OnResize(size_t width, size_t height)
   {
-    LOG<<"cApplication::_Create"<<std::endl;
+    statusBar.Resize();
 
-    #ifdef __WIN__
-    ASSERT(pWindow != nullptr);
+    int iWindowWidth = int(width);
+    int iWindowHeight = int(height);
 
-    // Store the windows handle
-    HWND hwndWindow = pWindow->GetWindowHandle();
+    int iStatusBarWidth = 0;
+    int iStatusBarHeight = 0;
+    GetControlSize(statusBar.GetHandle(), iStatusBarWidth, iStatusBarHeight);
 
-    window.SetWindowHandle(hwndWindow);
+    const int iScrollBarWidth = GetScrollBarWidth();
+    const int iScrollBarHeight = iWindowHeight - iStatusBarHeight;
 
-    // Set our default font
-    window.SetDefaultFont();
+    MoveControl(scrollBar.GetHandle(), iWindowWidth - iScrollBarWidth, 0, iScrollBarWidth, iScrollBarHeight);
 
-    // Add our menu
-    AddMenu();
+    iWindowWidth -= iScrollBarWidth;
 
-    // Tell SDL that we want to process system events
-    SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
+    #ifdef BUILD_SUPPORT_COMBOBOX
+    const int iButtonHeight = DialogUnitsToPixelsY(34);
+    #else
+    const int iButtonHeight = GetButtonHeight();
+    #endif
+    const int iButtonWidth = iButtonHeight;
+    const int iButtonsTotalWidth = (2 * (iButtonWidth + GetSpacerWidth()));
+    const int iPathWidth = iWindowWidth - (iButtonsTotalWidth + (2 * GetSpacerWidth()));
+    #ifdef BUILD_SUPPORT_COMBOBOX
+    const int iPathHeight = GetComboBoxHeight();
+    #else
+    const int iPathHeight = GetInputHeight();
+    #endif
 
-    // Add our status bar
-    AddStatusBar();
+    int x = GetSpacerWidth();
+    int y = GetSpacerHeight();
+    #ifdef BUILD_SUPPORT_COMBOBOX
+    MoveControl(comboBoxPath.GetHandle(), x, y, iPathWidth, iPathHeight);
+    #else
+    MoveControl(inputPath.GetHandle(), x, y, iPathWidth, iPathHeight);
+    #endif
+    x += iPathWidth + GetSpacerWidth();
 
-    // Initialise the taskbar
-    taskBar.Init(window);
+    MoveControl(buttonPathUp.GetHandle(), x, y, iButtonWidth, iButtonHeight);
+    x += iButtonWidth + GetSpacerWidth();
+    MoveControl(buttonPathShowFolder.GetHandle(), x, y, iButtonWidth, iButtonHeight);
+    x += iButtonWidth + GetSpacerWidth();
+
+    y += max(iPathHeight, iButtonHeight) + (2 * GetSpacerHeight());
+    iWindowHeight -= max(iPathHeight, iButtonHeight) + (2 * GetSpacerHeight());
+
+    MoveControl(openGLControl.GetHandle(), 0, y, iWindowWidth, iWindowHeight);
+
+    // TODO: Move these somewhere else
+    scrollBar.SetRange(0, 200);
+    scrollBar.SetPosition(50);
+  }
+
+  bool cMainWindow::OnCommand(int idCommand)
+  {
+    switch (idCommand) {
+      case ID_MENU_FILE_OPEN_FOLDER: {
+        win32mm::cFolderDialog dialog;
+        dialog.Run(*this);
+        return true;
+      }
+      case ID_MENU_FILE_SETTINGS: {
+        OpenSettingsDialog(settings, *this);
+        return true;
+      }
+      case ID_MENU_FILE_QUIT: {
+        //_OnStateQuitEvent();
+        return true;
+      }
+      case ID_MENU_EDIT_CUT: {
+        return true;
+      }
+      case ID_MENU_VIEW_SINGLE_PHOTO_MODE: {
+        //bIsSinglePhotoMode = !bIsSinglePhotoMode;
+
+        // TODO: UPDATE THE MENU ITEM CHECKBOX
+        return true;
+      }
+      case ID_MENU_HELP_ABOUT: {
+        win32mm::OpenAboutDialog(*this);
+        return false;
+      }
+      case ID_CONTROL_PATH: {
+        LOG<<"cStatePhotoBrowser::HandleCommand Path"<<std::endl;
+        return true;
+      }
+      case ID_CONTROL_UP: {
+        LOG<<"cStatePhotoBrowser::HandleCommand Up"<<std::endl;
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+
+
+  // ** cApplication
+
+  cApplication::cApplication(int argc, const char* const* argv) :
+    spitfire::cConsoleApplication(argc, argv),
+
+    mainWindow(*this),
+
+    pFont(nullptr)
+  {
+    // Initialise libwin32mm
+    win32mm::Init();
+
+    settings.Load();
+  }
+
+  cApplication::~cApplication()
+  {
+    settings.Save();
+  }
+
+  void cApplication::Create()
+  {
+    LOG<<"cApplication::Create"<<std::endl;
+
+    const uint32_t t = SDL_GetTicks();
+    LOG<<"cApplication::Create Started at "<<t<<std::endl;
+
+    mainWindow.Create();
 
     /*class cEvent
     {
@@ -212,93 +449,42 @@ namespace diesel
     if (uMsg > WM_USER) {
       runOnMainThread.ProcessEvents(hwnd, uMsg, wParam, lParam);
     }*/
-    #endif
-
-    assert(pContext != nullptr);
-    assert(pContext->IsValid());
-
-    assert(pGuiManager == nullptr);
-    assert(pGuiRenderer == nullptr);
-
-    // Setup our gui
-    pGuiManager = new breathe::gui::cManager;
-    pGuiRenderer = new breathe::gui::cRenderer(*pGuiManager, system, *pContext);
-
-    _LoadResources();
-
-    // Push our first state
-    PushState(new cStatePhotoBrowser(*this));
-
-    return true;
   }
 
-  void cApplication::_Destroy()
+  void cApplication::Destroy()
   {
-    _DestroyResources();
-
-    spitfire::SAFE_DELETE(pGuiRenderer);
-    spitfire::SAFE_DELETE(pGuiManager);
   }
 
-  bool cApplication::_LoadResources()
+  void cApplication::_PrintHelp() const
   {
-    LOG<<"cApplication::_LoadResources"<<std::endl;
-
-    assert(pGuiManager != nullptr);
-    assert(pGuiRenderer != nullptr);
-
-    pFont = pContext->CreateFont(TEXT("data/fonts/pricedown.ttf"), 32, TEXT("data/shaders/font.vert"), TEXT("data/shaders/font.frag"));
-    assert(pFont != nullptr);
-    assert(pFont->IsValid());
-
-    cLetterBox letterBox(pContext->GetWidth(), pContext->GetHeight());
-
-    pGuiRenderer->LoadResources(letterBox.letterBoxedWidth, letterBox.letterBoxedHeight);
-
-    // Load the resources of all the states
-    std::list<breathe::util::cState*>::iterator iter = states.begin();
-    const std::list<breathe::util::cState*>::iterator iterEnd = states.end();
-    while (iter != iterEnd) {
-      cState* pState = static_cast<cState*>(*iter);
-      if (pState != nullptr) pState->LoadResources();
-
-      iter++;
-    }
-
-    return true;
+    LOG<<"Usage: "<<spitfire::string::ToUTF8(GetApplicationName())<<" [OPTIONS]"<<std::endl;
+    LOG<<std::endl;
+    LOG<<" -help, --help Display this help and exit"<<std::endl;
+    LOG<<" -version, --version Display version information and exit"<<std::endl;
   }
 
-  void cApplication::_DestroyResources()
+  string_t cApplication::_GetVersion() const
   {
-    LOG<<"cApplication::_DestroyResources"<<std::endl;
-
-    // Destroy the resources of all the states
-    std::list<breathe::util::cState*>::iterator iter = states.begin();
-    const std::list<breathe::util::cState*>::iterator iterEnd = states.end();
-    while (iter != iterEnd) {
-      cState* pState = static_cast<cState*>(*iter);
-      if (pState != nullptr) pState->DestroyResources();
-
-      iter++;
-    }
-
-    assert(pGuiManager != nullptr);
-    assert(pGuiRenderer != nullptr);
-
-    pGuiRenderer->DestroyResources();
-
-    if (pFont != nullptr) {
-      pContext->DestroyFont(pFont);
-      pFont = nullptr;
-    }
+    ostringstream_t o;
+    o<<GetApplicationName();
+    o<<" "<<BUILD_APPLICATION_VERSION_STRING;
+    return o.str();
   }
 
-  void cApplication::OnApplicationWindowEvent(const breathe::gui::cWindowEvent& event)
+  bool cApplication::_Run()
   {
-    LOG<<"cApplication::OnApplicationWindowEvent"<<std::endl;
-    if (event.IsAboutToResize()) {
-      LOG<<"cApplication::OnApplicationWindowEvent About to resize"<<std::endl;
-      statusBar.Resize();
-    }
+    Create();
+
+    const int iResult = mainWindow.Run();
+
+    Destroy();
+
+    /*opengl::cSystem system;
+    opengl::cResolution resolution;
+    opengl::cWindow window(system, NULL, TEXT(""), resolution);
+
+    window.ProcessEvents();*/
+
+    return (iResult == 0);
   }
 }

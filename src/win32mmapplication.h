@@ -4,24 +4,22 @@
 // Standard headers
 #include <stack>
 
+// libopenglmm headers
+#include <libopenglmm/cFont.h>
+#include <libopenglmm/cWindow.h>
+
 // Spitfire headers
 #include <spitfire/math/math.h>
-
-// Breathe headers
-#include <breathe/audio/audio.h>
-
-#include <breathe/gui/cManager.h>
-#include <breathe/gui/cRenderer.h>
-
-#include <breathe/util/cApplication.h>
+#include <spitfire/util/cConsoleApplication.h>
 
 #undef interface
 
 // libwin32mm headers
 #include <libwin32mm/controls.h>
 #include <libwin32mm/keys.h>
+#include <libwin32mm/maindialog.h>
+#include <libwin32mm/openglcontrol.h>
 #include <libwin32mm/taskbar.h>
-#include <libwin32mm/window.h>
 
 #undef interface
 #define interface Interface
@@ -29,71 +27,69 @@
 // Diesel headers
 #include "settings.h"
 
-namespace diesel
+// Disabled currently as the combobox seems to cause redraw issues with the OpenGL control
+//#define BUILD_SUPPORT_COMBOBOX
+
+/*namespace win32mm
 {
-  #ifdef __WIN__
-  // Langtags
-  // TODO: Move these to dynamic langtags
-  #ifdef __WIN__
-  #define LANGTAG_QUIT "Exit"
-  #else
-  #define LANGTAG_QUIT "Quit"
-  #endif
-
-  #define LANGTAG_FILE "File"
-  #define LANGTAG_OPEN_FOLDER "Open Folder"
-  #define LANGTAG_SETTINGS "Settings"
-  #define LANGTAG_EDIT "Edit"
-  #define LANGTAG_CUT "Cut"
-  #define LANGTAG_VIEW "View"
-  #define LANGTAG_SINGLE_PHOTO_MODE "Single Photo Mode"
-
-  // Menu IDs
-  const int ID_MENU_FILE_OPEN_FOLDER = 10000;
-  const int ID_MENU_FILE_SETTINGS = 10001;
-  const int ID_MENU_FILE_QUIT = 10002;
-  const int ID_MENU_EDIT_CUT = 10004;
-  const int ID_MENU_VIEW_SINGLE_PHOTO_MODE = 10005;
-  #endif
-
-  // ** A simple class for calculating letter box dimensions
-
-  class cLetterBox
+  class cContext
   {
   public:
-    cLetterBox(size_t width, size_t height);
+    cContext();
+    ~cContext();
 
-    size_t desiredWidth;
-    size_t desiredHeight;
-    float fDesiredRatio;
+    bool Create(HWND control);
+    void Destroy();
 
-    float fRatio;
+    bool IsValid() const { return ((hDC != NULL) && (hRC != NULL)); }
 
-    size_t letterBoxedWidth;
-    size_t letterBoxedHeight;
+    void Resize(size_t width, size_t height);
+
+    void Begin();
+    void End();
+
+  private:
+    HWND control;
+    HDC hDC;
+    HGLRC hRC;
+  };
+}*/
+
+namespace diesel
+{
+  class cMyControl : public win32mm::cOpenGLControl {
+  public:
+    void Create(win32mm::cWindow& parent, int idControl);
+    void Destroy();
+
+  private:
+    virtual void OnSize();
+    virtual void OnPaint();
+
+    win32mm::cContext context;
   };
 
 
-  class cState;
+  class cApplication;
 
-  // ** cApplication
-
-  class cApplication : public breathe::util::cApplication
+  class cMainWindow : public win32mm::cMainDialog
   {
   public:
-    friend class cState;
+    explicit cMainWindow(cApplication& application);
 
-    cApplication(int argc, const char* const* argv);
-    ~cApplication();
+  private:
+    virtual void OnInit() override;
+    virtual void OnDestroy() override;
 
-    void PlaySound(breathe::audio::cBufferRef pBuffer);
+    virtual bool OnQuit() override;
 
-    win32mm::cWindow window;
-    win32mm::cStatusBar statusBar;
-    win32mm::cTaskBar taskBar;
+    virtual void OnResizing(size_t width, size_t height) override;
+    virtual void OnResize(size_t width, size_t height) override;
 
-  protected:
-    cSettings settings;
+    virtual bool OnCommand(int idCommand) override;
+
+    void LoadWindowPosition();
+    void SaveWindowPosition();
 
   private:
     void AddMenu();
@@ -101,20 +97,52 @@ namespace diesel
 
     void ResizeStatusBar();
 
-    virtual bool _Create() override;
-    virtual void _Destroy() override;
+    cApplication& application;
+    cSettings& settings;
 
-    virtual bool _LoadResources() override;
-    virtual void _DestroyResources() override;
+    win32mm::cStatusBar statusBar;
+    win32mm::cTaskBar taskBar;
 
-    virtual void OnApplicationWindowEvent(const breathe::gui::cWindowEvent& event) override;
+    cMyControl openGLControl;
+
+    #ifdef BUILD_SUPPORT_COMBOBOX
+    win32mm::cComboBox comboBoxPath;
+    #else
+    win32mm::cInput inputPath;
+    #endif
+    win32mm::cButton buttonPathUp;
+    win32mm::cButton buttonPathShowFolder;
+    win32mm::cScrollBar scrollBar;
+  };
+
+
+  class cState;
+
+  // ** cApplication
+
+  class cApplication : public spitfire::cConsoleApplication
+  {
+  public:
+    friend class cMainWindow;
+    friend class cState;
+
+    cApplication(int argc, const char* const* argv);
+    ~cApplication();
+
+  private:
+    virtual void _PrintHelp() const override;
+    virtual string_t _GetVersion() const override;
+    virtual bool _Run() override;
+
+    void Create();
+    void Destroy();
+
+    cSettings settings;
+
+    cMainWindow mainWindow;
 
     // Text
     opengl::cFont* pFont;
-
-    // Gui
-    breathe::gui::cManager* pGuiManager;
-    breathe::gui::cRenderer* pGuiRenderer;
   };
 }
 
