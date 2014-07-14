@@ -27,8 +27,10 @@
 // Diesel headers
 #include "settings.h"
 
-/*namespace win32mm
+namespace win32mm
 {
+  // ** cContext
+
   class cContext
   {
   public:
@@ -50,7 +52,7 @@
     HDC hDC;
     HGLRC hRC;
   };
-}*/
+}
 
 namespace diesel
 {

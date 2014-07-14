@@ -50,6 +50,144 @@
 #include "win32mmapplication.h"
 #include "win32mmsettingsdialog.h"
 
+namespace win32mm
+{
+  // ** cContext
+
+  cContext::cContext() :
+    control(NULL),
+    hDC(NULL),
+    hRC(NULL)
+  {
+  }
+
+  cContext::~cContext()
+  {
+    std::cout<<"cContext::~cContext"<<std::endl;
+    ASSERT(!IsValid());
+  }
+
+  bool cContext::Create(HWND _control)
+  {
+    if (control != NULL) return true;
+
+    control = _control;
+
+    hDC = ::GetDC(control);
+    ASSERT(hDC != NULL);
+
+    PIXELFORMATDESCRIPTOR pfd = {
+      sizeof(PIXELFORMATDESCRIPTOR),
+      1,                               // Version Number
+      PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
+      PFD_TYPE_RGBA,                   // Request RGBA Format
+      16,                              // Select Color Depth
+      0, 0, 0, 0, 0, 0,                // Color Bits Ignored
+      0,                               // No Alpha bits
+      0,                               // Shift Bit Ignored
+      0,                               // No Accumulation Buffer
+      0, 0, 0, 0,                      // Accumulation Bits Ignored
+      16,                              // 16Bit Z-Buffer (Depth Buffer)
+      0,                               // No Stencil Buffer
+      0,                               // No Auxiliary Buffer
+      PFD_MAIN_PLANE,                  // Main Drawing Layer
+      0,                               // Reserved
+      0, 0, 0                          // Layer Masks Ignored
+    };
+
+    GLuint PixelFormat = ::ChoosePixelFormat(hDC, &pfd);
+    ASSERT(PixelFormat != 0);
+
+    bool bIsSetPixelFormat = (::SetPixelFormat(hDC, PixelFormat, &pfd) == TRUE);
+    ASSERT(bIsSetPixelFormat);
+
+    // Create OpenGL rendering context
+    hRC = wglCreateContext(hDC);
+    ASSERT(hDC != NULL);
+
+    bool bIsSetCurrentContext = (wglMakeCurrent(hDC, hRC) == TRUE);
+    ASSERT(bIsSetCurrentContext);
+
+    // TODO: Is this needed?
+    ::ShowWindow(control, SW_SHOW);
+
+    int iMajor = 3;
+    int iMinor = 3;
+    if (gl3wInit()) {
+      LOGERROR<<"cContext::_SetWindowVideoMode Failed to initialize OpenGL"<<std::endl;
+      return false;
+    }
+    if (!gl3wIsSupported(iMajor, iMinor)) {
+      LOGERROR<<TEXT("cContext::_SetWindowVideoMode OpenGL ")<<spitfire::string::ToString(iMajor)<<TEXT(".")<<spitfire::string::ToString(iMinor)<<TEXT(" not supported")<<std::endl;
+      return false;
+    }
+
+    // Set up our default clearing, projection etc.
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //glOrtho(-1, 1, -1, 1, 1, 1);  // multiply the current matrix by an orthographic matrix
+
+    std::cout<<"OpenGL Version: "<<(const char*)glGetString(GL_VERSION)<<", OpenGL Vendor: "<<(const char*)glGetString(GL_VENDOR)<<", OpenGL Renderer: "<<(const char*)glGetString(GL_RENDERER)<<std::endl;
+
+    return (bIsSetPixelFormat && bIsSetCurrentContext);
+  }
+
+  void cContext::Destroy()
+  {
+    // Release OpenGL rendering context
+    if (hRC != NULL) {
+      if (!wglMakeCurrent(NULL, NULL)) {
+        std::cout<<"Release of DC and RC failed"<<std::endl;
+      }
+      if (!wglDeleteContext(hRC)) {
+        std::cout<<"Release of Rendering Context failed"<<std::endl;
+      }
+      hRC = NULL;
+    }
+
+    // Release Device context
+    if (hDC != NULL) {
+      if (ReleaseDC(control, hDC) != 1) {
+        std::cout<<"Release of Device Context failed"<<std::endl;
+      }
+      hDC = NULL;
+    }
+
+    // Make sure we do not refer to this control in the future
+    control = NULL;
+  }
+
+  void cContext::Resize(size_t width, size_t height)
+  {
+    LOG<<"cContext::Resize ("<<width<<"x"<<height<<")"<<std::endl;
+
+    // Prevent a divide by zero
+    if (height == 0) height = 1;
+
+    glViewport(0.0f, 0.0f, float(width), float(height));
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(75.0f, float(width / height), 0.1f, 100.0f);
+    glMatrixMode(GL_MODELVIEW);
+  }
+
+  void cContext::Begin()
+  {
+    ASSERT(IsValid());
+
+    bool bIsSetCurrentContext = (wglMakeCurrent(hDC, hRC) == TRUE);
+    ASSERT(bIsSetCurrentContext);
+  }
+
+  void cContext::End()
+  {
+    ASSERT(IsValid());
+
+    ::SwapBuffers(hDC);
+  }
+}
+
 namespace diesel
 {
   void cMyControl::Create(win32mm::cWindow& parent, int idControl)
