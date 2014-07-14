@@ -206,6 +206,11 @@ namespace diesel
     OnResize(iWidth, iHeight);
   }
 
+  void cMainWindow::OnInitFinished()
+  {
+    openGLControl.Update();
+  }
+
   void cMainWindow::OnDestroy()
   {
     SaveWindowPosition();
@@ -392,50 +397,6 @@ namespace diesel
     settings.Save();
   }
 
-  void cApplication::Create()
-  {
-    LOG<<"cApplication::Create"<<std::endl;
-
-    const uint32_t t = SDL_GetTicks();
-    LOG<<"cApplication::Create Started at "<<t<<std::endl;
-
-    mainWindow.Create();
-
-    /*class cEvent
-    {
-    public:
-      virtual ~cEvent() {}
-
-      virtual void EventFunction(const cApplication& data) { (void)data; }
-    };
-
-    class MyEventDerived : public cEvent
-    {
-    public:
-      virtual void EventFunction(const cApplication& data) override { (void)data; }
-    };
-
-    win32mm::cWindow window;
-
-    win32mm::cRunOnMainThread<cApplication, cEvent> runOnMainThread(*this);
-    runOnMainThread.Create(window);
-
-    MyEventDerived* pEvent = new MyEventDerived;
-    runOnMainThread.PushEventToMainThread(pEvent);
-
-    HWND hwnd = NULL;
-    UINT uMsg = 0;
-    WPARAM wParam = 0;
-    LPARAM lParam = 0;
-    if (uMsg > WM_USER) {
-      runOnMainThread.ProcessEvents(hwnd, uMsg, wParam, lParam);
-    }*/
-  }
-
-  void cApplication::Destroy()
-  {
-  }
-
   void cApplication::_PrintHelp() const
   {
     LOG<<"Usage: "<<spitfire::string::ToUTF8(GetApplicationName())<<" [OPTIONS]"<<std::endl;
@@ -454,11 +415,7 @@ namespace diesel
 
   bool cApplication::_Run()
   {
-    Create();
-
     const int iResult = mainWindow.Run();
-
-    Destroy();
 
     /*opengl::cSystem system;
     opengl::cResolution resolution;

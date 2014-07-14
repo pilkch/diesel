@@ -76,6 +76,7 @@ namespace diesel
 
   private:
     virtual void OnInit() override;
+    virtual void OnInitFinished() override;
     virtual void OnDestroy() override;
 
     virtual bool OnQuit() override;
@@ -126,9 +127,6 @@ namespace diesel
     virtual void _PrintHelp() const override;
     virtual string_t _GetVersion() const override;
     virtual bool _Run() override;
-
-    void Create();
-    void Destroy();
 
     cSettings settings;
 
