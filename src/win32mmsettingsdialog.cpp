@@ -147,7 +147,7 @@ namespace diesel
 
   bool cSettingsDialog::Run(win32mm::cWindow& parent)
   {
-    return RunNonResizable(parent);
+    return RunNonResizable(parent, TEXT("Options"));
   }
 
 
