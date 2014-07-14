@@ -137,7 +137,6 @@ namespace diesel
     // Initialise the taskbar
     taskBar.Init(*this);
 
-    #ifdef BUILD_SUPPORT_COMBOBOX
     // Create our path combobox
     comboBoxPath.CreateComboBox(*this, ID_CONTROL_PATH);
     comboBoxPath.AddString(TEXT("a"));
@@ -145,10 +144,6 @@ namespace diesel
     comboBoxPath.AddString(TEXT("b"));
 
     comboBoxPath.SetText(TEXT("Hello"));
-    #else
-    inputPath.Create(*this, ID_CONTROL_PATH);
-    #endif
-
 
     // Create our OpenGL control
     openGLControl.Create(*this, ID_CONTROL_OPENGL);
@@ -217,9 +212,7 @@ namespace diesel
 
     openGLControl.Destroy();
 
-    #ifdef BUILD_SUPPORT_COMBOBOX
     comboBoxPath.Destroy();
-    #endif
     scrollBar.Destroy();
   }
 
@@ -309,27 +302,15 @@ namespace diesel
 
     iWindowWidth -= iScrollBarWidth;
 
-    #ifdef BUILD_SUPPORT_COMBOBOX
-    const int iButtonHeight = DialogUnitsToPixelsY(34);
-    #else
     const int iButtonHeight = GetButtonHeight();
-    #endif
     const int iButtonWidth = iButtonHeight;
     const int iButtonsTotalWidth = (2 * (iButtonWidth + GetSpacerWidth()));
     const int iPathWidth = iWindowWidth - (iButtonsTotalWidth + (2 * GetSpacerWidth()));
-    #ifdef BUILD_SUPPORT_COMBOBOX
     const int iPathHeight = GetComboBoxHeight();
-    #else
-    const int iPathHeight = GetInputHeight();
-    #endif
 
     int x = GetSpacerWidth();
     int y = GetSpacerHeight();
-    #ifdef BUILD_SUPPORT_COMBOBOX
     MoveControl(comboBoxPath.GetHandle(), x, y, iPathWidth, iPathHeight);
-    #else
-    MoveControl(inputPath.GetHandle(), x, y, iPathWidth, iPathHeight);
-    #endif
     x += iPathWidth + GetSpacerWidth();
 
     MoveControl(buttonPathUp.GetHandle(), x, y, iButtonWidth, iButtonHeight);
@@ -337,7 +318,7 @@ namespace diesel
     MoveControl(buttonPathShowFolder.GetHandle(), x, y, iButtonWidth, iButtonHeight);
     x += iButtonWidth + GetSpacerWidth();
 
-    y += max(iPathHeight, iButtonHeight) + (2 * GetSpacerHeight());
+    y += max(iPathHeight, iButtonHeight) + GetSpacerHeight();
     iWindowHeight -= max(iPathHeight, iButtonHeight) + (2 * GetSpacerHeight());
 
     MoveControl(openGLControl.GetHandle(), 0, y, iWindowWidth, iWindowHeight);

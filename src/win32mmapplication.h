@@ -27,9 +27,6 @@
 // Diesel headers
 #include "settings.h"
 
-// Disabled currently as the combobox seems to cause redraw issues with the OpenGL control
-//#define BUILD_SUPPORT_COMBOBOX
-
 /*namespace win32mm
 {
   class cContext
@@ -105,11 +102,7 @@ namespace diesel
 
     cMyControl openGLControl;
 
-    #ifdef BUILD_SUPPORT_COMBOBOX
     win32mm::cComboBox comboBoxPath;
-    #else
-    win32mm::cInput inputPath;
-    #endif
     win32mm::cButton buttonPathUp;
     win32mm::cButton buttonPathShowFolder;
     win32mm::cScrollBar scrollBar;
