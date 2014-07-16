@@ -555,12 +555,6 @@ namespace diesel
   {
     const int iResult = mainWindow.Run();
 
-    /*opengl::cSystem system;
-    opengl::cResolution resolution;
-    opengl::cWindow window(system, NULL, TEXT(""), resolution);
-
-    window.ProcessEvents();*/
-
     return (iResult == 0);
   }
 }
