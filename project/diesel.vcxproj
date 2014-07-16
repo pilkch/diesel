@@ -174,7 +174,6 @@
     <ClCompile Include="..\..\library\src\libopenglmm\cSystem.cpp" />
     <ClCompile Include="..\..\library\src\libopenglmm\cTexture.cpp" />
     <ClCompile Include="..\..\library\src\libopenglmm\cVertexBufferObject.cpp" />
-    <ClCompile Include="..\..\library\src\libopenglmm\cWindow.cpp" />
     <ClCompile Include="..\..\library\src\libopenglmm\libopenglmm.cpp" />
     <ClCompile Include="..\..\library\src\libvoodoomm\cImage.cpp" />
     <ClCompile Include="..\..\library\src\libvoodoomm\libvoodoomm.cpp" />
