@@ -7,6 +7,7 @@
 // libopenglmm headers
 #include <libopenglmm/cFont.h>
 #include <libopenglmm/cWindow.h>
+#include <libopenglmm/cSystem.h>
 
 // Spitfire headers
 #include <spitfire/math/math.h>
@@ -29,18 +30,18 @@
 
 namespace win32mm
 {
-  // ** cContext
+  // ** cOpenGLContext
 
-  class cContext
+  class cOpenGLContext
   {
   public:
-    cContext();
-    ~cContext();
+    cOpenGLContext();
+    ~cOpenGLContext();
 
     bool Create(HWND control);
     void Destroy();
 
-    bool IsValid() const { return ((hDC != NULL) && (hRC != NULL)); }
+    bool IsValid() const;
 
     void Resize(size_t width, size_t height);
 
@@ -51,6 +52,12 @@ namespace win32mm
     HWND control;
     HDC hDC;
     HGLRC hRC;
+
+    opengl::cSystem system;
+
+    opengl::cResolution resolution;
+
+    opengl::cContext* pContext;
   };
 }
 
@@ -65,7 +72,7 @@ namespace diesel
     virtual void OnSize();
     virtual void OnPaint();
 
-    win32mm::cContext context;
+    win32mm::cOpenGLContext context;
   };
 
 

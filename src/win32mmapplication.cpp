@@ -52,22 +52,23 @@
 
 namespace win32mm
 {
-  // ** cContext
+  // ** cOpenGLContext
 
-  cContext::cContext() :
+  cOpenGLContext::cOpenGLContext() :
     control(NULL),
     hDC(NULL),
-    hRC(NULL)
+    hRC(NULL),
+    pContext(nullptr)
   {
   }
 
-  cContext::~cContext()
+  cOpenGLContext::~cOpenGLContext()
   {
-    std::cout<<"cContext::~cContext"<<std::endl;
+    std::cout<<"cOpenGLContext::~cOpenGLContext"<<std::endl;
     ASSERT(!IsValid());
   }
 
-  bool cContext::Create(HWND _control)
+  bool cOpenGLContext::Create(HWND _control)
   {
     if (control != NULL) return true;
 
@@ -114,11 +115,11 @@ namespace win32mm
     int iMajor = 3;
     int iMinor = 3;
     if (gl3wInit()) {
-      LOGERROR<<"cContext::_SetWindowVideoMode Failed to initialize OpenGL"<<std::endl;
+      LOGERROR<<"cOpenGLContext::_SetWindowVideoMode Failed to initialize OpenGL"<<std::endl;
       return false;
     }
     if (!gl3wIsSupported(iMajor, iMinor)) {
-      LOGERROR<<TEXT("cContext::_SetWindowVideoMode OpenGL ")<<spitfire::string::ToString(iMajor)<<TEXT(".")<<spitfire::string::ToString(iMinor)<<TEXT(" not supported")<<std::endl;
+      LOGERROR<<TEXT("cOpenGLContext::_SetWindowVideoMode OpenGL ")<<spitfire::string::ToString(iMajor)<<TEXT(".")<<spitfire::string::ToString(iMinor)<<TEXT(" not supported")<<std::endl;
       return false;
     }
 
@@ -129,11 +130,27 @@ namespace win32mm
 
     std::cout<<"OpenGL Version: "<<(const char*)glGetString(GL_VERSION)<<", OpenGL Vendor: "<<(const char*)glGetString(GL_VENDOR)<<", OpenGL Renderer: "<<(const char*)glGetString(GL_RENDERER)<<std::endl;
 
+
+    // Set our resolution
+    resolution.width = 500;
+    resolution.height = 500;
+    resolution.pixelFormat = opengl::PIXELFORMAT::R8G8B8A8;
+    // TODO: Get the size of the control
+
+    // Init libopenglmm
+    pContext = system.CreateSharedContextForControl(control, resolution);
+
     return (bIsSetPixelFormat && bIsSetCurrentContext);
   }
 
-  void cContext::Destroy()
+  void cOpenGLContext::Destroy()
   {
+    // Destroy our context
+    if (pContext != nullptr) {
+      system.DestroyContext(pContext);
+      pContext = nullptr;
+    }
+
     // Release OpenGL rendering context
     if (hRC != NULL) {
       if (!wglMakeCurrent(NULL, NULL)) {
@@ -157,22 +174,28 @@ namespace win32mm
     control = NULL;
   }
 
-  void cContext::Resize(size_t width, size_t height)
+  bool cOpenGLContext::IsValid() const
   {
-    LOG<<"cContext::Resize ("<<width<<"x"<<height<<")"<<std::endl;
-
-    // Prevent a divide by zero
-    if (height == 0) height = 1;
-
-    glViewport(0.0f, 0.0f, float(width), float(height));
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(75.0f, float(width / height), 0.1f, 100.0f);
-    glMatrixMode(GL_MODELVIEW);
+    return (
+      (hDC != NULL) &&
+      (hRC != NULL) &&
+      ((pContext != nullptr) && pContext->IsValid())
+    );
   }
 
-  void cContext::Begin()
+  void cOpenGLContext::Resize(size_t width, size_t height)
+  {
+    LOG<<"cOpenGLContext::Resize ("<<width<<"x"<<height<<")"<<std::endl;
+
+    // Update our resolution
+    resolution.width = width;
+    resolution.height = height;
+
+    // Resize the context
+    pContext->ResizeWindow(resolution);
+  }
+
+  void cOpenGLContext::Begin()
   {
     ASSERT(IsValid());
 
@@ -180,7 +203,7 @@ namespace win32mm
     ASSERT(bIsSetCurrentContext);
   }
 
-  void cContext::End()
+  void cOpenGLContext::End()
   {
     ASSERT(IsValid());
 
