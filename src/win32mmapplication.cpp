@@ -77,7 +77,7 @@ namespace win32mm
     hDC = ::GetDC(control);
     ASSERT(hDC != NULL);
 
-    PIXELFORMATDESCRIPTOR pfd = {
+    const PIXELFORMATDESCRIPTOR pfd = {
       sizeof(PIXELFORMATDESCRIPTOR),
       1,                               // Version Number
       PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
@@ -96,24 +96,21 @@ namespace win32mm
       0, 0, 0                          // Layer Masks Ignored
     };
 
-    GLuint PixelFormat = ::ChoosePixelFormat(hDC, &pfd);
+    const GLuint PixelFormat = ::ChoosePixelFormat(hDC, &pfd);
     ASSERT(PixelFormat != 0);
 
-    bool bIsSetPixelFormat = (::SetPixelFormat(hDC, PixelFormat, &pfd) == TRUE);
+    const bool bIsSetPixelFormat = (::SetPixelFormat(hDC, PixelFormat, &pfd) == TRUE);
     ASSERT(bIsSetPixelFormat);
 
     // Create OpenGL rendering context
     hRC = wglCreateContext(hDC);
     ASSERT(hDC != NULL);
 
-    bool bIsSetCurrentContext = (wglMakeCurrent(hDC, hRC) == TRUE);
+    const bool bIsSetCurrentContext = (wglMakeCurrent(hDC, hRC) == TRUE);
     ASSERT(bIsSetCurrentContext);
 
-    // TODO: Is this needed?
-    ::ShowWindow(control, SW_SHOW);
-
-    int iMajor = 3;
-    int iMinor = 3;
+    const int iMajor = 3;
+    const int iMinor = 3;
     if (gl3wInit()) {
       LOGERROR<<"cOpenGLContext::_SetWindowVideoMode Failed to initialize OpenGL"<<std::endl;
       return false;
@@ -126,7 +123,6 @@ namespace win32mm
     // Set up our default clearing, projection etc.
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //glOrtho(-1, 1, -1, 1, 1, 1);  // multiply the current matrix by an orthographic matrix
 
     std::cout<<"OpenGL Version: "<<(const char*)glGetString(GL_VERSION)<<", OpenGL Vendor: "<<(const char*)glGetString(GL_VENDOR)<<", OpenGL Renderer: "<<(const char*)glGetString(GL_RENDERER)<<std::endl;
 
