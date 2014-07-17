@@ -28,7 +28,7 @@
 // Diesel headers
 #include "settings.h"
 
-namespace win32mm
+namespace diesel
 {
   // ** cOpenGLContext
 
@@ -59,10 +59,10 @@ namespace win32mm
 
     opengl::cContext* pContext;
   };
-}
 
-namespace diesel
-{
+
+  // ** cMyControl
+
   class cMyControl : public win32mm::cOpenGLControl {
   public:
     void Create(win32mm::cWindow& parent, int idControl);
@@ -72,7 +72,7 @@ namespace diesel
     virtual void OnSize();
     virtual void OnPaint();
 
-    win32mm::cOpenGLContext context;
+    cOpenGLContext context;
   };
 
 

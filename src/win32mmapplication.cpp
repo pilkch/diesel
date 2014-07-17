@@ -50,7 +50,7 @@
 #include "win32mmapplication.h"
 #include "win32mmsettingsdialog.h"
 
-namespace win32mm
+namespace diesel
 {
   // ** cOpenGLContext
 
@@ -205,10 +205,10 @@ namespace win32mm
 
     ::SwapBuffers(hDC);
   }
-}
 
-namespace diesel
-{
+
+  // ** cMyControl
+
   void cMyControl::Create(win32mm::cWindow& parent, int idControl)
   {
     win32mm::cOpenGLControl::Create(parent, idControl);
