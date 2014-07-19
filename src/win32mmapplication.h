@@ -61,9 +61,9 @@ namespace diesel
   };
 
 
-  // ** cMyControl
+  // ** cPhotoBrowserControl
 
-  class cMyControl : public win32mm::cOpenGLControl {
+  class cPhotoBrowserControl : public win32mm::cOpenGLControl {
   public:
     void Create(win32mm::cWindow& parent, int idControl);
     void Destroy();
@@ -110,7 +110,7 @@ namespace diesel
     win32mm::cStatusBar statusBar;
     win32mm::cTaskBar taskBar;
 
-    cMyControl openGLControl;
+    cPhotoBrowserControl openGLControl;
 
     win32mm::cComboBox comboBoxPath;
     win32mm::cButton buttonPathUp;

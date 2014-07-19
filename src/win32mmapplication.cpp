@@ -207,26 +207,26 @@ namespace diesel
   }
 
 
-  // ** cMyControl
+  // ** cPhotoBrowserControl
 
-  void cMyControl::Create(win32mm::cWindow& parent, int idControl)
+  void cPhotoBrowserControl::Create(win32mm::cWindow& parent, int idControl)
   {
     win32mm::cOpenGLControl::Create(parent, idControl);
 
     context.Create(GetHandle());
   }
 
-  void cMyControl::Destroy()
+  void cPhotoBrowserControl::Destroy()
   {
     context.Destroy();
   }
 
-  void cMyControl::OnSize()
+  void cPhotoBrowserControl::OnSize()
   {
     context.Resize(GetWidth(), GetHeight());
   }
 
-  void cMyControl::OnPaint()
+  void cPhotoBrowserControl::OnPaint()
   {
     context.Begin();
 
