@@ -206,14 +206,26 @@ namespace diesel
     ::SwapBuffers(hDC);
   }
 
+  opengl::cContext& cOpenGLContext::GetContext()
+  {
+    return *pContext;
+  }
+
 
   // ** cPhotoBrowserControl
 
-  void cPhotoBrowserControl::Create(win32mm::cWindow& parent, int idControl)
+  cPhotoBrowserControl::cPhotoBrowserControl() :
+    pListener(nullptr)
+  {
+  }
+
+  void cPhotoBrowserControl::Create(win32mm::cWindow& parent, int idControl, cPhotoBrowserControlListener& listener)
   {
     win32mm::cOpenGLControl::Create(parent, idControl);
 
     context.Create(GetHandle());
+
+    pListener = &listener;
   }
 
   void cPhotoBrowserControl::Destroy()
@@ -230,6 +242,14 @@ namespace diesel
   {
     context.Begin();
 
+    if (pListener != nullptr) pListener->OnPhotoBrowserControlPaint(context.GetContext());
+
+    context.End();
+  }
+
+
+  void cMyListener::OnPhotoBrowserControlPaint(opengl::cContext& context)
+  {
     static bool bIsRed = false;
     if (bIsRed) glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
     else glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
@@ -241,8 +261,6 @@ namespace diesel
     glVertex3f(-1.0f,-1.0f,0.0f);
     glVertex3f(1.0f,-1.0f,0.0f);
     glEnd();
-
-    context.End();
   }
 
 
@@ -303,7 +321,7 @@ namespace diesel
     comboBoxPath.SetText(TEXT("Hello"));
 
     // Create our OpenGL control
-    openGLControl.Create(*this, ID_CONTROL_OPENGL);
+    openGLControl.Create(*this, ID_CONTROL_OPENGL, listener);
 
     win32mm::cIcon iconUp;
     iconUp.LoadFromFile(TEXT("data/icons/windows/folder_up.ico"), 32);

@@ -48,6 +48,8 @@ namespace diesel
     void Begin();
     void End();
 
+    opengl::cContext& GetContext();
+
   private:
     HWND control;
     HDC hDC;
@@ -61,11 +63,23 @@ namespace diesel
   };
 
 
+  // ** cPhotoBrowserControlListener
+
+  class cPhotoBrowserControlListener
+  {
+  public:
+    virtual ~cPhotoBrowserControlListener() {}
+
+    virtual void OnPhotoBrowserControlPaint(opengl::cContext& context) = 0; // Called when the control is being painted
+  };
+
   // ** cPhotoBrowserControl
 
   class cPhotoBrowserControl : public win32mm::cOpenGLControl {
   public:
-    void Create(win32mm::cWindow& parent, int idControl);
+    cPhotoBrowserControl();
+
+    void Create(win32mm::cWindow& parent, int idControl, cPhotoBrowserControlListener& listener);
     void Destroy();
 
   private:
@@ -73,6 +87,17 @@ namespace diesel
     virtual void OnPaint();
 
     cOpenGLContext context;
+
+    cPhotoBrowserControlListener* pListener;
+  };
+
+
+  class cMyListener : public cPhotoBrowserControlListener
+  {
+  public:
+
+  private:
+    virtual void OnPhotoBrowserControlPaint(opengl::cContext& context) override;
   };
 
 
@@ -111,6 +136,7 @@ namespace diesel
     win32mm::cTaskBar taskBar;
 
     cPhotoBrowserControl openGLControl;
+    cMyListener listener;
 
     win32mm::cComboBox comboBoxPath;
     win32mm::cButton buttonPathUp;
