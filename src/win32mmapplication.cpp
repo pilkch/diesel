@@ -248,7 +248,7 @@ namespace diesel
   }
 
 
-  void cMyListener::OnPhotoBrowserControlPaint(opengl::cContext& context)
+  void cPhotoBrowserView::OnPhotoBrowserControlPaint(opengl::cContext& context)
   {
     static bool bIsRed = false;
     if (bIsRed) glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
@@ -321,7 +321,7 @@ namespace diesel
     comboBoxPath.SetText(TEXT("Hello"));
 
     // Create our OpenGL control
-    openGLControl.Create(*this, ID_CONTROL_OPENGL, listener);
+    photoBrowser.Create(*this, ID_CONTROL_OPENGL, photoBrowserView);
 
     win32mm::cIcon iconUp;
     iconUp.LoadFromFile(TEXT("data/icons/windows/folder_up.ico"), 32);
@@ -383,14 +383,14 @@ namespace diesel
 
   void cMainWindow::OnInitFinished()
   {
-    openGLControl.Update();
+    photoBrowser.Update();
   }
 
   void cMainWindow::OnDestroy()
   {
     SaveWindowPosition();
 
-    openGLControl.Destroy();
+    photoBrowser.Destroy();
 
     comboBoxPath.Destroy();
     scrollBar.Destroy();
@@ -501,7 +501,7 @@ namespace diesel
     y += max(iPathHeight, iButtonHeight) + GetSpacerHeight();
     iWindowHeight -= max(iPathHeight, iButtonHeight) + (2 * GetSpacerHeight());
 
-    MoveControl(openGLControl.GetHandle(), 0, y, iWindowWidth, iWindowHeight);
+    MoveControl(photoBrowser.GetHandle(), 0, y, iWindowWidth, iWindowHeight);
 
     // TODO: Move these somewhere else
     scrollBar.SetRange(0, 200);

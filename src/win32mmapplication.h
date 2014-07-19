@@ -92,7 +92,11 @@ namespace diesel
   };
 
 
-  class cMyListener : public cPhotoBrowserControlListener
+  // ** cPhotoBrowserView
+  //
+  // Handles mouse and keyboard input, loading images in the background and rendering
+
+  class cPhotoBrowserView : public cPhotoBrowserControlListener
   {
   public:
 
@@ -135,8 +139,8 @@ namespace diesel
     win32mm::cStatusBar statusBar;
     win32mm::cTaskBar taskBar;
 
-    cPhotoBrowserControl openGLControl;
-    cMyListener listener;
+    cPhotoBrowserControl photoBrowser;
+    cPhotoBrowserView photoBrowserView;
 
     win32mm::cComboBox comboBoxPath;
     win32mm::cButton buttonPathUp;
