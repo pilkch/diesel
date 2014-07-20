@@ -11,11 +11,6 @@
 #include <map>
 #include <vector>
 #include <list>
-
-// OpenGL headers
-#include <GL/GLee.h>
-#include <GL/glu.h>
-
 // Spitfire headers
 #include <spitfire/spitfire.h>
 
@@ -52,218 +47,6 @@
 
 namespace diesel
 {
-  // ** cOpenGLContext
-
-  cOpenGLContext::cOpenGLContext() :
-    control(NULL),
-    hDC(NULL),
-    hRC(NULL),
-    pContext(nullptr)
-  {
-  }
-
-  cOpenGLContext::~cOpenGLContext()
-  {
-    std::cout<<"cOpenGLContext::~cOpenGLContext"<<std::endl;
-    ASSERT(!IsValid());
-  }
-
-  bool cOpenGLContext::Create(HWND _control)
-  {
-    if (control != NULL) return true;
-
-    control = _control;
-
-    hDC = ::GetDC(control);
-    ASSERT(hDC != NULL);
-
-    const PIXELFORMATDESCRIPTOR pfd = {
-      sizeof(PIXELFORMATDESCRIPTOR),
-      1,                               // Version Number
-      PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
-      PFD_TYPE_RGBA,                   // Request RGBA Format
-      16,                              // Select Color Depth
-      0, 0, 0, 0, 0, 0,                // Color Bits Ignored
-      0,                               // No Alpha bits
-      0,                               // Shift Bit Ignored
-      0,                               // No Accumulation Buffer
-      0, 0, 0, 0,                      // Accumulation Bits Ignored
-      16,                              // 16Bit Z-Buffer (Depth Buffer)
-      0,                               // No Stencil Buffer
-      0,                               // No Auxiliary Buffer
-      PFD_MAIN_PLANE,                  // Main Drawing Layer
-      0,                               // Reserved
-      0, 0, 0                          // Layer Masks Ignored
-    };
-
-    const GLuint PixelFormat = ::ChoosePixelFormat(hDC, &pfd);
-    ASSERT(PixelFormat != 0);
-
-    const bool bIsSetPixelFormat = (::SetPixelFormat(hDC, PixelFormat, &pfd) == TRUE);
-    ASSERT(bIsSetPixelFormat);
-
-    // Create OpenGL rendering context
-    hRC = wglCreateContext(hDC);
-    ASSERT(hDC != NULL);
-
-    const bool bIsSetCurrentContext = (wglMakeCurrent(hDC, hRC) == TRUE);
-    ASSERT(bIsSetCurrentContext);
-
-    const int iMajor = 3;
-    const int iMinor = 3;
-    if (gl3wInit()) {
-      LOGERROR<<"cOpenGLContext::_SetWindowVideoMode Failed to initialize OpenGL"<<std::endl;
-      return false;
-    }
-    if (!gl3wIsSupported(iMajor, iMinor)) {
-      LOGERROR<<TEXT("cOpenGLContext::_SetWindowVideoMode OpenGL ")<<spitfire::string::ToString(iMajor)<<TEXT(".")<<spitfire::string::ToString(iMinor)<<TEXT(" not supported")<<std::endl;
-      return false;
-    }
-
-    // Set up our default clearing, projection etc.
-    glClearColor(0.0, 0.0, 0.0, 0.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    std::cout<<"OpenGL Version: "<<(const char*)glGetString(GL_VERSION)<<", OpenGL Vendor: "<<(const char*)glGetString(GL_VENDOR)<<", OpenGL Renderer: "<<(const char*)glGetString(GL_RENDERER)<<std::endl;
-
-
-    // Set our resolution
-    resolution.width = 500;
-    resolution.height = 500;
-    resolution.pixelFormat = opengl::PIXELFORMAT::R8G8B8A8;
-    // TODO: Get the size of the control
-
-    // Init libopenglmm
-    pContext = system.CreateSharedContextForControl(control, resolution);
-
-    return (bIsSetPixelFormat && bIsSetCurrentContext);
-  }
-
-  void cOpenGLContext::Destroy()
-  {
-    // Destroy our context
-    if (pContext != nullptr) {
-      system.DestroyContext(pContext);
-      pContext = nullptr;
-    }
-
-    // Release OpenGL rendering context
-    if (hRC != NULL) {
-      if (!wglMakeCurrent(NULL, NULL)) {
-        std::cout<<"Release of DC and RC failed"<<std::endl;
-      }
-      if (!wglDeleteContext(hRC)) {
-        std::cout<<"Release of Rendering Context failed"<<std::endl;
-      }
-      hRC = NULL;
-    }
-
-    // Release Device context
-    if (hDC != NULL) {
-      if (ReleaseDC(control, hDC) != 1) {
-        std::cout<<"Release of Device Context failed"<<std::endl;
-      }
-      hDC = NULL;
-    }
-
-    // Make sure we do not refer to this control in the future
-    control = NULL;
-  }
-
-  bool cOpenGLContext::IsValid() const
-  {
-    return (
-      (hDC != NULL) &&
-      (hRC != NULL) &&
-      ((pContext != nullptr) && pContext->IsValid())
-    );
-  }
-
-  void cOpenGLContext::Resize(size_t width, size_t height)
-  {
-    LOG<<"cOpenGLContext::Resize ("<<width<<"x"<<height<<")"<<std::endl;
-
-    // Update our resolution
-    resolution.width = width;
-    resolution.height = height;
-
-    // Resize the context
-    pContext->ResizeWindow(resolution);
-  }
-
-  void cOpenGLContext::Begin()
-  {
-    ASSERT(IsValid());
-
-    bool bIsSetCurrentContext = (wglMakeCurrent(hDC, hRC) == TRUE);
-    ASSERT(bIsSetCurrentContext);
-  }
-
-  void cOpenGLContext::End()
-  {
-    ASSERT(IsValid());
-
-    ::SwapBuffers(hDC);
-  }
-
-  opengl::cContext& cOpenGLContext::GetContext()
-  {
-    return *pContext;
-  }
-
-
-  // ** cPhotoBrowserControl
-
-  cPhotoBrowserControl::cPhotoBrowserControl() :
-    pListener(nullptr)
-  {
-  }
-
-  void cPhotoBrowserControl::Create(win32mm::cWindow& parent, int idControl, cPhotoBrowserControlListener& listener)
-  {
-    win32mm::cOpenGLControl::Create(parent, idControl);
-
-    context.Create(GetHandle());
-
-    pListener = &listener;
-  }
-
-  void cPhotoBrowserControl::Destroy()
-  {
-    context.Destroy();
-  }
-
-  void cPhotoBrowserControl::OnSize()
-  {
-    context.Resize(GetWidth(), GetHeight());
-  }
-
-  void cPhotoBrowserControl::OnPaint()
-  {
-    context.Begin();
-
-    if (pListener != nullptr) pListener->OnPhotoBrowserControlPaint(context.GetContext());
-
-    context.End();
-  }
-
-
-  void cPhotoBrowserView::OnPhotoBrowserControlPaint(opengl::cContext& context)
-  {
-    static bool bIsRed = false;
-    if (bIsRed) glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-    else glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
-    bIsRed = !bIsRed;
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glTranslatef(3.0f,0.0f,0.0f);
-    glBegin(GL_TRIANGLES);
-    glVertex3f(0.0f,1.0f,0.0f);
-    glVertex3f(-1.0f,-1.0f,0.0f);
-    glVertex3f(1.0f,-1.0f,0.0f);
-    glEnd();
-  }
-
-
   // Langtags
   // TODO: Move these to dynamic langtags
   #ifdef __WIN__
@@ -298,7 +81,8 @@ namespace diesel
 
   cMainWindow::cMainWindow(cApplication& _application) :
     application(_application),
-    settings(_application.settings)
+    settings(_application.settings),
+    photoBrowserView(photoBrowser)
   {
   }
 
@@ -321,7 +105,7 @@ namespace diesel
     comboBoxPath.SetText(TEXT("Hello"));
 
     // Create our OpenGL control
-    photoBrowser.Create(*this, ID_CONTROL_OPENGL, photoBrowserView);
+    photoBrowserView.Create(*this, ID_CONTROL_OPENGL);
 
     win32mm::cIcon iconUp;
     iconUp.LoadFromFile(TEXT("data/icons/windows/folder_up.ico"), 32);
@@ -383,14 +167,14 @@ namespace diesel
 
   void cMainWindow::OnInitFinished()
   {
-    photoBrowser.Update();
+    photoBrowserView.Update();
   }
 
   void cMainWindow::OnDestroy()
   {
     SaveWindowPosition();
 
-    photoBrowser.Destroy();
+    photoBrowserView.Destroy();
 
     comboBoxPath.Destroy();
     scrollBar.Destroy();
@@ -501,7 +285,7 @@ namespace diesel
     y += max(iPathHeight, iButtonHeight) + GetSpacerHeight();
     iWindowHeight -= max(iPathHeight, iButtonHeight) + (2 * GetSpacerHeight());
 
-    MoveControl(photoBrowser.GetHandle(), 0, y, iWindowWidth, iWindowHeight);
+    MoveControl(photoBrowserView.GetHandle(), 0, y, iWindowWidth, iWindowHeight);
 
     // TODO: Move these somewhere else
     scrollBar.SetRange(0, 200);

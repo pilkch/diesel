@@ -27,84 +27,10 @@
 
 // Diesel headers
 #include "settings.h"
+#include "win32mmopenglview.h"
 
 namespace diesel
 {
-  // ** cOpenGLContext
-
-  class cOpenGLContext
-  {
-  public:
-    cOpenGLContext();
-    ~cOpenGLContext();
-
-    bool Create(HWND control);
-    void Destroy();
-
-    bool IsValid() const;
-
-    void Resize(size_t width, size_t height);
-
-    void Begin();
-    void End();
-
-    opengl::cContext& GetContext();
-
-  private:
-    HWND control;
-    HDC hDC;
-    HGLRC hRC;
-
-    opengl::cSystem system;
-
-    opengl::cResolution resolution;
-
-    opengl::cContext* pContext;
-  };
-
-
-  // ** cPhotoBrowserControlListener
-
-  class cPhotoBrowserControlListener
-  {
-  public:
-    virtual ~cPhotoBrowserControlListener() {}
-
-    virtual void OnPhotoBrowserControlPaint(opengl::cContext& context) = 0; // Called when the control is being painted
-  };
-
-  // ** cPhotoBrowserControl
-
-  class cPhotoBrowserControl : public win32mm::cOpenGLControl {
-  public:
-    cPhotoBrowserControl();
-
-    void Create(win32mm::cWindow& parent, int idControl, cPhotoBrowserControlListener& listener);
-    void Destroy();
-
-  private:
-    virtual void OnSize();
-    virtual void OnPaint();
-
-    cOpenGLContext context;
-
-    cPhotoBrowserControlListener* pListener;
-  };
-
-
-  // ** cPhotoBrowserView
-  //
-  // Handles mouse and keyboard input, loading images in the background and rendering
-
-  class cPhotoBrowserView : public cPhotoBrowserControlListener
-  {
-  public:
-
-  private:
-    virtual void OnPhotoBrowserControlPaint(opengl::cContext& context) override;
-  };
-
-
   class cApplication;
 
   class cMainWindow : public win32mm::cMainDialog
@@ -139,8 +65,8 @@ namespace diesel
     win32mm::cStatusBar statusBar;
     win32mm::cTaskBar taskBar;
 
-    cPhotoBrowserControl photoBrowser;
-    cPhotoBrowserView photoBrowserView;
+    cWin32mmOpenGLView photoBrowserView;
+    cPhotoBrowser photoBrowser;
 
     win32mm::cComboBox comboBoxPath;
     win32mm::cButton buttonPathUp;
