@@ -30,9 +30,11 @@ namespace diesel
   class cPhotoBrowserViewController
   {
   public:
-    cPhotoBrowserViewController();
+    explicit cPhotoBrowserViewController(cWin32mmOpenGLView& view);
 
     void SetContext(opengl::cContext& context);
+
+    void SetCurrentFolderPath(const string_t& sFolderPath);
 
     void OnPaint();
 
@@ -52,7 +54,11 @@ namespace diesel
     void CreateVertexBufferObjectIcon();
     void CreateVertexBufferObjectPhoto(opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectPhoto, size_t textureWidth, size_t textureHeight);
 
+    cWin32mmOpenGLView& view;
+
     opengl::cContext* pContext;
+
+    string_t sFolderPath;
   };
 }
 

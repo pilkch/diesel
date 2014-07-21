@@ -82,7 +82,8 @@ namespace diesel
   cMainWindow::cMainWindow(cApplication& _application) :
     application(_application),
     settings(_application.settings),
-    photoBrowserView(photoBrowserViewController)
+    photoBrowserView(photoBrowserViewController),
+    photoBrowserViewController(photoBrowserView)
   {
   }
 
@@ -95,6 +96,9 @@ namespace diesel
 
     // Initialise the taskbar
     taskBar.Init(*this);
+
+    // Create our OpenGL control
+    photoBrowserView.Create(*this, ID_CONTROL_OPENGL);
 
     // Create our path combobox
     comboBoxPath.CreateComboBox(*this, ID_CONTROL_PATH);
@@ -112,10 +116,9 @@ namespace diesel
       iter++;
     }
 
-    comboBoxPath.SetText(settings.GetLastPhotoBrowserFolder());
+    const string_t sLastPhotoBrowserFolder = settings.GetLastPhotoBrowserFolder();
+    comboBoxPath.SetText(sLastPhotoBrowserFolder);
 
-    // Create our OpenGL control
-    photoBrowserView.Create(*this, ID_CONTROL_OPENGL);
 
     win32mm::cIcon iconUp;
     iconUp.LoadFromFile(TEXT("data/icons/windows/folder_up.ico"), 32);
@@ -347,7 +350,8 @@ namespace diesel
         return false;
       }
       case ID_CONTROL_PATH: {
-        LOG<<"cStatePhotoBrowser::HandleCommand Path"<<std::endl;
+        LOG<<"cStatePhotoBrowser::HandleCommand Path \""<<comboBoxPath.GetText()<<"\""<<std::endl;
+        photoBrowserViewController.SetCurrentFolderPath(comboBoxPath.GetText());
         return true;
       }
       case ID_CONTROL_UP: {

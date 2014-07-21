@@ -25,7 +25,8 @@ namespace diesel
 {
   // ** cPhotoBrowserViewController
 
-  cPhotoBrowserViewController::cPhotoBrowserViewController() :
+  cPhotoBrowserViewController::cPhotoBrowserViewController(cWin32mmOpenGLView& _view) :
+    view(_view),
     pContext(nullptr)
   {
   }
@@ -33,6 +34,13 @@ namespace diesel
   void cPhotoBrowserViewController::SetContext(opengl::cContext& context)
   {
     pContext = &context;
+  }
+
+  void cPhotoBrowserViewController::SetCurrentFolderPath(const string_t& _sFolderPath)
+  {
+    sFolderPath = _sFolderPath;
+
+    view.Update();
   }
 
   void cPhotoBrowserViewController::OnPaint()
