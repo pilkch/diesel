@@ -55,7 +55,7 @@ namespace diesel
     opengl::cContext* pContext;
   };
 
-  class cPhotoBrowser;
+  class cPhotoBrowserViewController;
 
   class cWin32mmOpenGLViewEvent;
 
@@ -64,31 +64,17 @@ namespace diesel
   class cWin32mmOpenGLView : public win32mm::cOpenGLControl
   {
   public:
-    friend class cPhotoBrowser;
+    friend class cOpenGLViewController;
 
-    explicit cWin32mmOpenGLView(cPhotoBrowser& parent);
+    explicit cWin32mmOpenGLView(cPhotoBrowserViewController& controller);
     ~cWin32mmOpenGLView();
+
+    opengl::cContext& GetContext();
 
     void Create(win32mm::cWindow& window, int idControl);
     void Destroy();
 
   protected:
-    //bool OnKeyPressEvent(GdkEventKey* event);
-
-    bool OnMouseDown(int button, int x, int y, bool bKeyControl, bool bKeyShift);
-    bool OnMouseRelease(int button, int x, int y, bool bKeyControl, bool bKeyShift);
-    bool OnMouseDoubleClick(int button, int x, int y, bool bKeyControl, bool bKeyShift);
-    bool OnMouseScrollUp(int x, int y, bool bKeyControl, bool bKeyShift);
-    bool OnMouseScrollDown(int x, int y, bool bKeyControl, bool bKeyShift);
-    bool OnMouseMove(int x, int y, bool bKeyControl, bool bKeyShift);
-
-  private:
-    void CreateVertexBufferObjectSelectionRectangle(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight);
-    void CreateVertexBufferObjectSquare(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight);
-    void CreateVertexBufferObjectRect(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fX, float fY, float fWidth, float fHeight, size_t textureWidth, size_t textureHeight);
-    void CreateVertexBufferObjectIcon();
-    void CreateVertexBufferObjectPhoto(opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectPhoto, size_t textureWidth, size_t textureHeight);
-
     void InitOpenGL(int argc, char* argv[]);
     void DestroyOpenGL();
 
@@ -97,15 +83,9 @@ namespace diesel
     virtual void OnSize() override;
     virtual void OnPaint() override;
 
-    cPhotoBrowser& parent;
+    cPhotoBrowserViewController& controller;
 
     cWin32mmOpenGLContext context;
-  };
-
-  class cPhotoBrowser
-  {
-  public:
-
   };
 }
 

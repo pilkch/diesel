@@ -26,6 +26,7 @@
 #define interface Interface
 
 // Diesel headers
+#include "photobrowserviewcontroller.h"
 #include "settings.h"
 #include "win32mmopenglview.h"
 
@@ -66,7 +67,7 @@ namespace diesel
     win32mm::cTaskBar taskBar;
 
     cWin32mmOpenGLView photoBrowserView;
-    cPhotoBrowser photoBrowser;
+    cPhotoBrowserViewController photoBrowserViewController;
 
     win32mm::cComboBox comboBoxPath;
     win32mm::cButton buttonPathUp;

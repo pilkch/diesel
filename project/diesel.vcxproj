@@ -217,7 +217,7 @@
     <ClCompile Include="..\src\imageloadthread.cpp" />
     <ClCompile Include="..\src\importthread.cpp" />
     <ClCompile Include="..\src\main.cpp" />
-    <ClCompile Include="..\src\photobrowseropenglrenderer.cpp" />
+    <ClCompile Include="..\src\photobrowserviewcontroller.cpp" />
     <ClCompile Include="..\src\settings.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(InputDir)\$(IntDir)\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(InputDir)\$(IntDir)\</ObjectFileName>
@@ -254,7 +254,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\photobrowseropenglrenderer.h" />
+    <ClInclude Include="..\src\photobrowserviewcontroller.h" />
     <ClInclude Include="..\src\win32mmapplication.h" />
     <ClInclude Include="..\src\win32mmopenglview.h" />
     <ClInclude Include="..\src\win32mmsettingsdialog.h" />
