@@ -43,8 +43,9 @@ namespace diesel
     virtual void OnInit() override;
     virtual void OnInitFinished() override;
     virtual void OnDestroy() override;
-
     virtual bool OnQuit() override;
+
+    virtual bool OnOk() override;
 
     virtual void OnResizing(size_t width, size_t height) override;
     virtual void OnResize(size_t width, size_t height) override;

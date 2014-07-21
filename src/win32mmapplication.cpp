@@ -98,11 +98,21 @@ namespace diesel
 
     // Create our path combobox
     comboBoxPath.CreateComboBox(*this, ID_CONTROL_PATH);
-    comboBoxPath.AddString(TEXT("a"));
-    comboBoxPath.AddString(TEXT("c"));
-    comboBoxPath.AddString(TEXT("b"));
 
-    comboBoxPath.SetText(TEXT("Hello"));
+    // Get the visited history
+    std::list<string_t> items;
+    settings.GetPreviousPhotoBrowserFolders(items);
+
+    // Add the previous items
+    std::list<string_t>::const_iterator iter = items.begin();
+    const std::list<string_t>::const_iterator iterEnd = items.end();
+    while (iter != iterEnd) {
+      comboBoxPath.AddItem(*iter);
+
+      iter++;
+    }
+
+    comboBoxPath.SetText(settings.GetLastPhotoBrowserFolder());
 
     // Create our OpenGL control
     photoBrowserView.Create(*this, ID_CONTROL_OPENGL);
@@ -172,6 +182,15 @@ namespace diesel
 
   void cMainWindow::OnDestroy()
   {
+    // Save the visited history
+    std::list<string_t> items;
+    const size_t n = comboBoxPath.GetItemCount();
+    for (size_t i = 0; i < n; i++) items.push_back(comboBoxPath.GetItem(i));
+
+    settings.SetPreviousPhotoBrowserFolders(items);
+    settings.SetLastPhotoBrowserFolder(comboBoxPath.GetText());
+
+
     SaveWindowPosition();
 
     photoBrowserView.Destroy();
@@ -183,6 +202,12 @@ namespace diesel
   bool cMainWindow::OnQuit()
   {
     return true;
+  }
+
+  bool cMainWindow::OnOk()
+  {
+    // Avoid closing when the user presses the enter key
+    return false;
   }
 
   void cMainWindow::SaveWindowPosition()
