@@ -143,7 +143,6 @@ namespace diesel
 
       // Create thumbnail from dng
       sThumbnailFilePath = cImageCacheManager::GetOrCreateThumbnailForDNGFile(sFilePathDNG, imageSize);
-
     } else {
       ASSERT(photo.bHasImage);
       const string_t sExtension = util::FindFileExtensionForImageFile(sFolderPath, sFileNameNoExtension);
@@ -358,7 +357,7 @@ namespace diesel
 
           if (IsToStop() || loadingProcessInterface.IsToStop()) break;
 
-          if (sThumbnailFilePath.empty()) LOG<<"cImageLoadThread::ThreadFunction Error creating thumbnail \""<<sFolderPath<<"\""<<std::endl;
+          if (sThumbnailFilePath.empty()) LOG<<"cImageLoadThread::ThreadFunction Error creating thumbnail \""<<sFolderPath<<"\" for \""<<pPhoto->sFilePath<<"\""<<std::endl;
           else LoadThumbnailImage(sThumbnailFilePath, sFileNameNoExtension, IMAGE_SIZE::THUMBNAIL);
 
           iter++;
