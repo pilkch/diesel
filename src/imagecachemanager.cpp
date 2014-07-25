@@ -103,6 +103,12 @@ namespace diesel
     return sCacheFolder;
   }
 
+
+  string_t cImageCacheManager::GetAdobeDNGConverterPath()
+  {
+    return TEXT("C:\\Program Files (x86)\\Adobe\\Adobe DNG Converter.exe");
+  }
+
   bool cImageCacheManager::IsWineInstalled()
   {
     const int iResult = system("which wine");
@@ -142,7 +148,9 @@ namespace diesel
     const string_t sDNGFilePath = spitfire::filesystem::MakeFilePath(sFolder, sFile + TEXT(".dng"));
 
     ostringstream_t o;
-    o<<"wine \"C:\\Program Files (x86)\\Adobe\\Adobe DNG Converter.exe\" -c \""<<sRawFilePath<<"\"";
+    o<<"wine ";
+    const string_t sExecutablePath = GetAdobeDNGConverterPath();
+    o<<"\""<<sExecutablePath<<"\" -c \""<<sRawFilePath<<"\"";
     #ifndef BUILD_DEBUG
     o<<" &> /dev/null";
     #endif

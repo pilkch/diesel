@@ -25,6 +25,7 @@ namespace diesel
 
   private:
     static string_t GetCacheFolderPath();
+    static string_t GetAdobeDNGConverterPath();
   };
 }
 
