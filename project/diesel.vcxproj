@@ -202,6 +202,7 @@
     <ClCompile Include="..\..\library\src\spitfire\math\cVec4.cpp" />
     <ClCompile Include="..\..\library\src\spitfire\math\geometry.cpp" />
     <ClCompile Include="..\..\library\src\spitfire\math\math.cpp" />
+    <ClCompile Include="..\..\library\src\spitfire\platform\operatingsystem.cpp" />
     <ClCompile Include="..\..\library\src\spitfire\storage\document.cpp" />
     <ClCompile Include="..\..\library\src\spitfire\storage\filesystem.cpp" />
     <ClCompile Include="..\..\library\src\spitfire\storage\settings.cpp" />
