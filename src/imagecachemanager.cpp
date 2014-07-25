@@ -137,6 +137,9 @@ namespace diesel
 
     // TODO: Use the actual dng sdk like this instead?
     // https://projects.kde.org/projects/extragear/graphics/kipi-plugins/repository/revisions/master/show/dngconverter
+    const string_t sFolder = spitfire::filesystem::GetFolder(sRawFilePath);
+    const string_t sFile = spitfire::filesystem::GetFileNoExtension(sRawFilePath);
+    const string_t sDNGFilePath = spitfire::filesystem::MakeFilePath(sFolder, sFile + TEXT(".dng"));
 
     ostringstream_t o;
     o<<"wine \"C:\\Program Files (x86)\\Adobe\\Adobe DNG Converter.exe\" -c \""<<sRawFilePath<<"\"";
@@ -150,9 +153,6 @@ namespace diesel
       return TEXT("");
     }
 
-    const string_t sFolder = spitfire::filesystem::GetFolder(sRawFilePath);
-    const string_t sFile = spitfire::filesystem::GetFileNoExtension(sRawFilePath);
-    const string_t sDNGFilePath = spitfire::filesystem::MakeFilePath(sFolder, sFile + TEXT(".dng"));
     return sDNGFilePath;
   }
 
@@ -188,6 +188,9 @@ namespace diesel
 
     const string_t sFolderJPG = spitfire::filesystem::GetFolder(sFilePathJPG);
 
+    const string_t sFileUFRawEmbeddedJPG = spitfire::filesystem::GetFileNoExtension(sDNGFilePath) + TEXT(".embedded.jpg");
+    string_t sFilePathUFRawJPG = spitfire::filesystem::MakeFilePath(sFolderJPG, sFileUFRawEmbeddedJPG);
+
     ostringstream_t o;
     o<<"ufraw-batch --out-type=jpg";
     if (size != 0) o<<" --embedded-image --size="<<size;
@@ -206,8 +209,6 @@ namespace diesel
     const string_t sNameJPG = spitfire::filesystem::GetFileNoExtension(sFilePathJPG);
 
     // Try to rename from file.embedded.jpg to abcdefghi_file.jpg
-    const string_t sFileUFRawEmbeddedJPG = spitfire::filesystem::GetFileNoExtension(sDNGFilePath) + TEXT(".embedded.jpg");
-    string_t sFilePathUFRawJPG = spitfire::filesystem::MakeFilePath(sFolderJPG, sFileUFRawEmbeddedJPG);
     LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile Looking for \""<<sFilePathUFRawJPG<<"\""<<std::endl;
     if (spitfire::filesystem::FileExists(sFilePathUFRawJPG)) {
       if (!spitfire::filesystem::MoveFile(sFilePathUFRawJPG, sFilePathJPG)) {
