@@ -11,15 +11,130 @@
 // Diesel headers
 #include "imagecachemanager.h"
 
-#ifdef UNICODE
-int system(const wchar_t* szCommand)
-{
-  return _wsystem(szCommand);
-}
-#endif
-
 namespace diesel
 {
+  #ifdef __WIN__
+
+  // ** cPipe
+  //
+  // http://msdn.microsoft.com/en-us/library/ms682499%28VS.85%29.aspx
+  //
+
+  #define BUFSIZE 4096
+
+  class cPipe
+  {
+  public:
+    cPipe();
+
+    void RunCommandLine(const spitfire::string_t& sCommandLine);
+
+  private:
+    void CreateChildProcess(const spitfire::string_t& sCommandLine);
+    void ReadFromPipe();
+
+    HANDLE hChildStd_IN_Rd;
+    HANDLE hChildStd_IN_Wr;
+    HANDLE hChildStd_OUT_Rd;
+    HANDLE hChildStd_OUT_Wr;
+  };
+
+  cPipe::cPipe() :
+    hChildStd_IN_Rd(NULL),
+    hChildStd_IN_Wr(NULL),
+    hChildStd_OUT_Rd(NULL),
+    hChildStd_OUT_Wr(NULL)
+  {
+  }
+
+  // Create a child process that uses the previously created pipes for STDIN and STDOUT.
+  void cPipe::CreateChildProcess(const spitfire::string_t& sCommandLine)
+  {
+    // Set up members of the PROCESS_INFORMATION structure
+    PROCESS_INFORMATION piProcInfo;
+    ZeroMemory(&piProcInfo, sizeof(PROCESS_INFORMATION));
+
+    // Set up members of the STARTUPINFO structure
+    // This structure specifies the STDIN and STDOUT handles for redirection.
+    STARTUPINFO siStartInfo;
+    ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
+    siStartInfo.cb = sizeof(STARTUPINFO);
+    siStartInfo.hStdError = hChildStd_OUT_Wr;
+    siStartInfo.hStdOutput = hChildStd_OUT_Wr;
+    siStartInfo.hStdInput = hChildStd_IN_Rd;
+    siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
+
+    // Create the child process
+    spitfire::string_t sCommandLineMutable = sCommandLine;
+    BOOL bSuccess = ::CreateProcess(NULL,
+      (spitfire::char_t*)sCommandLineMutable.c_str(),     // command line
+      NULL,          // process security attributes
+      NULL,          // primary thread security attributes
+      TRUE,          // handles are inherited
+      0,             // creation flags
+      NULL,          // use parent's environment
+      NULL,          // use parent's current directory
+      &siStartInfo,  // STARTUPINFO pointer
+      &piProcInfo    // receives PROCESS_INFORMATION
+    );
+
+    // If an error occurs, exit the application
+    if (!bSuccess) {
+      LOGERROR<<"CreateChildProcess CreateProcess FAILED, returning"<<std::endl;
+      return;
+    }
+
+    // Close handles to the child process and its primary thread.
+    // Some applications might keep these handles to monitor the status
+    // of the child process, for example.
+    ::CloseHandle(piProcInfo.hProcess);
+    ::CloseHandle(piProcInfo.hThread);
+  }
+
+  // Read output from the child process's pipe for STDOUT
+  // and write to the parent process's pipe for STDOUT.
+  // Stop when there is no more data.
+  void cPipe::ReadFromPipe()
+  {
+    DWORD dwRead = 0;
+    DWORD dwWritten = 0;
+    CHAR chBuf[BUFSIZE];
+    BOOL bSuccess = FALSE;
+    HANDLE hParentStdOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
+
+    while (true) {
+      bSuccess = ::ReadFile(hChildStd_OUT_Rd, chBuf, BUFSIZE, &dwRead, NULL);
+      if (!bSuccess || (dwRead == 0)) break;
+
+      bSuccess = ::WriteFile(hParentStdOut, chBuf, dwRead, &dwWritten, NULL);
+      if (!bSuccess) break;
+    }
+  }
+
+  void cPipe::RunCommandLine(const diesel::string_t& sCommandLine)
+  {
+    CreateChildProcess(sCommandLine);
+
+    ::CloseHandle(hChildStd_OUT_Wr);
+
+    ReadFromPipe();
+
+    ::CloseHandle(hChildStd_OUT_Rd);
+  }
+
+  void RunCommandLine(const diesel::string_t& sCommandLine)
+  {
+    cPipe pipe;
+    pipe.RunCommandLine(sCommandLine);
+  }
+  #endif
+
+  #ifdef __WIN__
+  const string_t sFolderSeparator = TEXT("\\");
+  #else
+  const string_t sFolderSeparator = TEXT("/");
+  #endif
+
   class cFileAgeAndSize
   {
   public:
@@ -103,19 +218,75 @@ namespace diesel
     return sCacheFolder;
   }
 
+  #ifdef __WIN__
+  string_t cImageCacheManager::GetUFRawBatchPath()
+  {
+    const string_t sProgramFiles = spitfire::filesystem::GetProgramFilesDirectory();
+    const string_t sUFRawBin = spitfire::filesystem::MakeFilePath(sProgramFiles, TEXT("UFRaw"), TEXT("bin"));
+    const string_t sExecutablePath = spitfire::filesystem::MakeFilePath(sUFRawBin, TEXT("ufraw-batch.exe"));
+    return sExecutablePath;
+  }
+
+  string_t cImageCacheManager::GetConvertPath()
+  {
+    // For some reason the 64 bit version installs into "Program Files" too
+    const string_t sProgramFiles = TEXT("C:\\Program Files\\");
+    for (spitfire::filesystem::cFolderIterator iter(sProgramFiles); iter.IsValid(); iter.Next()) {
+      if (spitfire::string::StartsWith(iter.GetFileOrFolder(), TEXT("ImageMagick"))) {
+        const string_t sImageMagickPath = iter.GetFullPath();
+        return spitfire::filesystem::MakeFilePath(sImageMagickPath, TEXT("convert.exe"));
+      }
+    }
+
+    return TEXT("");
+  }
+  #endif
 
   string_t cImageCacheManager::GetAdobeDNGConverterPath()
   {
+    #ifdef __WIN__
+    const string_t sProgramFiles = spitfire::filesystem::GetProgramFilesDirectory();
+    const string_t sExecutablePath = spitfire::filesystem::MakeFilePath(sProgramFiles, TEXT("Adobe"), TEXT("Adobe DNG Converter.exe"));
+    return sExecutablePath;
+    #else
     return TEXT("C:\\Program Files (x86)\\Adobe\\Adobe DNG Converter.exe");
+    #endif
   }
 
+  #ifndef __WIN__
   bool cImageCacheManager::IsWineInstalled()
   {
     const int iResult = system("which wine");
     LOG<<"cImageCacheManager::IsWineInstalled returned "<<iResult<<std::endl;
     return (iResult == 0);
   }
+  #endif
 
+  #ifdef __WIN__
+  bool cImageCacheManager::IsAdobeDNGConverterInstalled()
+  {
+    const string_t sAdobeDNGConverterPath = GetAdobeDNGConverterPath();
+    const bool bExists = spitfire::filesystem::FileExists(sAdobeDNGConverterPath);
+    LOG<<"cImageCacheManager::IsAdobeDNGConverterInstalled returning "<<spitfire::string::ToString(bExists)<<std::endl;
+    return bExists;
+  }
+
+  bool cImageCacheManager::IsUFRawBatchInstalled()
+  {
+    const string_t sUFRawBatchPath = GetUFRawBatchPath();
+    const bool bExists = spitfire::filesystem::FileExists(sUFRawBatchPath);
+    LOG<<"cImageCacheManager::IsUFRawBatchInstalled returning "<<spitfire::string::ToString(bExists)<<std::endl;
+    return bExists;
+  }
+
+  bool cImageCacheManager::IsConvertInstalled()
+  {
+    const string_t sConvertPath = GetConvertPath();
+    const bool bExists = spitfire::filesystem::FileExists(sConvertPath);
+    LOG<<"cImageCacheManager::IsConvertInstalled returning "<<spitfire::string::ToString(bExists)<<std::endl;
+    return bExists;
+  }
+  #else
   bool cImageCacheManager::IsUFRawBatchInstalled()
   {
     const int iResult = system("which ufraw-batch");
@@ -129,6 +300,7 @@ namespace diesel
     LOG<<"cImageCacheManager::IsConvertInstalled returned "<<iResult<<std::endl;
     return (iResult == 0);
   }
+  #endif
 
   string_t cImageCacheManager::GetOrCreateDNGForRawFile(const string_t& sRawFilePath)
   {
@@ -136,30 +308,47 @@ namespace diesel
 
     ASSERT(spitfire::filesystem::FileExists(sRawFilePath));
 
+    #ifndef __WIN__
     if (!IsWineInstalled()) {
       LOG<<"cImageCacheManager::GetOrCreateDNGForRawFile wine is not installed, returning \"\""<<std::endl;
       return TEXT("");
     }
+    #endif
 
+    #ifdef __WIN__
+    // TODO: Use the actual dng sdk instead?
+    #else
     // TODO: Use the actual dng sdk like this instead?
     // https://projects.kde.org/projects/extragear/graphics/kipi-plugins/repository/revisions/master/show/dngconverter
+    #endif
+
     const string_t sFolder = spitfire::filesystem::GetFolder(sRawFilePath);
     const string_t sFile = spitfire::filesystem::GetFileNoExtension(sRawFilePath);
     const string_t sDNGFilePath = spitfire::filesystem::MakeFilePath(sFolder, sFile + TEXT(".dng"));
 
     ostringstream_t o;
+    #ifndef __WIN__
     o<<"wine ";
+    #endif
     const string_t sExecutablePath = GetAdobeDNGConverterPath();
     o<<"\""<<sExecutablePath<<"\" -c \""<<sRawFilePath<<"\"";
     #ifndef BUILD_DEBUG
     o<<" &> /dev/null";
     #endif
     const string_t sCommandLine = o.str();
-    const int iResult = system(sCommandLine.c_str());
-    if (iResult != 0) {
-      LOG<<"cImageCacheManager::GetOrCreateDNGForRawFile wine returned "<<iResult<<" for \""<<sCommandLine<<"\", returning \"\""<<std::endl;
+    #ifdef __WIN__
+    RunCommandLine(sCommandLine);
+    if (!spitfire::filesystem::FileExists(sDNGFilePath)) {
+      LOG<<"cImageCacheManager::GetOrCreateDNGForRawFile \""<<sCommandLine<<"\" FAILED, returning \"\""<<std::endl;
       return TEXT("");
     }
+    #else
+    const int iResult = system(sCommandLine.c_str());
+    if (iResult != 0) {
+      LOG<<"cImageCacheManager::GetOrCreateDNGForRawFile \""<<sCommandLine<<"\" returned "<<iResult<<", returning \"\""<<std::endl;
+      return TEXT("");
+    }
+    #endif
 
     return sDNGFilePath;
   }
@@ -200,18 +389,41 @@ namespace diesel
     string_t sFilePathUFRawJPG = spitfire::filesystem::MakeFilePath(sFolderJPG, sFileUFRawEmbeddedJPG);
 
     ostringstream_t o;
-    o<<"ufraw-batch --out-type=jpg";
+    #ifdef __WIN__
+    o<<"\""<<GetUFRawBatchPath()<<"\"";
+    #else
+    o<<"ufraw-batch";
+    #endif
+    o<<" --out-type=jpg";
     if (size != 0) o<<" --embedded-image --size="<<size;
-    o<<" \""<<sDNGFilePath<<"\" --overwrite --out-path=\""<<sFolderJPG<<"\"";
+    o<<" \""<<sDNGFilePath<<"\" --overwrite --out-path=\""<<spitfire::string::StripTrailing(sFolderJPG, sFolderSeparator)<<"\"";
     #ifndef BUILD_DEBUG
     o<<" --silent";
     #endif
     const string_t sCommandLine = o.str();
+    LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile Running command line \""<<sCommandLine<<"\""<<std::endl;
+    /*const int iResult = system(sCommandLine.c_str());
+    #ifdef __WIN__
+    if (!spitfire::filesystem::FileExists(sFilePathUFRawJPG)) {
+    #else
+    if (iResult != 0) {
+    #endif
+      LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile ufraw-batch returned "<<iResult<<" for \""<<sCommandLine<<"\", returning \"\""<<std::endl;
+      return TEXT("");
+    }*/
+    #ifdef __WIN__
+    RunCommandLine(sCommandLine);
+    if (!spitfire::filesystem::FileExists(sFilePathUFRawJPG)) {
+      LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile ufraw-batch FAILED for \""<<sCommandLine<<"\", returning \"\""<<std::endl;
+      return TEXT("");
+    }
+    #else
     const int iResult = system(sCommandLine.c_str());
     if (iResult != 0) {
       LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile ufraw-batch returned "<<iResult<<" for \""<<sCommandLine<<"\", returning \"\""<<std::endl;
       return TEXT("");
     }
+    #endif
 
     // ufraw-batch doesn't respect the output folder if we provide our own output filename, so we have to rename the file after it is converted
     const string_t sNameJPG = spitfire::filesystem::GetFileNoExtension(sFilePathJPG);
@@ -275,15 +487,19 @@ namespace diesel
     const string_t sFolderJPG = spitfire::filesystem::GetFolder(sFilePathJPG);
 
     ostringstream_t o;
-    o<<"convert \""<<sImageFilePath<<"\"";
+    o<<"\""<<GetConvertPath()<<"\" \""<<sImageFilePath<<"\"";
     if ((width != 0) && (height != 0)) o<<" -resize "<<width<<"x"<<height;
     o<<" -auto-orient \""<<sFilePathJPG<<"\"";
     const string_t sCommandLine = o.str();
+    #ifdef __WIN__
+    RunCommandLine(sCommandLine);
+    #else
     const int iResult = system(sCommandLine.c_str());
     if (iResult != 0) {
       LOG<<"cImageCacheManager::GetOrCreateThumbnailForImageFile convert returned "<<iResult<<" for \""<<sCommandLine<<"\", returning \"\""<<std::endl;
       return TEXT("");
     }
+    #endif
 
     if (!spitfire::filesystem::FileExists(sFilePathJPG)) {
       LOG<<"cImageCacheManager::GetOrCreateThumbnailForImageFile Failed to create the thumbnail image \""<<sFilePathJPG<<"\", returning \"\""<<std::endl;
