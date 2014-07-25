@@ -227,4 +227,40 @@ namespace diesel
 
     context.End();
   }
+
+  void cWin32mmOpenGLView::OnOpenGLViewResized()
+  {
+  }
+
+  void cWin32mmOpenGLView::OnOpenGLViewFileFound()
+  {
+  }
+
+  void cWin32mmOpenGLView::OnOpenGLViewLoadedFileOrFolder()
+  {
+  }
+
+  void cWin32mmOpenGLView::OnOpenGLViewLoadedFilesClear()
+  {
+  }
+
+  void cWin32mmOpenGLView::OnOpenGLViewChangedFolder(const string_t& sFolderPath)
+  {
+  }
+
+  void cWin32mmOpenGLView::OnOpenGLViewRightClick()
+  {
+  }
+
+  void cWin32mmOpenGLView::OnOpenGLViewSelectionChanged()
+  {
+  }
+
+  void cWin32mmOpenGLView::OnOpenGLViewPhotoCollageMode()
+  {
+  }
+
+  void cWin32mmOpenGLView::OnOpenGLViewSinglePhotoMode(const string_t& sFilePath)
+  {
+  }
 }

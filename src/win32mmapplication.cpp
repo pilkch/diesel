@@ -11,9 +11,8 @@
 #include <map>
 #include <vector>
 #include <list>
-// Spitfire headers
-#include <spitfire/spitfire.h>
 
+// Spitfire headers
 #include <spitfire/math/math.h>
 #include <spitfire/math/cVec2.h>
 #include <spitfire/math/cVec3.h>
@@ -21,7 +20,8 @@
 #include <spitfire/math/cMat4.h>
 #include <spitfire/math/cQuaternion.h>
 #include <spitfire/math/cColour.h>
-
+#include <spitfire/platform/operatingsystem.h>
+#include <spitfire/storage/filesystem.h>
 #include <spitfire/util/log.h>
 
 // libopenglmm headers
@@ -356,6 +356,23 @@ namespace diesel
       }
       case ID_CONTROL_UP: {
         LOG<<"cStatePhotoBrowser::HandleCommand Up"<<std::endl;
+        // Get the current path
+        const string_t sFolderPath = comboBoxPath.GetText();
+
+        // Get the parent folder and check that it is valid
+        const string_t sParentFolderPath = spitfire::filesystem::StripLastDirectory(sFolderPath);
+        if (spitfire::filesystem::DirectoryExists(sParentFolderPath)) {
+          // Change the current path
+          photoBrowserViewController.SetCurrentFolderPath(sParentFolderPath);
+
+          // Update the combobox text
+          comboBoxPath.SetText(sParentFolderPath);
+        }
+        return true;
+      }
+      case ID_CONTROL_SHOW_FOLDER: {
+        LOG<<"cStatePhotoBrowser::HandleCommand Show folder"<<std::endl;
+        if (spitfire::filesystem::DirectoryExists(comboBoxPath.GetText())) spitfire::operatingsystem::ShowFolder(comboBoxPath.GetText());
         return true;
       }
     }

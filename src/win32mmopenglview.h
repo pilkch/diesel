@@ -74,6 +74,16 @@ namespace diesel
     void Create(win32mm::cWindow& window, int idControl);
     void Destroy();
 
+    void OnOpenGLViewChangedFolder(const string_t& sFolderPath);
+    void OnOpenGLViewResized();
+    void OnOpenGLViewFileFound();
+    void OnOpenGLViewLoadedFileOrFolder();
+    void OnOpenGLViewLoadedFilesClear();
+    void OnOpenGLViewRightClick();
+    void OnOpenGLViewSelectionChanged();
+    void OnOpenGLViewPhotoCollageMode();
+    void OnOpenGLViewSinglePhotoMode(const string_t& sFilePath);
+
   protected:
     void InitOpenGL(int argc, char* argv[]);
     void DestroyOpenGL();

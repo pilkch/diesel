@@ -23,136 +23,106 @@
 
 namespace diesel
 {
-  // ** cPhotoBrowserViewController
-
-  cPhotoBrowserViewController::cPhotoBrowserViewController(cWin32mmOpenGLView& _view) :
-    view(_view),
-    pContext(nullptr)
-  {
-  }
-
-  void cPhotoBrowserViewController::Init(opengl::cContext& context)
-  {
-    pContext = &context;
-  }
-
-  void cPhotoBrowserViewController::SetCurrentFolderPath(const string_t& _sFolderPath)
-  {
-    sFolderPath = _sFolderPath;
-
-    view.Update();
-  }
-
-  void cPhotoBrowserViewController::OnPaint()
-  {
-    static bool bIsRed = false;
-    if (bIsRed) glClearColor(1.0f, 1.0f, 0.0f, 1.0f);
-    else glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
-    bIsRed = !bIsRed;
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  }
-
-#if 0
-  class cWin32mmOpenGLViewEvent
+  class cPhotoBrowserViewControllerEvent
   {
   public:
-    virtual ~cWin32mmOpenGLViewEvent() {}
+    virtual ~cPhotoBrowserViewControllerEvent() {}
 
-    virtual void EventFunction(cWin32mmOpenGLView& view) = 0;
+    virtual void EventFunction(cPhotoBrowserViewController& view) = 0;
   };
 
 
-  class cWin32mmOpenGLViewFolderFoundEvent : public cWin32mmOpenGLViewEvent
+  class cPhotoBrowserViewControllerFolderFoundEvent : public cPhotoBrowserViewControllerEvent
   {
   public:
-    cWin32mmOpenGLViewFolderFoundEvent(const string_t& sFolderName);
+    cPhotoBrowserViewControllerFolderFoundEvent(const string_t& sFolderName);
 
-    virtual void EventFunction(cWin32mmOpenGLView& view) override;
+    virtual void EventFunction(cPhotoBrowserViewController& view) override;
 
     string_t sFolderName;
   };
 
-  cWin32mmOpenGLViewFolderFoundEvent::cWin32mmOpenGLViewFolderFoundEvent(const string_t& _sFolderName) :
+  cPhotoBrowserViewControllerFolderFoundEvent::cPhotoBrowserViewControllerFolderFoundEvent(const string_t& _sFolderName) :
     sFolderName(_sFolderName)
   {
   }
 
-  void cWin32mmOpenGLViewFolderFoundEvent::EventFunction(cWin32mmOpenGLView& view)
+  void cPhotoBrowserViewControllerFolderFoundEvent::EventFunction(cPhotoBrowserViewController& view)
   {
-    //view.OnFolderFound(sFolderName);
+    view.OnFolderFound(sFolderName);
   }
 
 
-  class cWin32mmOpenGLViewFileFoundEvent : public cWin32mmOpenGLViewEvent
+  class cPhotoBrowserViewControllerFileFoundEvent : public cPhotoBrowserViewControllerEvent
   {
   public:
-    cWin32mmOpenGLViewFileFoundEvent(const string_t& sFileNameNoExtension);
+    cPhotoBrowserViewControllerFileFoundEvent(const string_t& sFileNameNoExtension);
 
-    virtual void EventFunction(cWin32mmOpenGLView& view) override;
+    virtual void EventFunction(cPhotoBrowserViewController& view) override;
 
     string_t sFileNameNoExtension;
   };
 
-  cWin32mmOpenGLViewFileFoundEvent::cWin32mmOpenGLViewFileFoundEvent(const string_t& _sFileNameNoExtension) :
+  cPhotoBrowserViewControllerFileFoundEvent::cPhotoBrowserViewControllerFileFoundEvent(const string_t& _sFileNameNoExtension) :
     sFileNameNoExtension(_sFileNameNoExtension)
   {
   }
 
-  void cWin32mmOpenGLViewFileFoundEvent::EventFunction(cWin32mmOpenGLView& view)
+  void cPhotoBrowserViewControllerFileFoundEvent::EventFunction(cPhotoBrowserViewController& view)
   {
-    //view.OnFileFound(sFileNameNoExtension);
+    view.OnFileFound(sFileNameNoExtension);
   }
 
 
-  class cWin32mmOpenGLViewImageLoadedEvent : public cWin32mmOpenGLViewEvent
+  class cPhotoBrowserViewControllerImageLoadedEvent : public cPhotoBrowserViewControllerEvent
   {
   public:
-    cWin32mmOpenGLViewImageLoadedEvent(const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize, voodoo::cImage* pImage);
-    ~cWin32mmOpenGLViewImageLoadedEvent();
+    cPhotoBrowserViewControllerImageLoadedEvent(const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize, voodoo::cImage* pImage);
+    ~cPhotoBrowserViewControllerImageLoadedEvent();
 
-    virtual void EventFunction(cWin32mmOpenGLView& view) override;
+    virtual void EventFunction(cPhotoBrowserViewController& view) override;
 
     string_t sFileNameNoExtension;
     IMAGE_SIZE imageSize;
     voodoo::cImage* pImage;
   };
 
-  cWin32mmOpenGLViewImageLoadedEvent::cWin32mmOpenGLViewImageLoadedEvent(const string_t& _sFileNameNoExtension, IMAGE_SIZE _imageSize, voodoo::cImage* _pImage) :
+  cPhotoBrowserViewControllerImageLoadedEvent::cPhotoBrowserViewControllerImageLoadedEvent(const string_t& _sFileNameNoExtension, IMAGE_SIZE _imageSize, voodoo::cImage* _pImage) :
     sFileNameNoExtension(_sFileNameNoExtension),
     imageSize(_imageSize),
     pImage(_pImage)
   {
   }
 
-  cWin32mmOpenGLViewImageLoadedEvent::~cWin32mmOpenGLViewImageLoadedEvent()
+  cPhotoBrowserViewControllerImageLoadedEvent::~cPhotoBrowserViewControllerImageLoadedEvent()
   {
     spitfire::SAFE_DELETE(pImage);
   }
 
-  void cWin32mmOpenGLViewImageLoadedEvent::EventFunction(cWin32mmOpenGLView& view)
+  void cPhotoBrowserViewControllerImageLoadedEvent::EventFunction(cPhotoBrowserViewController& view)
   {
-    //view.OnImageLoaded(sFileNameNoExtension, imageSize, pImage);
+    view.OnImageLoaded(sFileNameNoExtension, imageSize, pImage);
   }
 
 
-  class cWin32mmOpenGLViewImageErrorEvent : public cWin32mmOpenGLViewEvent
+  class cPhotoBrowserViewControllerImageErrorEvent : public cPhotoBrowserViewControllerEvent
   {
   public:
-    explicit cWin32mmOpenGLViewImageErrorEvent(const string_t& sFileNameNoExtension);
+    explicit cPhotoBrowserViewControllerImageErrorEvent(const string_t& sFileNameNoExtension);
 
-    virtual void EventFunction(cWin32mmOpenGLView& view) override;
+    virtual void EventFunction(cPhotoBrowserViewController& view) override;
 
     string_t sFileNameNoExtension;
   };
 
-  cWin32mmOpenGLViewImageErrorEvent::cWin32mmOpenGLViewImageErrorEvent(const string_t& _sFileNameNoExtension) :
+  cPhotoBrowserViewControllerImageErrorEvent::cPhotoBrowserViewControllerImageErrorEvent(const string_t& _sFileNameNoExtension) :
     sFileNameNoExtension(_sFileNameNoExtension)
   {
   }
 
-  void cWin32mmOpenGLViewImageErrorEvent::EventFunction(cWin32mmOpenGLView& view)
+  void cPhotoBrowserViewControllerImageErrorEvent::EventFunction(cPhotoBrowserViewController& view)
   {
-    //view.OnImageError(sFileNameNoExtension);
+    view.OnImageError(sFileNameNoExtension);
   }
 
 
@@ -173,10 +143,12 @@ namespace diesel
   {
   }
 
-  // ** cWin32mmOpenGLView
 
-  cWin32mmOpenGLView::cWin32mmOpenGLView(cOpenGLViewController& _controller) :
-    controller(_controller),
+  // ** cPhotoBrowserViewController
+
+  cPhotoBrowserViewController::cPhotoBrowserViewController(cWin32mmOpenGLView& _view) :
+    view(_view),
+    pContext(nullptr),
     imageLoadThread(*this),
     bIsWireframe(false),
     pageHeight(500),
@@ -184,7 +156,6 @@ namespace diesel
     columns(10),
     fScale(1.0f),
     fScrollPosition(0.0f),
-    pContext(nullptr),
     pTextureMissing(nullptr),
     pTextureFolder(nullptr),
     pTextureLoading(nullptr),
@@ -195,7 +166,6 @@ namespace diesel
     pStaticVertexBufferObjectSelectionRectangle(nullptr),
     pStaticVertexBufferObjectIcon(nullptr),
     pFont(nullptr),
-    bIsConfigureCalled(false),
     colourSelected(1.0f, 1.0f, 1.0f),
     bIsModeSinglePhoto(false),
     currentSinglePhoto(0),
@@ -206,15 +176,6 @@ namespace diesel
     resolution.height = 500;
     resolution.pixelFormat = opengl::PIXELFORMAT::R8G8B8A8;
 
-    set_size_request(resolution.width, resolution.height);
-
-    // Allow this control to grab the keyboard focus
-    set_can_focus(true);
-
-
-    // Allow this widget to handle button press and pointer events
-    add_events(Gdk::BUTTON_PRESS_MASK | Gdk::POINTER_MOTION_MASK);
-
     UpdateColumnsPageHeightAndRequiredHeight();
 
     imageLoadThread.Start();
@@ -222,12 +183,19 @@ namespace diesel
     notifyMainThread.Create();
   }
 
-  cWin32mmOpenGLView::~cWin32mmOpenGLView()
+  cPhotoBrowserViewController::~cPhotoBrowserViewController()
   {
     Destroy();
   }
 
-  void cWin32mmOpenGLView::Destroy()
+  void cPhotoBrowserViewController::Init(opengl::cContext& context)
+  {
+    pContext = &context;
+
+    CreateResources();
+  }
+
+  void cPhotoBrowserViewController::Destroy()
   {
     imageLoadThread.StopNow();
 
@@ -235,31 +203,9 @@ namespace diesel
     notifyMainThread.ClearEventQueue();
 
     DestroyResources();
-
-    DestroyOpenGL();
   }
 
-  const Win32Widget* cWin32mmOpenGLView::GetWidget() const
-  {
-    return Win32::Widget::gobj();
-  }
-
-  Win32Widget* cWin32mmOpenGLView::GetWidget()
-  {
-    return Win32::Widget::gobj();
-  }
-
-  void cWin32mmOpenGLView::SetSelectionColour(const spitfire::math::cColour& colour)
-  {
-    colourSelected = colour;
-  }
-
-  string_t cWin32mmOpenGLView::GetFolder() const
-  {
-    return sFolderPath;
-  }
-
-  void cWin32mmOpenGLView::SetFolder(const string_t& _sFolderPath)
+  void cPhotoBrowserViewController::SetCurrentFolderPath(const string_t& _sFolderPath)
   {
     if (sFolderPath != _sFolderPath) {
       // Clear the request queue as soon as possible so that we don't waste time loading images from the old folder
@@ -267,20 +213,25 @@ namespace diesel
 
       sFolderPath = _sFolderPath;
 
-      if (bIsConfigureCalled) {
-        // Reload our photos
-        DestroyPhotos();
-        CreatePhotos();
-      }
+      // Reload our photos
+      DestroyPhotos();
+      CreatePhotos();
+
+      view.Update();
     }
   }
 
-  void cWin32mmOpenGLView::SetCacheMaximumSizeGB(size_t nCacheMaximumSizeGB)
+  void cPhotoBrowserViewController::SetSelectionColour(const spitfire::math::cColour& colour)
+  {
+    colourSelected = colour;
+  }
+
+  void cPhotoBrowserViewController::SetCacheMaximumSizeGB(size_t nCacheMaximumSizeGB)
   {
     imageLoadThread.SetMaximumCacheSizeGB(nCacheMaximumSizeGB);
   }
 
-  void cWin32mmOpenGLView::StopLoading()
+  void cPhotoBrowserViewController::StopLoading()
   {
     imageLoadThread.StopLoading();
 
@@ -292,15 +243,15 @@ namespace diesel
       iter++;
     }
 
-    parent.OnOpenGLViewLoadedFileOrFolder();
+    view.OnOpenGLViewLoadedFileOrFolder();
   }
 
-  size_t cWin32mmOpenGLView::GetPhotoCount() const
+  size_t cPhotoBrowserViewController::GetPhotoCount() const
   {
     return photos.size();
   }
 
-  size_t cWin32mmOpenGLView::GetLoadedPhotoCount() const
+  size_t cPhotoBrowserViewController::GetLoadedPhotoCount() const
   {
     size_t i = 0;
 
@@ -315,7 +266,7 @@ namespace diesel
     return i;
   }
 
-  size_t cWin32mmOpenGLView::GetSelectedPhotoCount() const
+  size_t cPhotoBrowserViewController::GetSelectedPhotoCount() const
   {
     size_t i = 0;
 
@@ -330,35 +281,30 @@ namespace diesel
     return i;
   }
 
-  size_t cWin32mmOpenGLView::GetPageHeight() const
-  {
-    return pageHeight;
-  }
-
-  size_t cWin32mmOpenGLView::GetRequiredHeight() const
+  size_t cPhotoBrowserViewController::GetRequiredHeight() const
   {
     return requiredHeight;
   }
 
-  float cWin32mmOpenGLView::GetScale() const
+  float cPhotoBrowserViewController::GetScale() const
   {
     return fScale;
   }
 
-  void cWin32mmOpenGLView::SetScale(float _fScale)
+  void cPhotoBrowserViewController::SetScale(float _fScale)
   {
     fScale = _fScale;
 
     UpdateColumnsPageHeightAndRequiredHeight();
   }
 
-  void cWin32mmOpenGLView::ClampScrollBarPosition()
+  void cPhotoBrowserViewController::ClampScrollBarPosition()
   {
     const float fMax = max(0.0f, float(requiredHeight) / fScale);
     fScrollPosition = spitfire::math::clamp(fScrollPosition, 0.0f, fMax);
   }
 
-  void cWin32mmOpenGLView::UpdateColumnsPageHeightAndRequiredHeight()
+  void cPhotoBrowserViewController::UpdateColumnsPageHeightAndRequiredHeight()
   {
     const float fWidth = (resolution.width - fThumbNailSpacing);
 
@@ -371,10 +317,10 @@ namespace diesel
 
     pageHeight = resolution.height * fScale;
 
-    LOG<<"cWin32mmOpenGLView::UpdateColumnsPageHeightAndRequiredHeight fScale="<<fScale<<", photos="<<photos.size()<<", rows="<<rows<<", columns="<<columns<<", requiredHeight="<<requiredHeight<<", pageHeight="<<pageHeight<<std::endl;
+    LOG<<"cPhotoBrowserViewController::UpdateColumnsPageHeightAndRequiredHeight fScale="<<fScale<<", photos="<<photos.size()<<", rows="<<rows<<", columns="<<columns<<", requiredHeight="<<requiredHeight<<", pageHeight="<<pageHeight<<std::endl;
   }
 
-  bool cWin32mmOpenGLView::GetPhotoAtPoint(size_t& index, const spitfire::math::cVec2& _point) const
+  bool cPhotoBrowserViewController::GetPhotoAtPoint(size_t& index, const spitfire::math::cVec2& _point) const
   {
     const spitfire::math::cVec2 point = spitfire::math::cVec2(0.0f, fScrollPosition) + _point / fScale;
 
@@ -389,17 +335,17 @@ namespace diesel
         (point.x >= fX) && (point.x <= fX + fThumbNailWidth) &&
         (point.y >= fY) && (point.y <= fY + fThumbNailHeight)
       ) {
-        LOG<<"cWin32mmOpenGLView::GetPhotoAtPoint In item "<<i<<std::endl;
+        LOG<<"cPhotoBrowserViewController::GetPhotoAtPoint In item "<<i<<std::endl;
         index = i;
         return true;
       }
     }
 
-    LOG<<"cWin32mmOpenGLView::GetPhotoAtPoint In blank space"<<std::endl;
+    LOG<<"cPhotoBrowserViewController::GetPhotoAtPoint In blank space"<<std::endl;
     return false;
   }
 
-  void cWin32mmOpenGLView::CreateVertexBufferObjectSelectionRectangle(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight)
+  void cPhotoBrowserViewController::CreateVertexBufferObjectSelectionRectangle(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight)
   {
     ASSERT(pStaticVertexBufferObject != nullptr);
 
@@ -420,10 +366,10 @@ namespace diesel
 
     pStaticVertexBufferObject->SetData(pGeometryDataPtr);
 
-    pStaticVertexBufferObject->Compile2D(system);
+    pStaticVertexBufferObject->Compile2D();
   }
 
-  void cWin32mmOpenGLView::CreateVertexBufferObjectSquare(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight)
+  void cPhotoBrowserViewController::CreateVertexBufferObjectSquare(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight)
   {
     ASSERT(pStaticVertexBufferObject != nullptr);
 
@@ -444,10 +390,10 @@ namespace diesel
 
     pStaticVertexBufferObject->SetData(pGeometryDataPtr);
 
-    pStaticVertexBufferObject->Compile2D(system);
+    pStaticVertexBufferObject->Compile2D();
   }
 
-  void cWin32mmOpenGLView::CreateVertexBufferObjectRect(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fX, float fY, float fWidth, float fHeight, size_t textureWidth, size_t textureHeight)
+  void cPhotoBrowserViewController::CreateVertexBufferObjectRect(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fX, float fY, float fWidth, float fHeight, size_t textureWidth, size_t textureHeight)
   {
     ASSERT(pStaticVertexBufferObject != nullptr);
 
@@ -471,10 +417,10 @@ namespace diesel
 
     pStaticVertexBufferObject->SetData(pGeometryDataPtr);
 
-    pStaticVertexBufferObject->Compile2D(system);
+    pStaticVertexBufferObject->Compile2D();
   }
 
-  void cWin32mmOpenGLView::CreateVertexBufferObjectIcon()
+  void cPhotoBrowserViewController::CreateVertexBufferObjectIcon()
   {
     pStaticVertexBufferObjectIcon = pContext->CreateStaticVertexBufferObject();
     ASSERT(pStaticVertexBufferObjectIcon != nullptr);
@@ -482,7 +428,7 @@ namespace diesel
     CreateVertexBufferObjectSquare(pStaticVertexBufferObjectIcon, fWidthAndHeight, fWidthAndHeight);
   }
 
-  void cWin32mmOpenGLView::CreateVertexBufferObjectPhoto(opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectPhoto, size_t textureWidth, size_t textureHeight)
+  void cPhotoBrowserViewController::CreateVertexBufferObjectPhoto(opengl::cStaticVertexBufferObject* pStaticVertexBufferObjectPhoto, size_t textureWidth, size_t textureHeight)
   {
     ASSERT(pStaticVertexBufferObjectPhoto != nullptr);
     const float fRatio = float(textureWidth) / float(textureHeight);
@@ -498,14 +444,14 @@ namespace diesel
     CreateVertexBufferObjectRect(pStaticVertexBufferObjectPhoto, fX, fY, fWidth, fHeight, textureWidth, textureHeight);
   }
 
-  /*void cWin32mmOpenGLView::CreateVertexBufferObjectPhotos()
+  /*void cPhotoBrowserViewController::CreateVertexBufferObjectPhotos()
   {
     if (pTexture != nullptr) {
 
     }
   }*/
 
-  void cWin32mmOpenGLView::CreateResources()
+  void cPhotoBrowserViewController::CreateResources()
   {
     // Return if we have already created our resources
     if (pShaderPhoto != nullptr) {
@@ -557,17 +503,17 @@ namespace diesel
     assert(pFont != nullptr);
     assert(pFont->IsValid());
 
-    pTextureMissing = pContext->CreateTexture("data/textures/icon_question_mark.png");
+    pTextureMissing = pContext->CreateTexture(TEXT("data/textures/icon_question_mark.png"));
     ASSERT(pTextureMissing != nullptr);
-    pTextureFolder = pContext->CreateTexture("data/textures/icon_folder.png");
+    pTextureFolder = pContext->CreateTexture(TEXT("data/textures/icon_folder.png"));
     ASSERT(pTextureFolder != nullptr);
-    pTextureLoading = pContext->CreateTexture("data/textures/icon_stopwatch.png");
+    pTextureLoading = pContext->CreateTexture(TEXT("data/textures/icon_stopwatch.png"));
     ASSERT(pTextureLoading != nullptr);
-    pTextureLoadingError = pContext->CreateTexture("data/textures/icon_loading_error.png");
+    pTextureLoadingError = pContext->CreateTexture(TEXT("data/textures/icon_loading_error.png"));
     ASSERT(pTextureLoadingError != nullptr);
   }
 
-  void cWin32mmOpenGLView::DestroyResources()
+  void cPhotoBrowserViewController::DestroyResources()
   {
     if (pTextureLoadingError != nullptr) {
       pContext->DestroyTexture(pTextureLoadingError);
@@ -629,19 +575,19 @@ namespace diesel
     DestroyPhotos();
   }
 
-  void cWin32mmOpenGLView::CreatePhotos()
+  void cPhotoBrowserViewController::CreatePhotos()
   {
     // If we don't have a folder to show then we can just return
     if (sFolderPath.empty()) return;
 
     // Reset our files loaded and total count
-    parent.OnOpenGLViewLoadedFilesClear();
+    view.OnOpenGLViewLoadedFilesClear();
 
     // Tell our image loading thread to start loading the folder
     imageLoadThread.LoadFolderThumbnails(sFolderPath);
   }
 
-  void cWin32mmOpenGLView::DestroyPhotos()
+  void cPhotoBrowserViewController::DestroyPhotos()
   {
     const size_t n = photos.size();
     for (size_t i = 0; i < n; i++) {
@@ -657,82 +603,7 @@ namespace diesel
     photos.clear();
   }
 
-  void cWin32mmOpenGLView::Init(int argc, char* argv[])
-  {
-    Win32_widget_set_events(GetWidget(), GDK_EXPOSURE_MASK);
-
-    InitOpenGL(argc, argv);
-
-    grab_focus();
-  }
-
-  void cWin32mmOpenGLView::InitOpenGL(int argc, char* argv[])
-  {
-    Win32_gl_init(&argc, &argv);
-
-    // Prepare OpenGL
-    GdkGLConfigMode flags = GdkGLConfigMode(GDK_GL_MODE_RGBA | GDK_GL_MODE_DEPTH | GDK_GL_MODE_DOUBLE);
-    #ifndef GDK_MULTIHEAD_SAFE
-    GdkGLConfig* pConfig = gdk_gl_config_new_by_mode(flags);
-    if (pConfig == nullptr) {
-      LOG<<"cWin32mmOpenGLView::InitOpenGL gdk_gl_config_new_by_mode FAILED for double buffered rendering"<<std::endl;
-      LOG<<"cWin32mmOpenGLView::InitOpenGL Trying single buffered rendering"<<std::endl;
-
-      // Try single-buffered visual
-      flags = GdkGLConfigMode(GDK_GL_MODE_RGBA | GDK_GL_MODE_DEPTH);
-      pConfig = gdk_gl_config_new_by_mode(flags);
-      if (pConfig == nullptr) LOG<<"cWin32mmOpenGLView::InitOpenGL gdk_gl_config_new_by_mode FAILED for single buffered rendering"<<std::endl;
-    }
-    #else
-    GdkGLConfig* pConfig = gdk_gl_config_new_by_mode_for_screen(GdkScreen* screen, flags);
-    #endif
-    ASSERT(pConfig != nullptr);
-
-    Win32Widget* pWidget = GetWidget();
-
-    if (!Win32_widget_set_gl_capability(pWidget, pConfig, NULL, TRUE, GDK_GL_RGBA_TYPE)) g_assert_not_reached();
-
-    // Handle the configure event
-    g_signal_connect(pWidget, "configure-event", G_CALLBACK(configure_cb), (void*)this);
-
-    // Create our redraw timer
-    const gdouble TIMEOUT_PERIOD = 1000 / 60;
-    g_timeout_add(TIMEOUT_PERIOD, idle_cb, pWidget);
-
-    // Init libopenglmm
-    pContext = system.CreateSharedContextForWidget(resolution);
-  }
-
-  gboolean cWin32mmOpenGLView::configure_cb(Win32Widget* pWidget, GdkEventConfigure* event, gpointer pUserData)
-  {
-    Win32_widget_begin_gl(pWidget);
-
-    // Set the viewport
-    Win32Allocation alloc;
-    Win32_widget_get_allocation(pWidget, &alloc);
-
-    cWin32mmOpenGLView* pThis = (cWin32mmOpenGLView*)pUserData;
-    ASSERT(pThis != nullptr);
-    pThis->bIsConfigureCalled = true;
-    pThis->ResizeWidget(alloc.width, alloc.height);
-    pThis->CreateResources();
-
-    const bool bSwap = true;
-    Win32_widget_end_gl(pWidget, bSwap);
-
-    return TRUE;
-  }
-
-  void cWin32mmOpenGLView::DestroyOpenGL()
-  {
-    // Destroy our context
-    if (pContext != nullptr) {
-      system.DestroyContext(pContext);
-      pContext = nullptr;
-    }
-  }
-
-  void cWin32mmOpenGLView::ResizeWidget(size_t width, size_t height)
+  void cPhotoBrowserViewController::ResizeWidget(size_t width, size_t height)
   {
     resolution.width = width;
     resolution.height = height;
@@ -740,10 +611,10 @@ namespace diesel
 
     UpdateColumnsPageHeightAndRequiredHeight();
 
-    parent.OnOpenGLViewResized();
+    view.OnOpenGLViewResized();
   }
 
-  void cWin32mmOpenGLView::RenderPhoto(size_t index, const spitfire::math::cMat4& matScale)
+  void cPhotoBrowserViewController::RenderPhoto(size_t index, const spitfire::math::cMat4& matScale)
   {
     spitfire::math::cMat4 matModelView2D;
 
@@ -826,7 +697,7 @@ namespace diesel
     }
   }
 
-  void cWin32mmOpenGLView::DrawScene()
+  void cPhotoBrowserViewController::OnPaint()
   {
     ASSERT(pContext != nullptr);
     ASSERT(pContext->IsValid());
@@ -845,7 +716,7 @@ namespace diesel
 
     pContext->SetClearColour(spitfire::math::cColour(0.0f, 0.0f, 0.0f, 1.0f));
 
-    pContext->BeginRenderToScreen();
+    //pContext->BeginRenderToScreen();
 
     if (bIsWireframe) pContext->EnableWireframe();
 
@@ -905,7 +776,7 @@ namespace diesel
 
           pVBOText->SetData(pTextGeometryDataPtr);
 
-          pVBOText->Compile2D(system);
+          pVBOText->Compile2D();
 
           // Bind the vertex buffer object
           pContext->BindStaticVertexBufferObject2D(*pVBOText);
@@ -1001,7 +872,7 @@ namespace diesel
 
           pVBOText->SetData(pTextGeometryDataPtr);
 
-          pVBOText->Compile2D(system);
+          pVBOText->Compile2D();
 
           // Bind the vertex buffer object
           pContext->BindStaticVertexBufferObject2D(*pVBOText);
@@ -1030,83 +901,54 @@ namespace diesel
 
     if (bIsWireframe) pContext->DisableWireframe();
 
-    pContext->EndRenderToScreen();
+    //pContext->EndRenderToScreen();
   }
 
-  bool cWin32mmOpenGLView::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
+  void cPhotoBrowserViewController::OnFolderFound(const string_t& sFolderName)
   {
-    // Draw with OpenGL instead of Cairo
-    Win32Widget* pWidget = GetWidget();
-
-    Win32_widget_begin_gl(pWidget);
-
-    DrawScene();
-
-    const bool bSwap = true;
-    Win32_widget_end_gl(pWidget, bSwap);
-
-    return true;
-  }
-
-  gboolean cWin32mmOpenGLView::idle_cb(gpointer pUserData)
-  {
-    //LOG<<"cWin32mmOpenGLView::idle_cb"<<std::endl;
-
-    // Update control data/params  in this function if needed
-    Win32Widget* pWidget = Win32_WIDGET(pUserData);
-
-    // Force a redraw
-    GdkRectangle dummyRect = { 0, 0, 1, 1 };
-    gdk_window_invalidate_rect(gdk_gl_window_get_window(Win32_widget_get_gl_window(pWidget)), &dummyRect, TRUE);
-
-    return TRUE;
-  }
-
-  void cWin32mmOpenGLView::OnFolderFound(const string_t& sFolderName)
-  {
-    LOG<<"cWin32mmOpenGLView::OnFolderFound \""<<sFolderName<<"\""<<std::endl;
+    LOG<<"cPhotoBrowserViewController::OnFolderFound \""<<sFolderName<<"\""<<std::endl;
 
     if (!spitfire::util::IsMainThread()) {
-      cWin32mmOpenGLViewFolderFoundEvent* pEvent = new cWin32mmOpenGLViewFolderFoundEvent(sFolderName);
+      cPhotoBrowserViewControllerFolderFoundEvent* pEvent = new cPhotoBrowserViewControllerFolderFoundEvent(sFolderName);
       notifyMainThread.PushEventToMainThread(pEvent);
     } else {
-      LOG<<"cWin32mmOpenGLView::OnFolderFound On main thread \""<<sFolderName<<"\""<<std::endl;
+      LOG<<"cPhotoBrowserViewController::OnFolderFound On main thread \""<<sFolderName<<"\""<<std::endl;
       cPhotoEntry* pEntry = new cPhotoEntry;
       pEntry->sFileNameNoExtension = sFolderName;
       pEntry->state = cPhotoEntry::STATE::FOLDER;
       photos.push_back(pEntry);
 
-      parent.OnOpenGLViewLoadedFileOrFolder(); // A folder counts as a loaded file
+      view.OnOpenGLViewLoadedFileOrFolder(); // A folder counts as a loaded file
     }
   }
 
-  void cWin32mmOpenGLView::OnFileFound(const string_t& sFileNameNoExtension)
+  void cPhotoBrowserViewController::OnFileFound(const string_t& sFileNameNoExtension)
   {
-    LOG<<"cWin32mmOpenGLView::OnFileFound \""<<sFileNameNoExtension<<"\""<<std::endl;
+    LOG<<"cPhotoBrowserViewController::OnFileFound \""<<sFileNameNoExtension<<"\""<<std::endl;
 
     if (!spitfire::util::IsMainThread()) {
-      cWin32mmOpenGLViewFileFoundEvent* pEvent = new cWin32mmOpenGLViewFileFoundEvent(sFileNameNoExtension);
+      cPhotoBrowserViewControllerFileFoundEvent* pEvent = new cPhotoBrowserViewControllerFileFoundEvent(sFileNameNoExtension);
       notifyMainThread.PushEventToMainThread(pEvent);
     } else {
-      LOG<<"cWin32mmOpenGLView::OnFileFound On main thread \""<<sFileNameNoExtension<<"\""<<std::endl;
+      LOG<<"cPhotoBrowserViewController::OnFileFound On main thread \""<<sFileNameNoExtension<<"\""<<std::endl;
       cPhotoEntry* pEntry = new cPhotoEntry;
       pEntry->sFileNameNoExtension = sFileNameNoExtension;
       pEntry->state = cPhotoEntry::STATE::LOADING;
       photos.push_back(pEntry);
 
-      parent.OnOpenGLViewFileFound();
+      view.OnOpenGLViewFileFound();
     }
   }
 
-  void cWin32mmOpenGLView::OnImageError(const string_t& sFileNameNoExtension)
+  void cPhotoBrowserViewController::OnImageError(const string_t& sFileNameNoExtension)
   {
-    LOG<<"cWin32mmOpenGLView::OnImageError \""<<sFileNameNoExtension<<"\""<<std::endl;
+    LOG<<"cPhotoBrowserViewController::OnImageError \""<<sFileNameNoExtension<<"\""<<std::endl;
 
     if (!spitfire::util::IsMainThread()) {
-      cWin32mmOpenGLViewImageErrorEvent* pEvent = new cWin32mmOpenGLViewImageErrorEvent(sFileNameNoExtension);
+      cPhotoBrowserViewControllerImageErrorEvent* pEvent = new cPhotoBrowserViewControllerImageErrorEvent(sFileNameNoExtension);
       notifyMainThread.PushEventToMainThread(pEvent);
     } else {
-      LOG<<"cWin32mmOpenGLView::OnImageError On main thread \""<<sFileNameNoExtension<<"\""<<std::endl;
+      LOG<<"cPhotoBrowserViewController::OnImageError On main thread \""<<sFileNameNoExtension<<"\""<<std::endl;
       const size_t n = photos.size();
       for (size_t i = 0; i < n; i++) {
         if (photos[i]->sFileNameNoExtension == sFileNameNoExtension) {
@@ -1116,19 +958,19 @@ namespace diesel
         }
       }
 
-      parent.OnOpenGLViewLoadedFileOrFolder();
+      view.OnOpenGLViewLoadedFileOrFolder();
     }
   }
 
-  void cWin32mmOpenGLView::OnImageLoaded(const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize, voodoo::cImage* pImage)
+  void cPhotoBrowserViewController::OnImageLoaded(const string_t& sFileNameNoExtension, IMAGE_SIZE imageSize, voodoo::cImage* pImage)
   {
-    LOG<<"cWin32mmOpenGLView::OnImageLoaded \""<<sFileNameNoExtension<<"\""<<std::endl;
+    LOG<<"cPhotoBrowserViewController::OnImageLoaded \""<<sFileNameNoExtension<<"\""<<std::endl;
 
     if (!spitfire::util::IsMainThread()) {
-      cWin32mmOpenGLViewImageLoadedEvent* pEvent = new cWin32mmOpenGLViewImageLoadedEvent(sFileNameNoExtension, imageSize, pImage);
+      cPhotoBrowserViewControllerImageLoadedEvent* pEvent = new cPhotoBrowserViewControllerImageLoadedEvent(sFileNameNoExtension, imageSize, pImage);
       notifyMainThread.PushEventToMainThread(pEvent);
     } else {
-      LOG<<"cWin32mmOpenGLView::OnImageLoaded On main thread \""<<sFileNameNoExtension<<"\""<<std::endl;
+      LOG<<"cPhotoBrowserViewController::OnImageLoaded On main thread \""<<sFileNameNoExtension<<"\""<<std::endl;
       const size_t n = photos.size();
       for (size_t i = 0; i < n; i++) {
         if (photos[i]->sFileNameNoExtension == sFileNameNoExtension) {
@@ -1165,11 +1007,11 @@ namespace diesel
         }
       }
 
-      parent.OnOpenGLViewLoadedFileOrFolder();
+      view.OnOpenGLViewLoadedFileOrFolder();
     }
   }
 
-  void cWin32mmOpenGLView::PreloadSinglePhoto(size_t index)
+  void cPhotoBrowserViewController::PreloadSinglePhoto(size_t index)
   {
     ASSERT(index < photos.size());
 
@@ -1184,7 +1026,7 @@ namespace diesel
     }
   }
 
-  void cWin32mmOpenGLView::SetSinglePhotoMode(size_t index)
+  void cPhotoBrowserViewController::SetSinglePhotoMode(size_t index)
   {
     ASSERT(index < photos.size());
 
@@ -1197,19 +1039,20 @@ namespace diesel
     if (currentSinglePhoto != 0) PreloadSinglePhoto(currentSinglePhoto - 1);
     if ((currentSinglePhoto + 1) < photos.size()) PreloadSinglePhoto(currentSinglePhoto + 1);
 
-    // Notify the parent
-    parent.OnOpenGLViewSinglePhotoMode(photos[currentSinglePhoto]->sFileNameNoExtension);
+    // Notify the view
+    view.OnOpenGLViewSinglePhotoMode(photos[currentSinglePhoto]->sFileNameNoExtension);
   }
 
-  void cWin32mmOpenGLView::SetPhotoCollageMode()
+  void cPhotoBrowserViewController::SetPhotoCollageMode()
   {
-    // Notify the parent
-    parent.OnOpenGLViewPhotoCollageMode();
+    // Notify the view
+    view.OnOpenGLViewPhotoCollageMode();
   }
 
-  bool cWin32mmOpenGLView::OnKeyPressEvent(GdkEventKey* pEvent)
+#if 0
+  bool cPhotoBrowserViewController::OnKeyPressEvent(GdkEventKey* pEvent)
   {
-    LOG<<"cWin32mmOpenGLView::OnKeyPressEvent"<<std::endl;
+    LOG<<"cPhotoBrowserViewController::OnKeyPressEvent"<<std::endl;
 
     // Handle single photo mode
     if (bIsModeSinglePhoto) {
@@ -1256,26 +1099,26 @@ namespace diesel
         cout << "YES!" << endl;
         return true;*/
       case GDK_Home: {
-        parent.OnOpenGLViewScrollTop();
+        view.OnOpenGLViewScrollTop();
         return true;
       }
       case GDK_End: {
-        parent.OnOpenGLViewScrollBottom();
+        view.OnOpenGLViewScrollBottom();
         return true;
       }
       case GDK_Page_Up: {
-        parent.OnOpenGLViewScrollPageUp();
+        view.OnOpenGLViewScrollPageUp();
         return true;
       }
       case GDK_Page_Down: {
-        parent.OnOpenGLViewScrollPageDown();
+        view.OnOpenGLViewScrollPageDown();
         return true;
       }
       case GDK_0: {
         if ((pEvent->state & GDK_CONTROL_MASK) != 0) {
           // Reset the zoom
           SetScale(1.0f);
-          parent.OnOpenGLViewContentChanged();
+          view.OnOpenGLViewContentChanged();
           return true;
         }
 
@@ -1285,13 +1128,14 @@ namespace diesel
 
     return false;
   }
+#endif
 
-  bool cWin32mmOpenGLView::OnMouseDown(int button, int x, int y, bool bKeyControl, bool bKeyShift)
+  bool cPhotoBrowserViewController::OnMouseDown(int button, int x, int y, bool bKeyControl, bool bKeyShift)
   {
-    LOG<<"cWin32mmOpenGLView::OnMouseDown"<<std::endl;
+    LOG<<"cPhotoBrowserViewController::OnMouseDown"<<std::endl;
 
     // Set the focus to this widget so that arrow keys work
-    grab_focus();
+    //grab_focus();
 
     // Change the selection on left and right click
     if ((button == 1) || (button == 3)) {
@@ -1299,7 +1143,7 @@ namespace diesel
 
       size_t index = 0;
       if (GetPhotoAtPoint(index, spitfire::math::cVec2(x, y))) {
-        LOG<<"cWin32mmOpenGLView::OnMouseDown item="<<index<<std::endl;
+        LOG<<"cPhotoBrowserViewController::OnMouseDown item="<<index<<std::endl;
         ASSERT(index < photos.size());
         if (!bKeyControl && !bKeyShift) {
           // Select only the photo we clicked on
@@ -1313,25 +1157,25 @@ namespace diesel
         for (size_t i = 0; i < n; i++) photos[i]->bIsSelected = false;
       }
 
-      parent.OnOpenGLViewSelectionChanged();
+      view.OnOpenGLViewSelectionChanged();
     }
 
     return true;
   }
 
-  bool cWin32mmOpenGLView::OnMouseRelease(int button, int x, int y, bool bKeyControl, bool bKeyShift)
+  bool cPhotoBrowserViewController::OnMouseRelease(int button, int x, int y, bool bKeyControl, bool bKeyShift)
   {
-    LOG<<"cWin32mmOpenGLView::OnMouseRelease"<<std::endl;
+    LOG<<"cPhotoBrowserViewController::OnMouseRelease"<<std::endl;
 
     // Handle right click
-    if (button == 3) parent.OnOpenGLViewRightClick();
+    if (button == 3) view.OnOpenGLViewRightClick();
 
     return true;
   }
 
-  bool cWin32mmOpenGLView::OnMouseDoubleClick(int button, int x, int y, bool bKeyControl, bool bKeyShift)
+  bool cPhotoBrowserViewController::OnMouseDoubleClick(int button, int x, int y, bool bKeyControl, bool bKeyShift)
   {
-    LOG<<"cWin32mmOpenGLView::OnMouseDoubleClick"<<std::endl;
+    LOG<<"cPhotoBrowserViewController::OnMouseDoubleClick"<<std::endl;
 
     if (button == 1) {
       if (!bIsModeSinglePhoto) {
@@ -1341,7 +1185,7 @@ namespace diesel
           if (!bKeyControl && !bKeyShift) {
             if (photos[index]->state == cPhotoEntry::STATE::FOLDER) {
               // Change to this folder
-              parent.OnOpenGLViewChangedFolder(spitfire::filesystem::MakeFilePath(sFolderPath, photos[index]->sFileNameNoExtension));
+              view.OnOpenGLViewChangedFolder(spitfire::filesystem::MakeFilePath(sFolderPath, photos[index]->sFileNameNoExtension));
             } else {
               // Enter single photo mode
               bIsModeSinglePhoto = true;
@@ -1358,27 +1202,27 @@ namespace diesel
     return true;
   }
 
-  bool cWin32mmOpenGLView::OnMouseScrollUp(int x, int y, bool bKeyControl, bool bKeyShift)
+  bool cPhotoBrowserViewController::OnMouseScrollUp(int x, int y, bool bKeyControl, bool bKeyShift)
   {
-    LOG<<"cWin32mmOpenGLView::OnMouseScrollUp"<<std::endl;
+    LOG<<"cPhotoBrowserViewController::OnMouseScrollUp"<<std::endl;
     return false;
   }
 
-  bool cWin32mmOpenGLView::OnMouseScrollDown(int x, int y, bool bKeyControl, bool bKeyShift)
+  bool cPhotoBrowserViewController::OnMouseScrollDown(int x, int y, bool bKeyControl, bool bKeyShift)
   {
-    LOG<<"cWin32mmOpenGLView::OnMouseScrollDown"<<std::endl;
+    LOG<<"cPhotoBrowserViewController::OnMouseScrollDown"<<std::endl;
     return false;
   }
 
-  bool cWin32mmOpenGLView::OnMouseMove(int x, int y, bool bKeyControl, bool bKeyShift)
+  bool cPhotoBrowserViewController::OnMouseMove(int x, int y, bool bKeyControl, bool bKeyShift)
   {
-    //LOG<<"cWin32mmOpenGLView::OnMouseMove"<<std::endl;
+    //LOG<<"cPhotoBrowserViewController::OnMouseMove"<<std::endl;
     return false;
   }
 
-  void cWin32mmOpenGLView::OnScrollBarScrolled(float fValue)
+  void cPhotoBrowserViewController::OnScrollBarScrolled(float fValue)
   {
-    LOG<<"cWin32mmOpenGLView::OnScrollBarScrolled "<<fValue<<std::endl;
+    LOG<<"cPhotoBrowserViewController::OnScrollBarScrolled "<<fValue<<std::endl;
 
     // Subtract a page because the scrollbar is strange
     fValue = max(0.0f, fValue - (float(pageHeight) / fScale));
@@ -1388,5 +1232,4 @@ namespace diesel
     // Clamp the value to our range
     ClampScrollBarPosition();
   }
-#endif
 }
