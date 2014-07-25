@@ -206,7 +206,7 @@ namespace diesel
 
     context.Create(GetHandle());
 
-    controller.SetContext(context.GetContext());
+    controller.Init(context.GetContext());
   }
 
   void cWin32mmOpenGLView::Destroy()

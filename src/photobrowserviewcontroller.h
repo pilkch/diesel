@@ -32,7 +32,7 @@ namespace diesel
   public:
     explicit cPhotoBrowserViewController(cWin32mmOpenGLView& view);
 
-    void SetContext(opengl::cContext& context);
+    void Init(opengl::cContext& context);
 
     void SetCurrentFolderPath(const string_t& sFolderPath);
 

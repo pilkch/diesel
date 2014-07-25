@@ -31,7 +31,7 @@ namespace diesel
   {
   }
 
-  void cPhotoBrowserViewController::SetContext(opengl::cContext& context)
+  void cPhotoBrowserViewController::Init(opengl::cContext& context)
   {
     pContext = &context;
   }
