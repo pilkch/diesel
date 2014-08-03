@@ -37,13 +37,16 @@ namespace diesel
     HANDLE hChildStd_IN_Wr;
     HANDLE hChildStd_OUT_Rd;
     HANDLE hChildStd_OUT_Wr;
+
+    HANDLE hChildProcess;
   };
 
   cPipe::cPipe() :
     hChildStd_IN_Rd(NULL),
     hChildStd_IN_Wr(NULL),
     hChildStd_OUT_Rd(NULL),
-    hChildStd_OUT_Wr(NULL)
+    hChildStd_OUT_Wr(NULL),
+    hChildProcess(NULL)
   {
   }
 
@@ -84,11 +87,11 @@ namespace diesel
       return;
     }
 
-    // Close handles to the child process and its primary thread.
-    // Some applications might keep these handles to monitor the status
-    // of the child process, for example.
-    ::CloseHandle(piProcInfo.hProcess);
+    // Close handles to the child's primary thread
     ::CloseHandle(piProcInfo.hThread);
+
+    // Remember the child process so that we can wait for it to finish
+    hChildProcess = piProcInfo.hProcess;
   }
 
   // Read output from the child process's pipe for STDOUT
@@ -120,6 +123,11 @@ namespace diesel
     ReadFromPipe();
 
     ::CloseHandle(hChildStd_OUT_Rd);
+
+    // Wait for the child to finish
+    ::WaitForSingleObject(hChildProcess, INFINITE);
+
+    hChildProcess = NULL;
   }
 
   void RunCommandLine(const diesel::string_t& sCommandLine)
