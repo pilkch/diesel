@@ -228,6 +228,24 @@ namespace diesel
     context.End();
   }
 
+  void cWin32mmOpenGLView::OnLButtonDown(int x, int y, const win32mm::cKeyModifiers& modifiers)
+  {
+    const int iButton = 1;
+    controller.OnMouseDown(iButton, x, y, modifiers.bControl, modifiers.bShift);
+  }
+
+  void cWin32mmOpenGLView::OnLButtonUp(int x, int y, const win32mm::cKeyModifiers& modifiers)
+  {
+    const int iButton = 1;
+    controller.OnMouseRelease(iButton, x, y, modifiers.bControl, modifiers.bShift);
+  }
+
+  void cWin32mmOpenGLView::OnRButtonUp(int x, int y, const win32mm::cKeyModifiers& modifiers)
+  {
+    const int iButton = 3;
+    controller.OnMouseRelease(iButton, x, y, modifiers.bControl, modifiers.bShift);
+  }
+
   void cWin32mmOpenGLView::OnOpenGLViewResized()
   {
   }

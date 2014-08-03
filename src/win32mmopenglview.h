@@ -84,7 +84,7 @@ namespace diesel
     void OnOpenGLViewPhotoCollageMode();
     void OnOpenGLViewSinglePhotoMode(const string_t& sFilePath);
 
-  protected:
+  private:
     void InitOpenGL(int argc, char* argv[]);
     void DestroyOpenGL();
 
@@ -92,6 +92,14 @@ namespace diesel
 
     virtual void OnSize() override;
     virtual void OnPaint() override;
+
+    virtual void OnLButtonDown(int x, int y, const win32mm::cKeyModifiers& modifiers) override;
+    virtual void OnLButtonUp(int x, int y, const win32mm::cKeyModifiers& modifiers) override;
+    virtual void OnRButtonUp(int x, int y, const win32mm::cKeyModifiers& modifiers) override;
+    virtual void OnMouseWheel(int x, int y, int iDeltaUp, const win32mm::cKeyModifiers& modifiers) override { (void)x; (void)y; (void)iDeltaUp; (void)modifiers; }
+    virtual void OnDoubleClick(int x, int y, const win32mm::cKeyModifiers& modifiers) override { (void)x; (void)y; (void)modifiers; }
+    virtual bool OnKeyDown(const win32mm::cKeyEvent& event) override { (void)event; return false; }
+    virtual bool OnKeyUp(const win32mm::cKeyEvent& event) override { (void)event; return false; }
 
     cPhotoBrowserViewController& controller;
 
