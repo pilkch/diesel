@@ -30,7 +30,7 @@ namespace diesel
 
     cSettings& settings;
 
-    win32mm::cGroupBox groupHistory;
+    win32mm::cHorizontalLine lineHistory;
     win32mm::cStatic historyStaticClearFolders;
     win32mm::cButton buttonHistoryClearFolders;
     win32mm::cStatic historyStaticClearCache;
@@ -56,7 +56,7 @@ namespace diesel
     LOG<<"DPI="<<iDPI<<std::endl;
 
     // Add controls
-    groupHistory.Create(*this, TEXT("History"));
+    lineHistory.Create(*this, TEXT("History"));
 
     historyStaticClearFolders.Create(*this, TEXT("Clear Previous Folders:"));
     buttonHistoryClearFolders.Create(*this, 102, TEXT("Clear"));
@@ -86,8 +86,6 @@ namespace diesel
     int iX = GetMarginWidth();
     int iY = GetMarginHeight();
 
-    //win32mm::cGroupBox groupHistory;
-
     // Find the widest static text
     const int widestStaticText = max(max(MeasureStaticTextWidth(historyStaticClearFolders.GetHandle()), MeasureStaticTextWidth(historyStaticClearCache.GetHandle())), MeasureStaticTextWidth(historyStaticCacheSize.GetHandle()));
 
@@ -96,6 +94,14 @@ namespace diesel
     const int widthRowClearCache = MeasureButtonWidth(buttonHistoryClearCache.GetHandle());
     const int widthRowCacheMaximumSize = MeasureInputUpDownWidth(historyCacheMaximumSizeGB) + GetSpacerWidth() + MeasureStaticTextWidth(historyStaticGB.GetHandle());
     const int widestRowOnTheRight = max(max(widthRowClearFolders, widthRowClearCache), widthRowCacheMaximumSize);
+    const int widthControls = widestStaticText + GetSpacerWidth() + widestRowOnTheRight;
+    const int widthHistoryText = MeasureStaticTextWidth(lineHistory.GetStaticTextHandle());
+    const int widthHistoryLine = widthControls - (widthHistoryText + GetSpacerWidth());
+    const int heightHistoryLine = MeasureStaticTextHeight(lineHistory.GetStaticTextHandle(), widthHistoryLine);
+
+    MoveControl(lineHistory.GetStaticTextHandle(), iX, iY, widthHistoryText, heightHistoryLine);
+    MoveControl(lineHistory.GetLineHandle(), iX + widthHistoryText + GetSpacerWidth(), iY + (heightHistoryLine / 2), widthHistoryLine, 1);
+    iY += heightHistoryLine + GetSpacerHeight();
 
     MoveControlStaticNextToOtherControls(historyStaticClearFolders.GetHandle(), iX, iY, widestStaticText);
     MoveControl(buttonHistoryClearFolders.GetHandle(), iX + widestStaticText + GetSpacerWidth(), iY, widestRowOnTheRight, GetButtonHeight());
@@ -112,7 +118,7 @@ namespace diesel
 
     const int iWidth = widestStaticText + GetSpacerWidth() + widestRowOnTheRight;
 
-    MoveControl(horizontalLine.GetHandle(), iX, iY, iWidth, 1);
+    MoveControl(horizontalLine.GetLineHandle(), iX, iY, iWidth, 1);
     iY += 1 + GetSpacerHeight();
 
     const int iDialogWidth = GetMarginWidth() + iWidth + GetMarginWidth();
