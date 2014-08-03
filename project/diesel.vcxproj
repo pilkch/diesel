@@ -225,6 +225,7 @@
     </ClCompile>
     <ClCompile Include="..\src\util.cpp" />
     <ClCompile Include="..\src\win32mmapplication.cpp" />
+    <ClCompile Include="..\src\win32mmimportdialog.cpp" />
     <ClCompile Include="..\src\win32mmopenglview.cpp" />
     <ClCompile Include="..\src\win32mmsettingsdialog.cpp" />
   </ItemGroup>
@@ -257,6 +258,7 @@
   <ItemGroup>
     <ClInclude Include="..\src\photobrowserviewcontroller.h" />
     <ClInclude Include="..\src\win32mmapplication.h" />
+    <ClInclude Include="..\src\win32mmimportdialog.h" />
     <ClInclude Include="..\src\win32mmopenglview.h" />
     <ClInclude Include="..\src\win32mmsettingsdialog.h" />
   </ItemGroup>

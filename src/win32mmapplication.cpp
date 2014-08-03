@@ -43,6 +43,7 @@
 
 // Diesel headers
 #include "win32mmapplication.h"
+#include "win32mmimportdialog.h"
 #include "win32mmsettingsdialog.h"
 
 namespace diesel
@@ -57,8 +58,8 @@ namespace diesel
 
   #define LANGTAG_FILE "File"
   #define LANGTAG_OPEN_FOLDER "Open Folder"
+  #define LANGTAG_IMPORT_FOLDER "Import Folder"
   #define LANGTAG_SETTINGS "Settings"
-  #define LANGTAG_EDIT "Edit"
   #define LANGTAG_CUT "Cut"
   #define LANGTAG_VIEW "View"
   #define LANGTAG_SINGLE_PHOTO_MODE "Single Photo Mode"
@@ -67,11 +68,11 @@ namespace diesel
 
   // Menu IDs
   const int ID_MENU_FILE_OPEN_FOLDER = 10000;
-  const int ID_MENU_FILE_SETTINGS = 10001;
-  const int ID_MENU_FILE_QUIT = 10002;
-  const int ID_MENU_EDIT_CUT = 10004;
-  const int ID_MENU_VIEW_SINGLE_PHOTO_MODE = 10005;
-  const int ID_MENU_HELP_ABOUT = 10006;
+  const int ID_MENU_FILE_IMPORT_FOLDER = 10001;
+  const int ID_MENU_FILE_SETTINGS = 10002;
+  const int ID_MENU_FILE_QUIT = 10003;
+  const int ID_MENU_VIEW_SINGLE_PHOTO_MODE = 10004;
+  const int ID_MENU_HELP_ABOUT = 10005;
 
   const int ID_CONTROL_OPENGL = 101;
   const int ID_CONTROL_PATH = 102;
@@ -233,12 +234,9 @@ namespace diesel
     // Create our File menu
     win32mm::cPopupMenu popupFile;
     popupFile.AppendMenuItemWithShortcut(ID_MENU_FILE_OPEN_FOLDER, TEXT(LANGTAG_OPEN_FOLDER), KEY_COMBO_CONTROL('O'));
+    popupFile.AppendMenuItem(ID_MENU_FILE_IMPORT_FOLDER, TEXT(LANGTAG_IMPORT_FOLDER));
     popupFile.AppendMenuItem(ID_MENU_FILE_SETTINGS, TEXT(LANGTAG_SETTINGS));
     popupFile.AppendMenuItemWithShortcut(ID_MENU_FILE_QUIT, TEXT(LANGTAG_QUIT), KEY_COMBO_CONTROL('W'));
-
-    // Create our Edit menu
-    win32mm::cPopupMenu popupEdit;
-    popupEdit.AppendMenuItemWithShortcut(ID_MENU_EDIT_CUT, TEXT(LANGTAG_CUT), KEY_COMBO_CONTROL('C'));
 
     // Create our View menu
     win32mm::cPopupMenu popupView;
@@ -249,7 +247,6 @@ namespace diesel
     popupHelp.AppendMenuItem(ID_MENU_HELP_ABOUT, TEXT(LANGTAG_ABOUT));
 
     menu.AppendPopupMenu(popupFile, TEXT(LANGTAG_FILE));
-    menu.AppendPopupMenu(popupEdit, TEXT(LANGTAG_EDIT));
     menu.AppendPopupMenu(popupView, TEXT(LANGTAG_VIEW));
     menu.AppendPopupMenu(popupHelp, TEXT(LANGTAG_HELP));
 
@@ -328,15 +325,16 @@ namespace diesel
         dialog.Run(*this);
         return true;
       }
+      case ID_MENU_FILE_IMPORT_FOLDER: {
+        OpenImportDialog(settings, *this);
+        return true;
+      }
       case ID_MENU_FILE_SETTINGS: {
         OpenSettingsDialog(settings, *this);
         return true;
       }
       case ID_MENU_FILE_QUIT: {
         //_OnStateQuitEvent();
-        return true;
-      }
-      case ID_MENU_EDIT_CUT: {
         return true;
       }
       case ID_MENU_VIEW_SINGLE_PHOTO_MODE: {
