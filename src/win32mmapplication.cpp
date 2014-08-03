@@ -197,6 +197,7 @@ namespace diesel
 
     SaveWindowPosition();
 
+    photoBrowserViewController.Destroy();
     photoBrowserView.Destroy();
 
     comboBoxPath.Destroy();
