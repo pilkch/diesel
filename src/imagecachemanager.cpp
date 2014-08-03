@@ -410,15 +410,6 @@ namespace diesel
     #endif
     const string_t sCommandLine = o.str();
     LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile Running command line \""<<sCommandLine<<"\""<<std::endl;
-    /*const int iResult = system(sCommandLine.c_str());
-    #ifdef __WIN__
-    if (!spitfire::filesystem::FileExists(sFilePathUFRawJPG)) {
-    #else
-    if (iResult != 0) {
-    #endif
-      LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile ufraw-batch returned "<<iResult<<" for \""<<sCommandLine<<"\", returning \"\""<<std::endl;
-      return TEXT("");
-    }*/
     #ifdef __WIN__
     RunCommandLine(sCommandLine);
     if (!spitfire::filesystem::FileExists(sFilePathUFRawJPG)) {
