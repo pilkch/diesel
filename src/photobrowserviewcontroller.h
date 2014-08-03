@@ -98,12 +98,12 @@ namespace diesel
 
     //bool OnKeyPressEvent(GdkEventKey* event);
 
+    bool OnMouseMove(int x, int y, bool bKeyControl, bool bKeyShift);
     bool OnMouseDown(int button, int x, int y, bool bKeyControl, bool bKeyShift);
     bool OnMouseRelease(int button, int x, int y, bool bKeyControl, bool bKeyShift);
     bool OnMouseDoubleClick(int button, int x, int y, bool bKeyControl, bool bKeyShift);
     bool OnMouseScrollUp(int x, int y, bool bKeyControl, bool bKeyShift);
     bool OnMouseScrollDown(int x, int y, bool bKeyControl, bool bKeyShift);
-    bool OnMouseMove(int x, int y, bool bKeyControl, bool bKeyShift);
 
   private:
     void CreateVertexBufferObjectSelectionRectangle(opengl::cStaticVertexBufferObject* pStaticVertexBufferObject, float fWidth, float fHeight);
