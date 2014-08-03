@@ -335,7 +335,7 @@ namespace diesel
         return true;
       }
       case ID_MENU_FILE_QUIT: {
-        //_OnStateQuitEvent();
+        CloseSoon();
         return true;
       }
       case ID_MENU_VIEW_SINGLE_PHOTO_MODE: {
