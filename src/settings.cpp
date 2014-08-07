@@ -121,7 +121,12 @@ namespace diesel
 
   string_t cSettings::GetLastImportFromFolder() const
   {
-    return document.GetValue<string_t>(TEXT("settings"), TEXT("import"), TEXT("lastImportFromFolder"), TEXT("/media/"));
+    #ifdef __LINUX__
+    const string_t sDefaultFolder = spitfire::filesystem::GetDrivesDirectory();
+    #else
+    const string_t sDefaultFolder = spitfire::filesystem::GetHomeDirectory();
+    #endif
+    return document.GetValue<string_t>(TEXT("settings"), TEXT("import"), TEXT("lastImportFromFolder"), sDefaultFolder);
   }
 
   void cSettings::SetLastImportFromFolder(const string_t& sFolder)
