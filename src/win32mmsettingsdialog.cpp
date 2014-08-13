@@ -92,8 +92,9 @@ namespace diesel
     // Find the widest row of controls on the right
     const int widthRowClearFolders = MeasureButtonWidth(historyStaticClearFolders.GetHandle());
     const int widthRowClearCache = MeasureButtonWidth(buttonHistoryClearCache.GetHandle());
-    const int widthRowCacheMaximumSize = MeasureInputUpDownWidth(historyCacheMaximumSizeGB) + GetSpacerWidth() + MeasureStaticTextWidth(historyStaticGB.GetHandle());
-    const int widestRowOnTheRight = max(max(widthRowClearFolders, widthRowClearCache), widthRowCacheMaximumSize);
+    const int widthCacheGB = MeasureStaticTextWidth(historyStaticGB.GetHandle());
+    const int widestRowOnTheRight = max(widthRowClearFolders, widthRowClearCache);
+    const int widthCacheMaximumSize = widestRowOnTheRight - (GetSpacerWidth() + widthCacheGB);
     const int widthControls = widestStaticText + GetSpacerWidth() + widestRowOnTheRight;
     const int widthHistoryText = MeasureStaticTextWidth(lineHistory.GetStaticTextHandle());
     const int widthHistoryLine = widthControls - (widthHistoryText + GetSpacerWidth());
@@ -112,8 +113,8 @@ namespace diesel
     iY += GetButtonHeight() + GetSpacerHeight();
 
     MoveControlStaticNextToOtherControls(historyStaticCacheSize.GetHandle(), iX, iY, widestStaticText);
-    MoveControlInputUpDown(historyCacheMaximumSizeGB, iX + widestStaticText + GetSpacerWidth(), iY, widestRowOnTheRight);
-    MoveControl(historyStaticGB.GetHandle(), iX + widestStaticText + GetSpacerWidth() + MeasureInputUpDownWidth(historyCacheMaximumSizeGB) + GetSpacerWidth(), iY, MeasureStaticTextWidth(historyStaticGB.GetHandle()), GetTextHeight());
+    MoveControlInputUpDown(historyCacheMaximumSizeGB, iX + widestStaticText + GetSpacerWidth(), iY, widthCacheMaximumSize);
+    MoveControlStaticNextToOtherControls(historyStaticGB.GetHandle(), iX + widestStaticText + GetSpacerWidth() + widthCacheMaximumSize + GetSpacerWidth(), iY, widthCacheGB);
     iY += GetInputHeight() + GetSpacerHeight();
 
     const int iWidth = widestStaticText + GetSpacerWidth() + widestRowOnTheRight;
