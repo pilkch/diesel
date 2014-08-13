@@ -42,6 +42,7 @@
 #include <libwin32mm/progressdialog.h>
 
 // Diesel headers
+#include "importthread.h"
 #include "win32mmapplication.h"
 #include "win32mmimportdialog.h"
 #include "win32mmsettingsdialog.h"
@@ -334,7 +335,21 @@ namespace diesel
         return true;
       }
       case ID_MENU_FILE_IMPORT_FOLDER: {
-        OpenImportDialog(settings, *this);
+        if (OpenImportDialog(settings, *this)) {
+          // Run the import process
+          win32mm::cProgressDialog dialog(*this, taskBar);
+
+          cImportProcess process(dialog);
+          process.SetFromFolder(settings.GetLastImportFromFolder());
+          process.SetToFolder(settings.GetLastImportToFolder());
+          process.SetSeparateFolderForEachYear(settings.IsImportSeparateFolderForEachYear());
+          process.SetSeparateFolderForEachDate(settings.IsImportSeparateFolderForEachDate());
+          process.SetDescription(settings.IsImportDescription());
+          process.SetDescriptionText(settings.GetImportDescriptionText());
+          process.SetDeleteFromSourceFolderOnSuccessfulImport(settings.IsAfterImportDeleteFromSourceFolderOnSuccessfulImport());
+
+          /*spitfire::util::PROCESS_RESULT result =*/ dialog.Run(process);
+        }
         return true;
       }
       case ID_MENU_FILE_SETTINGS: {
