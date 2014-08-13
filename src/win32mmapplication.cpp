@@ -237,7 +237,7 @@ namespace diesel
     popupFile.AppendMenuItemWithShortcut(ID_MENU_FILE_OPEN_FOLDER, TEXT(LANGTAG_OPEN_FOLDER), KEY_COMBO_CONTROL('O'));
     popupFile.AppendMenuItem(ID_MENU_FILE_IMPORT_FOLDER, TEXT(LANGTAG_IMPORT_FOLDER));
     popupFile.AppendMenuItem(ID_MENU_FILE_SETTINGS, TEXT(LANGTAG_SETTINGS));
-    popupFile.AppendMenuItemWithShortcut(ID_MENU_FILE_QUIT, TEXT(LANGTAG_QUIT), KEY_COMBO_CONTROL('W'));
+    popupFile.AppendMenuItemWithShortcut(ID_MENU_FILE_QUIT, TEXT(LANGTAG_QUIT), KEY_COMBO_CONTROL('Q'));
 
     // Create our View menu
     win32mm::cPopupMenu popupView;
