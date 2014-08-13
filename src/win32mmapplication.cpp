@@ -101,6 +101,13 @@ namespace diesel
     // Create our OpenGL control
     photoBrowserView.Create(*this, ID_CONTROL_OPENGL);
 
+    {
+      // Get a typical selection colour for the selections on our photo browser
+      const win32mm::cColorRef colour = theme.GetHighlightBackgroundColour();
+      const spitfire::math::cColour colourSelected(float(colour.GetRed()) / 255.0f, float(colour.GetGreen()) / 255.0f, float(colour.GetBlue()) / 255.0f, 1.0f);
+      photoBrowserViewController.SetSelectionColour(colourSelected);
+    }
+
     // Create our path combobox
     comboBoxPath.CreateComboBox(*this, ID_CONTROL_PATH);
 

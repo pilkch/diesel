@@ -21,6 +21,7 @@
 #include <libwin32mm/maindialog.h>
 #include <libwin32mm/openglcontrol.h>
 #include <libwin32mm/taskbar.h>
+#include <libwin32mm/theme.h>
 
 #undef interface
 #define interface Interface
@@ -63,6 +64,8 @@ namespace diesel
 
     cApplication& application;
     cSettings& settings;
+
+    win32mm::cTheme theme;
 
     win32mm::cStatusBar statusBar;
     win32mm::cTaskBar taskBar;
