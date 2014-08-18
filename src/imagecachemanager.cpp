@@ -344,6 +344,7 @@ namespace diesel
     o<<" &> /dev/null";
     #endif
     const string_t sCommandLine = o.str();
+    LOG<<"cImageCacheManager::GetOrCreateDNGForRawFile Running command line \""<<sCommandLine<<"\""<<std::endl;
     #ifdef __WIN__
     RunCommandLine(sCommandLine);
     if (!spitfire::filesystem::FileExists(sDNGFilePath)) {
@@ -490,6 +491,7 @@ namespace diesel
     if ((width != 0) && (height != 0)) o<<" -resize "<<width<<"x"<<height;
     o<<" -auto-orient \""<<sFilePathJPG<<"\"";
     const string_t sCommandLine = o.str();
+    //LOG<<"cImageCacheManager::GetOrCreateThumbnailForImageFile Running command line \""<<sCommandLine<<"\""<<std::endl;
     #ifdef __WIN__
     RunCommandLine(sCommandLine);
     #else
