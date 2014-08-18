@@ -716,7 +716,7 @@ namespace diesel
 
     pContext->SetClearColour(spitfire::math::cColour(0.0f, 0.0f, 0.0f, 1.0f));
 
-    //pContext->BeginRenderToScreen();
+    pContext->BeginRenderToScreen();
 
     if (bIsWireframe) pContext->EnableWireframe();
 
@@ -901,7 +901,7 @@ namespace diesel
 
     if (bIsWireframe) pContext->DisableWireframe();
 
-    //pContext->EndRenderToScreen();
+    pContext->EndRenderToScreen();
   }
 
   void cPhotoBrowserViewController::OnFolderFound(const string_t& sFolderName)
