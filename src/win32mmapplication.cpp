@@ -84,7 +84,7 @@ namespace diesel
   cMainWindow::cMainWindow(cApplication& _application) :
     application(_application),
     settings(_application.settings),
-    photoBrowserView(photoBrowserViewController),
+    photoBrowserView(*this, photoBrowserViewController),
     photoBrowserViewController(photoBrowserView)
   {
   }
@@ -100,7 +100,7 @@ namespace diesel
     taskBar.Init(*this);
 
     // Create our OpenGL control
-    photoBrowserView.Create(*this, ID_CONTROL_OPENGL);
+    photoBrowserView.Create(ID_CONTROL_OPENGL);
 
     {
       // Get a typical selection colour for the selections on our photo browser
@@ -406,6 +406,20 @@ namespace diesel
     return false;
   }
 
+  void cMainWindow::OnOpenGLViewChangedFolder(const string_t& sFolderPath)
+  {
+    if (spitfire::filesystem::DirectoryExists(sFolderPath)) {
+      // Change the current path
+      photoBrowserViewController.SetCurrentFolderPath(sFolderPath);
+
+      // Update the combobox text
+      comboBoxPath.SetText(sFolderPath);
+    }
+  }
+
+  void cMainWindow::OnOpenGLViewRightClick()
+  {
+  }
 
 
   // ** cApplication

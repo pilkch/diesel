@@ -55,6 +55,7 @@ namespace diesel
     opengl::cContext* pContext;
   };
 
+  class cMainWindow;
   class cPhotoBrowserViewController;
 
   class cWin32mmOpenGLViewEvent;
@@ -66,12 +67,12 @@ namespace diesel
   public:
     friend class cOpenGLViewController;
 
-    explicit cWin32mmOpenGLView(cPhotoBrowserViewController& controller);
+    cWin32mmOpenGLView(cMainWindow& mainWindow, cPhotoBrowserViewController& controller);
     ~cWin32mmOpenGLView();
 
     opengl::cContext& GetContext();
 
-    void Create(win32mm::cWindow& window, int idControl);
+    void Create(int idControl);
     void Destroy();
 
     void OnOpenGLViewChangedFolder(const string_t& sFolderPath);
@@ -96,11 +97,12 @@ namespace diesel
     virtual void OnLButtonDown(int x, int y, const win32mm::cKeyModifiers& modifiers) override;
     virtual void OnLButtonUp(int x, int y, const win32mm::cKeyModifiers& modifiers) override;
     virtual void OnRButtonUp(int x, int y, const win32mm::cKeyModifiers& modifiers) override;
-    virtual void OnMouseWheel(int x, int y, int iDeltaUp, const win32mm::cKeyModifiers& modifiers) override { (void)x; (void)y; (void)iDeltaUp; (void)modifiers; }
-    virtual void OnDoubleClick(int x, int y, const win32mm::cKeyModifiers& modifiers) override { (void)x; (void)y; (void)modifiers; }
+    virtual void OnMouseWheel(int x, int y, int iDeltaUp, const win32mm::cKeyModifiers& modifiers) override;
+    virtual void OnDoubleClick(int x, int y, const win32mm::cKeyModifiers& modifiers) override;
     virtual bool OnKeyDown(const win32mm::cKeyEvent& event) override { (void)event; return false; }
     virtual bool OnKeyUp(const win32mm::cKeyEvent& event) override { (void)event; return false; }
 
+    cMainWindow& mainWindow;
     cPhotoBrowserViewController& controller;
 
     cWin32mmOpenGLContext context;

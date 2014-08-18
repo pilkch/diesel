@@ -19,6 +19,7 @@
 #include <spitfire/util/log.h>
 
 // Diesel headers
+#include "win32mmapplication.h"
 #include "win32mmopenglview.h"
 #include "photobrowserviewcontroller.h"
 
@@ -186,7 +187,8 @@ namespace diesel
 
   // ** cWin32mmOpenGLView
 
-  cWin32mmOpenGLView::cWin32mmOpenGLView(cPhotoBrowserViewController& _controller) :
+  cWin32mmOpenGLView::cWin32mmOpenGLView(cMainWindow& _mainWindow, cPhotoBrowserViewController& _controller) :
+    mainWindow(_mainWindow),
     controller(_controller)
   {
   }
@@ -200,9 +202,9 @@ namespace diesel
     return context.GetContext();
   }
 
-  void cWin32mmOpenGLView::Create(win32mm::cWindow& parent, int idControl)
+  void cWin32mmOpenGLView::Create(int idControl)
   {
-    win32mm::cOpenGLControl::Create(parent, idControl);
+    win32mm::cOpenGLControl::Create(mainWindow, idControl);
 
     context.Create(GetHandle());
 
@@ -217,6 +219,8 @@ namespace diesel
   void cWin32mmOpenGLView::OnSize()
   {
     context.Resize(GetWidth(), GetHeight());
+
+    controller.ResizeWidget(GetWidth(), GetHeight());
   }
 
   void cWin32mmOpenGLView::OnPaint()
@@ -246,16 +250,32 @@ namespace diesel
     controller.OnMouseRelease(iButton, x, y, modifiers.bControl, modifiers.bShift);
   }
 
+  void cWin32mmOpenGLView::OnDoubleClick(int x, int y, const win32mm::cKeyModifiers& modifiers)
+  {
+    const int iButton = 1;
+    controller.OnMouseDoubleClick(iButton, x, y, modifiers.bControl, modifiers.bShift);
+  }
+
+  void cWin32mmOpenGLView::OnMouseWheel(int x, int y, int iDeltaUp, const win32mm::cKeyModifiers& modifiers)
+  {
+    if (iDeltaUp > 0) controller.OnMouseScrollUp(x, y, modifiers.bControl, modifiers.bShift);
+    else controller.OnMouseScrollDown(x, y, modifiers.bControl, modifiers.bShift);
+  }
+
   void cWin32mmOpenGLView::OnOpenGLViewResized()
   {
   }
 
   void cWin32mmOpenGLView::OnOpenGLViewFileFound()
   {
+    // Redraw the view
+    Update();
   }
 
   void cWin32mmOpenGLView::OnOpenGLViewLoadedFileOrFolder()
   {
+    // Redraw the view
+    Update();
   }
 
   void cWin32mmOpenGLView::OnOpenGLViewLoadedFilesClear()
@@ -264,21 +284,26 @@ namespace diesel
 
   void cWin32mmOpenGLView::OnOpenGLViewChangedFolder(const string_t& sFolderPath)
   {
+    mainWindow.OnOpenGLViewChangedFolder(sFolderPath);
   }
 
   void cWin32mmOpenGLView::OnOpenGLViewRightClick()
   {
+    mainWindow.OnOpenGLViewRightClick();
   }
 
   void cWin32mmOpenGLView::OnOpenGLViewSelectionChanged()
   {
+    Update();
   }
 
   void cWin32mmOpenGLView::OnOpenGLViewPhotoCollageMode()
   {
+    Update();
   }
 
   void cWin32mmOpenGLView::OnOpenGLViewSinglePhotoMode(const string_t& sFilePath)
   {
+    Update();
   }
 }

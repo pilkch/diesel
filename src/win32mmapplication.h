@@ -33,12 +33,19 @@
 
 namespace diesel
 {
+  class cWin32mmOpenGLView;
   class cApplication;
 
   class cMainWindow : public win32mm::cMainDialog
   {
   public:
+    friend class cWin32mmOpenGLView;
+
     explicit cMainWindow(cApplication& application);
+
+  protected:
+    void OnOpenGLViewChangedFolder(const string_t& sFolderPath);
+    void OnOpenGLViewRightClick();
 
   private:
     virtual void OnInit() override;
@@ -59,6 +66,8 @@ namespace diesel
   private:
     void AddMenu();
     void AddStatusBar();
+
+    void UpdateScrollBar();
 
     void ResizeStatusBar();
 
