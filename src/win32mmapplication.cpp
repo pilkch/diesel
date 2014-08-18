@@ -140,9 +140,6 @@ namespace diesel
     buttonPathShowFolder.Create(*this, ID_CONTROL_SHOW_FOLDER, iconShowFolder);
 
     scrollBar.CreateVertical(*this, 101);
-    scrollBar.SetRange(0, 200);
-    scrollBar.SetPageSize(20);
-    scrollBar.SetPosition(50);
 
     // Load the previous window position
     LoadWindowPosition();
@@ -277,6 +274,12 @@ namespace diesel
     statusBar.SetText(5, TEXT("2"));
   }
 
+  void cMainWindow::UpdateScrollBar()
+  {
+    scrollBar.SetRange(0, int(photoBrowserViewController.GetRequiredHeight()));
+    scrollBar.SetPageSize(photoBrowserView.GetHeight());
+  }
+
   void cMainWindow::OnResizing(size_t width, size_t height)
   {
     statusBar.Resize();
@@ -286,19 +289,14 @@ namespace diesel
   {
     statusBar.Resize();
 
-    int iWindowWidth = int(width);
-    int iWindowHeight = int(height);
-
     int iStatusBarWidth = 0;
     int iStatusBarHeight = 0;
     GetControlSize(statusBar.GetHandle(), iStatusBarWidth, iStatusBarHeight);
 
+    int iWindowWidth = int(width);
+    int iWindowHeight = int(height) - iStatusBarHeight;
+
     const int iScrollBarWidth = GetScrollBarWidth();
-    const int iScrollBarHeight = iWindowHeight - iStatusBarHeight;
-
-    MoveControl(scrollBar.GetHandle(), iWindowWidth - iScrollBarWidth, 0, iScrollBarWidth, iScrollBarHeight);
-
-    iWindowWidth -= iScrollBarWidth;
 
     const int iButtonHeight = GetButtonHeight();
     const int iButtonWidth = iButtonHeight;
@@ -319,11 +317,13 @@ namespace diesel
     y += max(iPathHeight, iButtonHeight) + GetSpacerHeight();
     iWindowHeight -= max(iPathHeight, iButtonHeight) + (2 * GetSpacerHeight());
 
+    MoveControl(scrollBar.GetHandle(), iWindowWidth - iScrollBarWidth, y, iScrollBarWidth, iWindowHeight);
+    iWindowWidth -= iScrollBarWidth;
+
     MoveControl(photoBrowserView.GetHandle(), 0, y, iWindowWidth, iWindowHeight);
 
-    // TODO: Move these somewhere else
-    scrollBar.SetRange(0, 200);
-    scrollBar.SetPosition(50);
+    // Update the scrollbar
+    UpdateScrollBar();
   }
 
   bool cMainWindow::OnCommand(int idCommand)
@@ -371,12 +371,12 @@ namespace diesel
         return false;
       }
       case ID_CONTROL_PATH: {
-        LOG<<"cStatePhotoBrowser::HandleCommand Path \""<<comboBoxPath.GetText()<<"\""<<std::endl;
+        LOG<<"cMainWindow::HandleCommand Path \""<<comboBoxPath.GetText()<<"\""<<std::endl;
         photoBrowserViewController.SetCurrentFolderPath(comboBoxPath.GetText());
         return true;
       }
       case ID_CONTROL_UP: {
-        LOG<<"cStatePhotoBrowser::HandleCommand Up"<<std::endl;
+        LOG<<"cMainWindow::HandleCommand Up"<<std::endl;
         // Get the current path
         const string_t sFolderPath = comboBoxPath.GetText();
 
@@ -392,9 +392,14 @@ namespace diesel
         return true;
       }
       case ID_CONTROL_SHOW_FOLDER: {
-        LOG<<"cStatePhotoBrowser::HandleCommand Show folder"<<std::endl;
+        LOG<<"cMainWindow::HandleCommand Show folder"<<std::endl;
         if (spitfire::filesystem::DirectoryExists(comboBoxPath.GetText())) spitfire::operatingsystem::ShowFolder(comboBoxPath.GetText());
         return true;
+      }
+      case 101: {
+        photoBrowserViewController.OnScrollBarScrolled(float(scrollBar.GetPosition()));
+        photoBrowserView.Update();
+        break;
       }
     }
 
