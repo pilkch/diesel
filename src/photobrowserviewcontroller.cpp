@@ -1224,8 +1224,10 @@ namespace diesel
   {
     LOG<<"cPhotoBrowserViewController::OnScrollBarScrolled "<<fValue<<std::endl;
 
+    #ifndef __WIN__
     // Subtract a page because the scrollbar is strange
     fValue = max(0.0f, fValue - (float(pageHeight) / fScale));
+    #endif
 
     fScrollPosition = fValue / fScale;
 
