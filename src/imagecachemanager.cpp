@@ -395,7 +395,9 @@ namespace diesel
     const string_t sFolderJPG = spitfire::filesystem::GetFolder(sFilePathJPG);
 
     const string_t sFileUFRawEmbeddedJPG = spitfire::filesystem::GetFileNoExtension(sDNGFilePath) + TEXT(".embedded.jpg");
-    string_t sFilePathUFRawJPG = spitfire::filesystem::MakeFilePath(sFolderJPG, sFileUFRawEmbeddedJPG);
+    const string_t sFilePathUFRawEmbeddedJPG = spitfire::filesystem::MakeFilePath(sFolderJPG, sFileUFRawEmbeddedJPG);
+    const string_t sFileUFRawJPG = spitfire::filesystem::GetFileNoExtension(sDNGFilePath) + TEXT(".jpg");
+    const string_t sFilePathUFRawJPG = spitfire::filesystem::MakeFilePath(sFolderJPG, sFileUFRawJPG);
 
     ostringstream_t o;
     #ifdef __WIN__
@@ -413,10 +415,6 @@ namespace diesel
     LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile Running command line \""<<sCommandLine<<"\""<<std::endl;
     #ifdef __WIN__
     RunCommandLine(sCommandLine);
-    if (!spitfire::filesystem::FileExists(sFilePathUFRawJPG)) {
-      LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile ufraw-batch FAILED for \""<<sCommandLine<<"\", returning \"\""<<std::endl;
-      return TEXT("");
-    }
     #else
     const int iResult = system(sCommandLine.c_str());
     if (iResult != 0) {
@@ -425,24 +423,27 @@ namespace diesel
     }
     #endif
 
+    if (!spitfire::filesystem::FileExists(sFilePathUFRawEmbeddedJPG) && !spitfire::filesystem::FileExists(sFilePathUFRawJPG)) {
+      LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile ufraw-batch FAILED for \""<<sCommandLine<<"\", embedded file \""<<sFilePathUFRawEmbeddedJPG<<"\" and file \""<<sFilePathUFRawJPG<<"\" were not found, returning \"\""<<std::endl;
+      return TEXT("");
+    }
+
     // ufraw-batch doesn't respect the output folder if we provide our own output filename, so we have to rename the file after it is converted
     const string_t sNameJPG = spitfire::filesystem::GetFileNoExtension(sFilePathJPG);
 
     // Try to rename from file.embedded.jpg to abcdefghi_file.jpg
+    LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile Looking for \""<<sFilePathUFRawEmbeddedJPG<<"\""<<std::endl;
+    if (spitfire::filesystem::FileExists(sFilePathUFRawEmbeddedJPG)) {
+      if (!spitfire::filesystem::MoveFile(sFilePathUFRawEmbeddedJPG, sFilePathJPG)) {
+        LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile Failed to move the file from \""<<sFilePathUFRawEmbeddedJPG<<"\" to \""<<sFilePathJPG<<"\""<<std::endl;
+      }
+    }
+
+    // Try to rename from file.jpg to abcdefghi_file.jpg
     LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile Looking for \""<<sFilePathUFRawJPG<<"\""<<std::endl;
     if (spitfire::filesystem::FileExists(sFilePathUFRawJPG)) {
       if (!spitfire::filesystem::MoveFile(sFilePathUFRawJPG, sFilePathJPG)) {
-        LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile Failed to move the file from \""<<sFolderJPG<<"\" to \""<<sFilePathJPG<<"\", returning \"\""<<std::endl;
-        return TEXT("");
-      }
-    } else {
-      // Try to rename from file.jpg to abcdefghi_file.jpg
-      const string_t sFileUFRawJPG = spitfire::filesystem::GetFileNoExtension(sDNGFilePath) + TEXT(".jpg");
-      string_t sFilePathUFRawJPG = spitfire::filesystem::MakeFilePath(sFolderJPG, sFileUFRawJPG);
-      LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile Looking for \""<<sFilePathUFRawJPG<<"\""<<std::endl;
-      if (spitfire::filesystem::FileExists(sFilePathUFRawJPG) && !spitfire::filesystem::MoveFile(sFilePathUFRawJPG, sFilePathJPG)) {
-        LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile Failed to move the file from \""<<sFolderJPG<<"\" to \""<<sFilePathJPG<<"\", returning \"\""<<std::endl;
-        return TEXT("");
+        LOG<<"cImageCacheManager::GetOrCreateThumbnailForDNGFile Failed to move the file from \""<<sFilePathUFRawJPG<<"\" to \""<<sFilePathJPG<<"\""<<std::endl;
       }
     }
 
