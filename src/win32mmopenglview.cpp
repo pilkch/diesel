@@ -187,8 +187,9 @@ namespace diesel
 
   // ** cWin32mmOpenGLView
 
-  cWin32mmOpenGLView::cWin32mmOpenGLView(cMainWindow& _mainWindow, cPhotoBrowserViewController& _controller) :
-    mainWindow(_mainWindow),
+  cWin32mmOpenGLView::cWin32mmOpenGLView(win32mm::cDialog& _parent, cWin32mmOpenGLViewListener& _listener, cPhotoBrowserViewController& _controller) :
+    dialog(_parent),
+    listener(_listener),
     controller(_controller)
   {
   }
@@ -204,7 +205,7 @@ namespace diesel
 
   void cWin32mmOpenGLView::Create(int idControl)
   {
-    win32mm::cOpenGLControl::Create(mainWindow, idControl);
+    win32mm::cOpenGLControl::Create(dialog, idControl);
 
     context.Create(GetHandle());
 
@@ -284,12 +285,12 @@ namespace diesel
 
   void cWin32mmOpenGLView::OnOpenGLViewChangedFolder(const string_t& sFolderPath)
   {
-    mainWindow.OnOpenGLViewChangedFolder(sFolderPath);
+    listener.OnOpenGLViewChangedFolder(sFolderPath);
   }
 
   void cWin32mmOpenGLView::OnOpenGLViewRightClick()
   {
-    mainWindow.OnOpenGLViewRightClick();
+    listener.OnOpenGLViewRightClick();
   }
 
   void cWin32mmOpenGLView::OnOpenGLViewSelectionChanged()

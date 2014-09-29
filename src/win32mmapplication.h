@@ -36,7 +36,7 @@ namespace diesel
   class cWin32mmOpenGLView;
   class cApplication;
 
-  class cMainWindow : public win32mm::cMainDialog
+  class cMainWindow : public win32mm::cMainDialog, public cWin32mmOpenGLViewListener
   {
   public:
     friend class cWin32mmOpenGLView;

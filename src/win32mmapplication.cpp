@@ -84,7 +84,7 @@ namespace diesel
   cMainWindow::cMainWindow(cApplication& _application) :
     application(_application),
     settings(_application.settings),
-    photoBrowserView(*this, photoBrowserViewController),
+    photoBrowserView(*this, *this, photoBrowserViewController),
     photoBrowserViewController(photoBrowserView),
     bShouldQuit(false)
   {

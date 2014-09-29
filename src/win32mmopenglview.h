@@ -12,6 +12,7 @@
 #include <libopenglmm/cSystem.h>
 
 // libwin32mm headers
+#include <libwin32mm/dialog.h>
 #include <libwin32mm/openglcontrol.h>
 
 // Spitfire headers
@@ -55,6 +56,15 @@ namespace diesel
     opengl::cContext* pContext;
   };
 
+  class cWin32mmOpenGLViewListener
+  {
+  public:
+    virtual ~cWin32mmOpenGLViewListener() {}
+
+    virtual void OnOpenGLViewChangedFolder(const string_t& sFolderPath) = 0;
+    virtual void OnOpenGLViewRightClick() = 0;
+  };
+
   class cMainWindow;
   class cPhotoBrowserViewController;
 
@@ -67,7 +77,7 @@ namespace diesel
   public:
     friend class cOpenGLViewController;
 
-    cWin32mmOpenGLView(cMainWindow& mainWindow, cPhotoBrowserViewController& controller);
+    cWin32mmOpenGLView(win32mm::cDialog& parent, cWin32mmOpenGLViewListener& listener, cPhotoBrowserViewController& controller);
     ~cWin32mmOpenGLView();
 
     opengl::cContext& GetContext();
@@ -102,7 +112,8 @@ namespace diesel
     virtual bool OnKeyDown(const win32mm::cKeyEvent& event) override { (void)event; return false; }
     virtual bool OnKeyUp(const win32mm::cKeyEvent& event) override { (void)event; return false; }
 
-    cMainWindow& mainWindow;
+    win32mm::cDialog& dialog;
+    cWin32mmOpenGLViewListener& listener;
     cPhotoBrowserViewController& controller;
 
     cWin32mmOpenGLContext context;
