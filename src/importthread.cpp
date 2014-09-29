@@ -1,3 +1,6 @@
+// Standard headers
+#include <unordered_set>
+
 // Spitfire headers
 #include <spitfire/algorithm/md5.h>
 #include <spitfire/storage/filesystem.h>
@@ -53,6 +56,11 @@ namespace diesel
     bDeleteFromSourceFolderOnSuccessfulImport = _bDelete;
   }
 
+  const std::vector<string_t>& cImportProcess::GetImportedFolders() const
+  {
+    return importedFolders;
+  }
+
   string_t cImportProcess::GetFolderForFile(const string_t& sFromFilePath, const string_t& sToFolder) const
   {
     ostringstream_t o;
@@ -88,6 +96,8 @@ namespace diesel
     {
       interface.SetTextSecondary(TEXT("Copying files..."));
 
+      std::unordered_set<string_t> folders;
+
       spitfire::filesystem::cFolderIterator iter(sFromFolder);
       size_t i = 0;
       const size_t n = iter.GetFileAndFolderCount();
@@ -102,10 +112,22 @@ namespace diesel
           const string_t sToFilePath = spitfire::filesystem::MakeFilePath(sToFullFolder, spitfire::filesystem::GetFile(sFromFilePath));
           LOG<<"cImportProcess::ProcessFunction Copying from \""<<sFromFilePath<<"\" to \""<<sToFilePath<<"\""<<std::endl;
           spitfire::filesystem::CopyFile(sFromFilePath, sToFilePath);
+
+          // Add the folder to the list of import folders
+          folders.insert(sToFullFolder);
         }
 
         iter.Next();
         i++;
+      }
+
+      // Add the folders to the imported folders list
+      std::unordered_set<string_t>::const_iterator iterFolders(folders.begin());
+      const std::unordered_set<string_t>::const_iterator iterFoldersEnd(folders.end());
+      while (iterFolders != iterFoldersEnd) {
+        importedFolders.push_back(*iterFolders);
+
+        iterFolders++;
       }
 
       if (interface.IsToStop()) return spitfire::util::PROCESS_RESULT::STOPPED_BY_INTERFACE;

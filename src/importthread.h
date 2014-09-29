@@ -1,6 +1,9 @@
 #ifndef DIESEL_IMPORTTHREAD_H
 #define DIESEL_IMPORTTHREAD_H
 
+// Standard headers
+#include <vector>
+
 // Spitfire headers
 #include <spitfire/util/process.h>
 #include <spitfire/util/thread.h>
@@ -17,7 +20,7 @@ namespace diesel
   class cImportProcess : public spitfire::util::cProcess
   {
   public:
-    cImportProcess(spitfire::util::cProcessInterface& interface);
+    explicit cImportProcess(spitfire::util::cProcessInterface& interface);
 
     void SetFromFolder(const string_t& sFolder);
     void SetToFolder(const string_t& sFolder);
@@ -26,6 +29,8 @@ namespace diesel
     void SetDescription(bool bDescription);
     void SetDescriptionText(const string_t& sDescription);
     void SetDeleteFromSourceFolderOnSuccessfulImport(bool bDelete);
+
+    const std::vector<string_t>& GetImportedFolders() const;
 
   private:
     string_t GetFolderForFile(const string_t& sFromFilePath, const string_t& sToFolder) const;
@@ -39,6 +44,8 @@ namespace diesel
     bool bDescription;
     string_t sDescriptionText;
     bool bDeleteFromSourceFolderOnSuccessfulImport;
+
+    std::vector<string_t> importedFolders;
   };
 }
 
