@@ -366,15 +366,18 @@ namespace diesel
         //LOG<<"cImageLoadThread::ThreadFunction Loop deleting event"<<std::endl;
         spitfire::SAFE_DELETE(pRequest);
 
-        // Enforce the maximum cache size
-        size_t nTempMaximumCacheSizeGB = 0;
+        // Now that have processed this event we can enforce the maximum cache size if we have not been asked to stop
+        // We don't do this if we are stopping because it takes ages on Windows
+        if (!IsToStop()) {
+          size_t nTempMaximumCacheSizeGB = 0;
 
-        {
-          spitfire::util::cLockObject lock(mutexMaximumCacheSize);
-          nTempMaximumCacheSizeGB = nMaximumCacheSizeGB;
+          {
+            spitfire::util::cLockObject lock(mutexMaximumCacheSize);
+            nTempMaximumCacheSizeGB = nMaximumCacheSizeGB;
+          }
+
+          cImageCacheManager::EnforceMaximumCacheSize(nTempMaximumCacheSizeGB);
         }
-
-        cImageCacheManager::EnforceMaximumCacheSize(nTempMaximumCacheSizeGB);
       } else {
         // If the queue is empty then we know that there are no more actions and it is safe to reset our stop loading signal object
         loadingProcessInterface.Reset();
