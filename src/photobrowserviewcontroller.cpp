@@ -1030,6 +1030,9 @@ namespace diesel
   {
     ASSERT(index < photos.size());
 
+    // Enter single photo mode
+    bIsModeSinglePhoto = true;
+
     currentSinglePhoto = index;
 
     // Load this photo
@@ -1045,6 +1048,9 @@ namespace diesel
 
   void cPhotoBrowserViewController::SetPhotoCollageMode()
   {
+    // Exit single photo mode
+    bIsModeSinglePhoto = false;
+
     // Notify the view
     view.OnOpenGLViewPhotoCollageMode();
   }
@@ -1188,14 +1194,13 @@ namespace diesel
               view.OnOpenGLViewChangedFolder(spitfire::filesystem::MakeFilePath(sFolderPath, photos[index]->sFileNameNoExtension));
             } else {
               // Enter single photo mode
-              bIsModeSinglePhoto = true;
               SetSinglePhotoMode(index);
             }
           }
         }
       } else {
         // Exit single photo mode
-        bIsModeSinglePhoto = false;
+        SetPhotoCollageMode();
       }
     }
 
