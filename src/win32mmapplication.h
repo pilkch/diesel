@@ -43,10 +43,6 @@ namespace diesel
 
     explicit cMainWindow(cApplication& application);
 
-  protected:
-    void OnOpenGLViewChangedFolder(const string_t& sFolderPath);
-    void OnOpenGLViewRightClick();
-
   private:
     virtual void OnInit() override;
     virtual void OnInitFinished() override;
@@ -59,6 +55,9 @@ namespace diesel
     virtual void OnResize(size_t width, size_t height) override;
 
     virtual bool OnCommand(int idCommand) override;
+
+    virtual void OnOpenGLViewChangedFolder(const string_t& sFolderPath) override;
+    virtual void OnOpenGLViewRightClick() override;
 
     void LoadWindowPosition();
     void SaveWindowPosition();
@@ -110,9 +109,6 @@ namespace diesel
     cSettings settings;
 
     cMainWindow mainWindow;
-
-    // Text
-    opengl::cFont* pFont;
   };
 }
 

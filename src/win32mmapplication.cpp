@@ -427,9 +427,7 @@ namespace diesel
   cApplication::cApplication(int argc, const char* const* argv) :
     spitfire::cConsoleApplication(argc, argv),
 
-    mainWindow(*this),
-
-    pFont(nullptr)
+    mainWindow(*this)
   {
     // Initialise libwin32mm
     win32mm::Init();
