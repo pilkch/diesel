@@ -50,6 +50,7 @@ namespace diesel
     virtual bool OnQuit() override;
 
     virtual bool OnOk() override;
+    virtual bool OnCancel() override;
 
     virtual void OnResizing(size_t width, size_t height) override;
     virtual void OnResize(size_t width, size_t height) override;
@@ -85,6 +86,8 @@ namespace diesel
     win32mm::cButton buttonPathUp;
     win32mm::cButton buttonPathShowFolder;
     win32mm::cScrollBar scrollBar;
+
+    bool bShouldQuit; // A slight hack so that we can tell when the Quit menu item is selected rather than the user prcessing the escape key
   };
 
 

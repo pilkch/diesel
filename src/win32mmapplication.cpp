@@ -85,7 +85,8 @@ namespace diesel
     application(_application),
     settings(_application.settings),
     photoBrowserView(*this, photoBrowserViewController),
-    photoBrowserViewController(photoBrowserView)
+    photoBrowserViewController(photoBrowserView),
+    bShouldQuit(false)
   {
   }
 
@@ -218,6 +219,11 @@ namespace diesel
   {
     // Avoid closing when the user presses the enter key
     return false;
+  }
+
+  bool cMainWindow::OnCancel()
+  {
+    return bShouldQuit;
   }
 
   void cMainWindow::SaveWindowPosition()
@@ -357,6 +363,9 @@ namespace diesel
         return true;
       }
       case ID_MENU_FILE_QUIT: {
+        // Set our quit flag
+        bShouldQuit = true;
+
         CloseSoon();
         return true;
       }
