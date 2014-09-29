@@ -308,6 +308,9 @@ namespace diesel
     if (dialog.Run(*this)) {
       // Update the control
       importFromFolder.SetValue(dialog.GetSelectedFolder());
+
+      // Enable or disable the Ok button
+      OnFromOrToChanged();
     }
   }
 
@@ -324,6 +327,9 @@ namespace diesel
 
       // Update the example file path
       UpdateExampleFilePath();
+
+      // Enable or disable the Ok button
+      OnFromOrToChanged();
     }
   }
 
