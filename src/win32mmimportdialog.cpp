@@ -54,8 +54,6 @@ namespace diesel
     win32mm::cInput importToFolder;
     win32mm::cButton importBrowseToFolder;
 
-    win32mm::cCheckBox importDescription;
-    win32mm::cInput importDescriptionText;
     win32mm::cStatic importExampleFilePathText;
 
     // After Import
@@ -85,13 +83,11 @@ namespace diesel
     importToFolder.Create(*this, 103);
     importBrowseToFolder.Create(*this, 104, TEXT("Browse..."));
 
-    importDescription.Create(*this, 107, TEXT("Description:"));
-    importDescriptionText.Create(*this, 108);
     importExampleFilePathText.Create(*this, TEXT(""));
 
     // After Import
     lineAfterImport.Create(*this, TEXT("After Import"));
-    afterImportDeleteFromSourceFolderOnSuccessfulImport.Create(*this, 109, TEXT("Delete from source folder on successful import"));
+    afterImportDeleteFromSourceFolderOnSuccessfulImport.Create(*this, 105, TEXT("Delete from source folder on successful import"));
 
     // Add horizontal line
     horizontalLine.Create(*this);
@@ -105,8 +101,6 @@ namespace diesel
     // Update the control values
     importFromFolder.SetValue(settings.GetLastImportFromFolder());
     importToFolder.SetValue(settings.GetLastImportToFolder());
-    importDescription.SetChecked(settings.IsImportDescription());
-    importDescriptionText.SetValue(settings.GetImportDescriptionText());
     afterImportDeleteFromSourceFolderOnSuccessfulImport.SetChecked(settings.IsAfterImportDeleteFromSourceFolderOnSuccessfulImport());
 
     // Update our example text
@@ -140,6 +134,7 @@ namespace diesel
     const int widthControls = widestStaticText + GetSpacerWidth() + widestRowOnTheRight;
     const int widthImportText = MeasureStaticTextWidth(lineImport.GetStaticTextHandle());
     const int widthImportLine = widthControls - (widthImportText + GetSpacerWidth());
+    const int heightImportExampleFilePathText = MeasureStaticTextHeight(importExampleFilePathText.GetHandle(), widthImportLine);
     const int staticTextHeight = MeasureStaticTextHeight(lineImport.GetStaticTextHandle(), widthImportLine);
     const int widthAfterImportText = MeasureStaticTextWidth(lineAfterImport.GetStaticTextHandle());
     const int lineHeightStaticInputButton = max(max(staticTextHeight, GetInputHeight()), GetButtonHeight());
@@ -156,9 +151,8 @@ namespace diesel
     MoveControlsInputAndButton(importToFolder, importBrowseToFolder, iX + widestStaticText + GetSpacerWidth(), iY, widestRowOnTheRight);
     iY += lineHeightStaticInputButton + GetSpacerHeight();
 
-    MoveControl(importDescription.GetHandle(), iX, iY, widestStaticText, GetCheckBoxHeight());
-    MoveControl(importDescriptionText.GetHandle(), iX + widestStaticText + GetSpacerWidth(), iY, widthControls - (widestStaticText + GetSpacerWidth()), GetInputHeight());
-    MoveControl(importExampleFilePathText.GetHandle(), iX, iY, widthControls, staticTextHeight);
+    MoveControl(importExampleFilePathText.GetHandle(), iX, iY, widthImportLine, heightImportExampleFilePathText);
+    iY += heightImportExampleFilePathText + GetSpacerHeight();
     iY += GetSpacerHeight();
 
     // After Import
@@ -199,13 +193,6 @@ namespace diesel
         OnBrowseToFolder();
         break;
       }
-      case 107: {
-        // If we just turned on the desciption then set the focus to the input next to it
-        if (importDescription.IsChecked()) SetFocus(importDescriptionText.GetHandle());
-
-        OnControlChanged();
-        break;
-      }
     };
 
     return false;
@@ -215,8 +202,6 @@ namespace diesel
   {
     settings.SetLastImportFromFolder(importFromFolder.GetValue());
     settings.SetLastImportToFolder(importToFolder.GetValue());
-    settings.SetImportDescription(importDescription.IsChecked());
-    settings.SetImportDescriptionText(importDescriptionText.GetValue());
     settings.SetAfterImportDeleteFromSourceFolderOnSuccessfulImport(afterImportDeleteFromSourceFolderOnSuccessfulImport.IsChecked());
 
     settings.Save();
@@ -241,14 +226,7 @@ namespace diesel
 
     o<<now.GetDateYYYYMMDD()<<TEXT(" ");
 
-    string_t sDescription;
-    if (importDescription.IsChecked()) sDescription = importDescriptionText.GetValue();
-
-    if (!sDescription.empty()) {
-      if (bImportSeparateFolderForEachDate) o<<now.GetDateYYYYMMDD()<<TEXT(" ");
-
-      o<<sDescription<<spitfire::filesystem::sFilePathSeparator;
-    } else if (bImportSeparateFolderForEachDate) o<<now.GetDateYYYYMMDD()<<spitfire::filesystem::sFilePathSeparator;
+    o<<TEXT("My Holiday Photos")<<spitfire::filesystem::sFilePathSeparator;
 
     importExampleFilePathText.SetText(o.str());
   }

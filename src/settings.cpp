@@ -144,26 +144,6 @@ namespace diesel
     document.SetValue(TEXT("settings"), TEXT("import"), TEXT("lastImportToFolder"), sFolder);
   }
 
-  bool cSettings::IsImportDescription() const
-  {
-    return document.GetValue<bool>(TEXT("settings"), TEXT("import"), TEXT("isImportDescription"), false);
-  }
-
-  void cSettings::SetImportDescription(bool bDescription)
-  {
-    document.SetValue(TEXT("settings"), TEXT("import"), TEXT("isImportDescription"), bDescription);
-  }
-
-  string_t cSettings::GetImportDescriptionText() const
-  {
-    return document.GetValue<string_t>(TEXT("settings"), TEXT("import"), TEXT("descriptionText"), TEXT(""));
-  }
-
-  void cSettings::SetImportDescriptionText(const string_t& sDescription)
-  {
-    document.SetValue(TEXT("settings"), TEXT("import"), TEXT("descriptionText"), sDescription);
-  }
-
   bool cSettings::IsAfterImportDeleteFromSourceFolderOnSuccessfulImport() const
   {
     return document.GetValue<bool>(TEXT("settings"), TEXT("import"), TEXT("isDeleteFromSourceFolderOnSuccessfulImport"), false);
