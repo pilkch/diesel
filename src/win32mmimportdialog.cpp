@@ -30,8 +30,7 @@ namespace diesel
     void MoveControlsInputAndButton(const win32mm::cInput& input, const win32mm::cButton& button, int x, int y, int width);
 
     void LayoutAndSetWindowSize();
-    void EnableControls();
-    
+
     void UpdateExampleFilePath();
 
     void OnControlChanged();
@@ -96,8 +95,6 @@ namespace diesel
     buttonOk.CreateOk(*this, TEXT("Ok"));
     buttonCancel.CreateCancel(*this);
 
-    LayoutAndSetWindowSize();
-
     // Update the control values
     importFromFolder.SetValue(settings.GetLastImportFromFolder());
     importToFolder.SetValue(settings.GetLastImportToFolder());
@@ -106,8 +103,7 @@ namespace diesel
     // Update our example text
     UpdateExampleFilePath();
 
-    // Make sure our controls start in the correct state
-    EnableControls();
+    LayoutAndSetWindowSize();
 
     OnFromOrToChanged();
   }
@@ -209,12 +205,6 @@ namespace diesel
     return true;
   }
 
-  void cImportDialog::EnableControls()
-  {
-    const bool bEnabled = importDescription.IsChecked();
-    EnableControl(importDescriptionText.GetHandle(), bEnabled);
-  }
-
   void cImportDialog::UpdateExampleFilePath()
   {
     ostringstream_t o;
@@ -234,7 +224,6 @@ namespace diesel
   void cImportDialog::OnControlChanged()
   {
     UpdateExampleFilePath();
-    EnableControls();
   }
 
   void cImportDialog::OnFromOrToChanged()
