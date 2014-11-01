@@ -54,8 +54,6 @@ namespace diesel
     win32mm::cInput importToFolder;
     win32mm::cButton importBrowseToFolder;
 
-    win32mm::cCheckBox importSeparateFolderForEachYear;
-    win32mm::cCheckBox importSeparateFolderForEachDate;
     win32mm::cCheckBox importDescription;
     win32mm::cInput importDescriptionText;
     win32mm::cStatic importExampleFilePathText;
@@ -87,8 +85,6 @@ namespace diesel
     importToFolder.Create(*this, 103);
     importBrowseToFolder.Create(*this, 104, TEXT("Browse..."));
 
-    importSeparateFolderForEachYear.Create(*this, 105, TEXT("Separate folder for each year"));
-    importSeparateFolderForEachDate.Create(*this, 106, TEXT("Separate folder for each date"));
     importDescription.Create(*this, 107, TEXT("Description:"));
     importDescriptionText.Create(*this, 108);
     importExampleFilePathText.Create(*this, TEXT(""));
@@ -109,8 +105,6 @@ namespace diesel
     // Update the control values
     importFromFolder.SetValue(settings.GetLastImportFromFolder());
     importToFolder.SetValue(settings.GetLastImportToFolder());
-    importSeparateFolderForEachYear.SetChecked(settings.IsImportSeparateFolderForEachYear());
-    importSeparateFolderForEachDate.SetChecked(settings.IsImportSeparateFolderForEachDate());
     importDescription.SetChecked(settings.IsImportDescription());
     importDescriptionText.SetValue(settings.GetImportDescriptionText());
     afterImportDeleteFromSourceFolderOnSuccessfulImport.SetChecked(settings.IsAfterImportDeleteFromSourceFolderOnSuccessfulImport());
@@ -139,7 +133,7 @@ namespace diesel
     int iY = GetMarginHeight();
 
     // Find the widest static text
-    const int widestStaticText = max(max(MeasureStaticTextWidth(importFromFolderText.GetHandle()), MeasureStaticTextWidth(importToFolderText.GetHandle())), MeasureCheckBoxWidth(importDescription.GetHandle()));
+    const int widestStaticText = max(MeasureStaticTextWidth(importFromFolderText.GetHandle()), MeasureStaticTextWidth(importToFolderText.GetHandle()));
 
     // Find the widest row of controls on the right
     const int widestRowOnTheRight = max(DialogUnitsToPixelsX(180), MeasureCheckBoxWidth(afterImportDeleteFromSourceFolderOnSuccessfulImport.GetHandle()));
@@ -162,15 +156,9 @@ namespace diesel
     MoveControlsInputAndButton(importToFolder, importBrowseToFolder, iX + widestStaticText + GetSpacerWidth(), iY, widestRowOnTheRight);
     iY += lineHeightStaticInputButton + GetSpacerHeight();
 
-    MoveControl(importSeparateFolderForEachYear.GetHandle(), iX, iY, widthControls, GetCheckBoxHeight());
-    iY += GetCheckBoxHeight() + GetSpacerHeight();
-    MoveControl(importSeparateFolderForEachDate.GetHandle(), iX, iY, widthControls, GetCheckBoxHeight());
-    iY += GetCheckBoxHeight() + GetSpacerHeight();
     MoveControl(importDescription.GetHandle(), iX, iY, widestStaticText, GetCheckBoxHeight());
     MoveControl(importDescriptionText.GetHandle(), iX + widestStaticText + GetSpacerWidth(), iY, widthControls - (widestStaticText + GetSpacerWidth()), GetInputHeight());
-    iY += max(GetCheckBoxHeight(), GetInputHeight()) + GetSpacerHeight();
     MoveControl(importExampleFilePathText.GetHandle(), iX, iY, widthControls, staticTextHeight);
-    iY += staticTextHeight + GetSpacerHeight();
     iY += GetSpacerHeight();
 
     // After Import
@@ -211,12 +199,6 @@ namespace diesel
         OnBrowseToFolder();
         break;
       }
-      case 105:
-      case 106:
-      case 108: {
-        OnControlChanged();
-        break;
-      }
       case 107: {
         // If we just turned on the desciption then set the focus to the input next to it
         if (importDescription.IsChecked()) SetFocus(importDescriptionText.GetHandle());
@@ -233,8 +215,6 @@ namespace diesel
   {
     settings.SetLastImportFromFolder(importFromFolder.GetValue());
     settings.SetLastImportToFolder(importToFolder.GetValue());
-    settings.SetImportSeparateFolderForEachYear(importSeparateFolderForEachYear.IsChecked());
-    settings.SetImportSeparateFolderForEachDate(importSeparateFolderForEachDate.IsChecked());
     settings.SetImportDescription(importDescription.IsChecked());
     settings.SetImportDescriptionText(importDescriptionText.GetValue());
     settings.SetAfterImportDeleteFromSourceFolderOnSuccessfulImport(afterImportDeleteFromSourceFolderOnSuccessfulImport.IsChecked());
@@ -256,13 +236,10 @@ namespace diesel
 
     o<<TEXT("Example: ");
 
-    const string_t sImportToFolder = importToFolder.GetValue();
-    o<<sImportToFolder;
-    if (sImportToFolder.back() != spitfire::filesystem::cFilePathSeparator) o<<spitfire::filesystem::sFilePathSeparator;
-    spitfire::util::cDateTime now;
-    if (importSeparateFolderForEachYear.IsChecked()) o<<now.GetYear()<<spitfire::filesystem::sFilePathSeparator;
+    const spitfire::util::cDateTime now;
+    o<<now.GetYear()<<spitfire::filesystem::sFilePathSeparator;
 
-    const bool bImportSeparateFolderForEachDate = importSeparateFolderForEachDate.IsChecked();
+    o<<now.GetDateYYYYMMDD()<<TEXT(" ");
 
     string_t sDescription;
     if (importDescription.IsChecked()) sDescription = importDescriptionText.GetValue();

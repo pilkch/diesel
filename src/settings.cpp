@@ -144,26 +144,6 @@ namespace diesel
     document.SetValue(TEXT("settings"), TEXT("import"), TEXT("lastImportToFolder"), sFolder);
   }
 
-  bool cSettings::IsImportSeparateFolderForEachYear() const
-  {
-    return document.GetValue<bool>(TEXT("settings"), TEXT("import"), TEXT("isSeparateFolderForEachYear"), true);
-  }
-
-  void cSettings::SetImportSeparateFolderForEachYear(bool bSeparateFolderForEachYear)
-  {
-    document.SetValue(TEXT("settings"), TEXT("import"), TEXT("isSeparateFolderForEachYear"), bSeparateFolderForEachYear);
-  }
-
-  bool cSettings::IsImportSeparateFolderForEachDate() const
-  {
-    return document.GetValue<bool>(TEXT("settings"), TEXT("import"), TEXT("isSeparateFolderForEachDate"), true);
-  }
-
-  void cSettings::SetImportSeparateFolderForEachDate(bool bSeparateFolderForEachDate)
-  {
-    document.SetValue(TEXT("settings"), TEXT("import"), TEXT("isSeparateFolderForEachDate"), bSeparateFolderForEachDate);
-  }
-
   bool cSettings::IsImportDescription() const
   {
     return document.GetValue<bool>(TEXT("settings"), TEXT("import"), TEXT("isImportDescription"), false);

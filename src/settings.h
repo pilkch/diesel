@@ -45,10 +45,6 @@ namespace diesel
     void SetLastImportFromFolder(const string_t& sFolder);
     string_t GetLastImportToFolder() const;
     void SetLastImportToFolder(const string_t& sFolder);
-    bool IsImportSeparateFolderForEachYear() const;
-    void SetImportSeparateFolderForEachYear(bool bSeparateFolderForEachYear);
-    bool IsImportSeparateFolderForEachDate() const;
-    void SetImportSeparateFolderForEachDate(bool bSeparateFolderForEachDate);
     bool IsImportDescription() const;
     void SetImportDescription(bool bDescription);
     string_t GetImportDescriptionText() const;
